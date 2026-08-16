@@ -1,25 +1,33 @@
 @import "tailwindcss";
 
+/* ──────────────────────────────────────────
+   피그마 Make 프로토타입 기준 디자인 토큰
+   출처: Downloads/웹페이지 제작/src/imports/pasted_text/cultural-fit-busan-prototype.md
+   실제 피그마 결과물 이미지 참조하여 보정
+   ────────────────────────────────────────── */
+
 :root {
   --background: #ffffff;
   --foreground: #111213;
+  --sub-text: #5f646a;
+  --muted: #9aa0a6;
   --accent: #2a5a48;
   --accent-hover: #1e4436;
   --sub-accent: #a06a48;
-  --surface: #f5f5f5;
-  --border: #e0e0e0;
-  --muted: #888888;
+  --border: #ecedee;
+  --surface: #f4f5f5;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-sub-text: var(--sub-text);
+  --color-muted: var(--muted);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-sub-accent: var(--sub-accent);
-  --color-surface: var(--surface);
   --color-border: var(--border);
-  --color-muted: var(--muted);
+  --color-surface: var(--surface);
   --font-sans: var(--font-noto-sans-kr);
   --font-serif: var(--font-cormorant-garamond);
 }
@@ -27,4 +35,43 @@
 body {
   background: var(--background);
   color: var(--foreground);
+  font-size: 16px;
+}
+
+/* ──────────────────────────────────────────
+   프로토타입 타이포그래피 규칙
+   큰 제목 30px/200  소제목 16px/400  본문 14px/300  라벨 9.5px/uppercase
+   ────────────────────────────────────────── */
+
+@layer components {
+  .typo-title {
+    font-size: 30px;
+    font-weight: 200;
+    letter-spacing: -0.045em;
+    line-height: 1.45;
+  }
+
+  .typo-subtitle {
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.5;
+  }
+
+  .typo-body {
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 2.0;
+  }
+
+  .typo-label {
+    font-size: 9.5px;
+    font-weight: 300;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+  }
+
+  .typo-serif-number {
+    font-family: var(--font-cormorant-garamond);
+    letter-spacing: 0.06em;
+  }
 }
