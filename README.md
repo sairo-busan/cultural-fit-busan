@@ -49,7 +49,7 @@
 
 | 영역 | 기술 | 비고 |
 |---|---|---|
-| 프론트엔드 | Next.js 15 (App Router) | React 19 · TypeScript |
+| 프론트엔드 | Next.js 16 (App Router) | React 19 · TypeScript |
 | 스타일링 | Tailwind CSS 4 | 모바일 퍼스트 |
 | 상태 관리 | Zustand + React Query | 프로필: localStorage · 장소: 정적 JSON |
 | 지도 | Kakao Maps SDK | 부산 지역 최적화 |
@@ -82,11 +82,13 @@ npm run dev
 
 ## 팀
 
-| 역할 | 담당 |
+| 이름 | 역할 |
 |---|---|
-| 개발 (풀스택) | 건 |
-| 기획 / 행정 / 디자인 | 유나 |
-| 행정 / 데이터 | 태무 |
+| 유나 | 기획 · 행정 · 디자인 |
+| 소피 | 개발 |
+| 에린 | 개발 |
+
+개발 범위: 프론트엔드 · 추천 엔진 · API 연동 · 앱 빌드 · 배포
 
 ## 데이터 출처
 

@@ -14,7 +14,7 @@
 
 | 영역 | 기술 | 비고 |
 |---|---|---|
-| 프론트엔드 | Next.js 15 (App Router) | React 19 · TypeScript |
+| 프론트엔드 | Next.js 16 (App Router) | React 19 · TypeScript |
 | 스타일링 | Tailwind CSS 4 | 모바일 퍼스트 |
 | 상태 관리 | Zustand + React Query | 프로필: localStorage · 장소: 정적 JSON |
 | 지도 | Kakao Maps SDK | 부산 지역 최적화 |
@@ -62,9 +62,13 @@
 
 ## 팀 구성 (3인)
 
-- 본인: 개발 (풀스택)
-- 유나: 기획/행정/디자인(피그마)
-- 태무: 행정/데이터
+| 이름 | 역할 |
+|---|---|
+| 유나 | 기획 · 행정 · 디자인 |
+| 소피 | 개발 |
+| 에린 | 개발 |
+
+개발 범위: 프론트엔드 · 추천 엔진 · API 연동 · 앱 빌드 · 배포
 
 ## 주요 참고 문서
 
@@ -89,7 +93,7 @@ NOTION_TOKEN (`.env` 참조)으로 접근
 - ✅ 공공데이터포털 인증키 발급
 - ✅ GitHub org `sairo-busan` 생성 + 레포 생성
 - 🔄 화면 IA 확정 (21개)
-- ⬜ Next.js 15 프로젝트 세팅 + Vercel 배포
+- 🔄 Next.js 16 프로젝트 세팅 + Vercel 배포
 - ⬜ 디자인 토큰 + 레이아웃 (유나 Figma 기준)
 - ⬜ 장소 태깅 JSON 구조 설계 + 시드 데이터
 - ⬜ TourAPI 프록시 (Vercel API Route 1개)
@@ -157,9 +161,6 @@ NOTION_TOKEN (`.env` 참조)으로 접근
 ## 코드 규칙
 
 - 커밋 메시지: `feat:`, `fix:`, `chore:` 접두사 (한국어 본문)
-- Co-authored 제외
-- Named export만 사용
-- 에러 메시지 한국어
 
 <!-- BEGIN:nextjs-agent-rules -->
 
