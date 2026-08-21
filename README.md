@@ -51,9 +51,11 @@
 |---|---|---|
 | 프론트엔드 | Next.js 16 (App Router) | React 19 · TypeScript |
 | 스타일링 | Tailwind CSS 4 | 모바일 퍼스트 |
-| 상태 관리 | Zustand + React Query | 프로필: localStorage · 장소: 정적 JSON |
+| 상태 관리 | Zustand + React Query | 프로필: localStorage · 장소: MongoDB |
+| DB | MongoDB | 로우데이터 배치 적재 · 실시간 하이브리드 |
+| 스토리지 | Cloudflare R2 (검토 중) | 우선 API URL 직접 사용 |
 | 지도 | Kakao Maps SDK | 부산 지역 최적화 |
-| 외부 API | TourAPI 4.0 (5종) | Vercel API Route 프록시 1개 |
+| 외부 API | TourAPI 4.0 (6종) | 배치 + 실시간 하이브리드 |
 | i18n | next-intl | EN / KO |
 | 앱 빌드 | Capacitor | WebView 래핑 · Android Only |
 | 배포 | Vercel + Play Store | 웹: Vercel · 앱: Play Store 내부 테스트 |
@@ -61,8 +63,7 @@
 ## 아키텍처 원칙
 
 - **로그인 없음** — localStorage로 프로필 저장, Play Store "수집 데이터 없음" 신고 유지
-- **서버 없음** — CFP 생성·추천 엔진 모두 클라이언트 사이드, 서버는 TourAPI 프록시 1개뿐
-- **DB 없음** — 태깅 데이터는 정적 JSON 파일
+- **MongoDB** — 로우데이터 배치 적재 + 사용자 이벤트는 실시간 호출 (하이브리드)
 - **포그라운드만** — 백그라운드 위치·FCM 사용 안 함
 
 ## 지역 특화
@@ -82,13 +83,12 @@ npm run dev
 
 ## 팀
 
-| 이름 | 역할 |
-|---|---|
-| 유나 | 기획 · 행정 · 디자인 |
-| 소피 | 개발 |
-| 에린 | 개발 |
-
-개발 범위: 프론트엔드 · 추천 엔진 · API 연동 · 앱 빌드 · 배포
+| 이름 | 역할 | 비고 |
+|---|---|---|
+| 유나 | 기획 · 디자인 · 라벨링 | 피그마 완성, 태깅 시트 |
+| 소피 | 웹 화면 UI | 피그마 → 코드, 라우팅, 컴포넌트 |
+| 에린 | 추천 엔진 + 백엔드 + 검색 | DB 구조, API 연동, 엔진 로직 |
+| 태무 | 비즈니스 컨설턴트 | 도메인: 은행 · 서비스 방향 자문 |
 
 ## 데이터 출처
 
