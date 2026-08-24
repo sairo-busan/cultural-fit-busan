@@ -37,7 +37,7 @@ export type Place = {
   localDepth: number | null; // 1~5
   englishSupport: number | null; // 0~5
   spiceLevel: number | null; // 0~5, 0 = 음식점 아님
-  weatherType: "indoor" | "outdoor" | null;
+  weatherType: "indoor" | "outdoor" | "both" | null; // both = 실내외 겸용(예: 자갈치시장)
   bestTime: string | null;
   placeType: "식음형" | "시장형" | "해양야경형" | "문화역사형" | null;
   fitSolo: number | null; // 1~5
@@ -56,6 +56,7 @@ export type Place = {
  */
 export type RecommendedPlace = Place & {
   fitScore: number; // 0~100
-  reasons: string[]; // MATCH 상위 2개 축 근거 문장, 예: ["조용한 곳을 찾으신다면", "현지인이 가는 곳"]
+  reasons: string[]; // 문장형 근거, S20 등 상세 설명용. 예: ["조용한 곳을 찾으신다면", "현지인이 가는 곳"]
+  tags: string[]; // 짧은 라벨, S10 카드용. 예: ["활기", "바다"] (fitScore는 카드에서 별도 % 표기)
   distanceMin: number | null; // 도보 분, 위치 권한 없으면 null
 };
