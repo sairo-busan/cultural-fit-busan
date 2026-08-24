@@ -94,7 +94,7 @@ TourAPI를 서버에서 프록시하고, 부산 관광지·문화시설·축제�
 | 2 | 에러 — 화이트리스트 밖 op | `GET /api/tour?op=notARealOp` | 400 |
 | 3 | 정상 — MongoDB 연결 | `GET /api/health` | `{"mongodb":"ok"}` |
 | 4 | 회귀 — 빌드 (env 없음) | `.env.local` 제거 후 `npm run build` | 빌드 성공 (8/24 최초 버전은 여기서 실패했었음) |
-| 5 | 정상 — 초기 적재 | `node --env-file=.env.local --import tsx scripts/ingest-places.ts` | 부산 530건 `places`에 upsert, 축제 22건 전부 eventStartDate 존재 |
+| 5 | 정상 — 초기 적재 | `node --env-file=.env.local --import tsx scripts/ingest-places.ts` | 부산 8개 타입 전체 2,231건 `places`에 upsert(공식 수치와 일치), 축제 73건 전부 eventStartDate 존재 |
 
 ---
 
@@ -103,3 +103,9 @@ TourAPI를 서버에서 프록시하고, 부산 관광지·문화시설·축제�
 ### 2026-08-24: 구현 완료 + 빌드 버그 수정
 
 최초 버전은 `mongodb.ts`가 모듈 로드 시점에 `throw` 해서 Vercel 빌드가 env 미설정으로 실패(직접 main push 후 발견 → revert). lazy-init으로 수정 후 무-env 빌드 통과 확인. `docs/_internal/analysis/BE-FEAT-002_mongodb_tourapi_backend_report.md`에 상세 기록.
+
+### 2026-08-24: PR 리뷰 반영 + 지역 필터 버그 수정
+
+- 소피 리뷰 반영: production에서도 MongoDB 클라이언트 global 캐싱(Atlas M0 연결 제한 대비), 프록시 화이트리스트를 실사용 오퍼레이션만으로 축소, `_id` 캐스팅 주석 추가
+- **지역 필터 버그**: `areaCode=6`(공식 문서에 없는 파라미터, 조용히 좁은 결과 반환)를 `lDongRegnCd=26`(공식 파라미터)으로 수정 — 팀원 제보로 발견. 재적재 결과 부산 전체 2,231건으로 공식 수치와 일치 확인(기존 530건은 최대 19배 누락 상태였음)
+- 콘텐츠타입 하드코딩(4종) 제거 — `contentTypeId` 생략 시 전체 타입 한 번에 수집하도록 변경, 8개 타입 전부 적재(약 3MB, 용량 부담 없음 확인)

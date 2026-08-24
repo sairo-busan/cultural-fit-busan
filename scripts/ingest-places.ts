@@ -1,16 +1,22 @@
 /**
  * 부산 장소 초기 구축 스크립트.
- * areaBasedList2로 목록 수집 → 장소별 detailCommon2/detailIntro2/detailImage2/detailInfo2 병합 → places 컬렉션에 upsert.
+ * areaBasedList2(lDongRegnCd=법정동 시도코드 기준, contentTypeId 미지정 = 전체 타입)로 목록 수집
+ * → 장소별 detailCommon2/detailIntro2/detailImage2/detailInfo2 병합 → places 컬렉션에 upsert.
+ * 타입 목록을 하드코딩하지 않아 TourAPI에 새 콘텐츠타입이 추가돼도 코드 변경 없이 자동 반영됨.
  *
  * 실행: node --env-file=.env.local --import tsx scripts/ingest-places.ts [contentTypeId]
- * (contentTypeId 생략 시 12,14,15,39 전부 순회. INGEST_LIMIT=n 환경변수로 소량 테스트 가능)
+ * (contentTypeId 생략 시 부산 전체 타입 한 번에. 특정 타입만 테스트하려면 예: `... ts 12`.
+ *  INGEST_LIMIT=n 환경변수로 소량 테스트 가능)
+ *
+ * 주의: areaBasedList2/searchFestival2의 공식 지역 필터는 `lDongRegnCd`(법정동 시도코드)이지,
+ * 구버전 `areaCode`가 아님(8/24 팀원 제보로 발견 — areaCode=6은 문서에도 없는 파라미터인데
+ * 조용히 더 좁은 결과를 반환해서 부산 데이터가 최대 19배까지 누락되고 있었음).
  */
 
 import { MongoClient } from "mongodb";
+import { BUSAN_REGION_CODE } from "../src/lib/tourApiCodes";
 
 const TOUR_API_BASE = "https://apis.data.go.kr/B551011/KorService2";
-const BUSAN_AREA_CODE = "6"; // areaBasedList2 요청용 지역코드(구 체계). 실제 호출로 부산 확인됨
-const DEFAULT_CONTENT_TYPE_IDS = ["12", "14", "15", "39"]; // 관광지/문화시설/축제행사/음식점
 
 const serviceKey = process.env.TOUR_API_KEY;
 const mongoUri = process.env.MONGODB_URI;
@@ -36,14 +42,18 @@ async function callTourApi(op: string, params: Record<string, string>) {
 
 type TourItem = Record<string, string>;
 
-async function fetchAreaList(contentTypeId: string): Promise<TourItem[]> {
+/**
+ * contentTypeId를 생략하면 부산 전체 타입을 한 번에 가져온다.
+ * 타입 목록을 하드코딩하지 않으므로 TourAPI에 새 타입이 추가돼도 코드 변경 없이 자동 반영됨.
+ */
+async function fetchAreaList(contentTypeId?: string): Promise<TourItem[]> {
   const items: TourItem[] = [];
   let pageNo = 1;
   const numOfRows = 100;
   while (true) {
     const body = await callTourApi("areaBasedList2", {
-      areaCode: BUSAN_AREA_CODE,
-      contentTypeId,
+      lDongRegnCd: BUSAN_REGION_CODE,
+      ...(contentTypeId ? { contentTypeId } : {}),
       numOfRows: String(numOfRows),
       pageNo: String(pageNo),
     });
@@ -86,7 +96,7 @@ async function fetchFestivalDates(): Promise<Map<string, { eventStartDate: strin
   const numOfRows = 100;
   while (true) {
     const body = await callTourApi("searchFestival2", {
-      areaCode: BUSAN_AREA_CODE,
+      lDongRegnCd: BUSAN_REGION_CODE,
       eventStartDate: "20250101", // 과거~미래 전체 범위를 잡기 위한 넉넉한 시작일
       numOfRows: String(numOfRows),
       pageNo: String(pageNo),
@@ -105,56 +115,57 @@ async function fetchFestivalDates(): Promise<Map<string, { eventStartDate: strin
 }
 
 async function main() {
-  const targetTypes = process.argv[2] ? [process.argv[2]] : DEFAULT_CONTENT_TYPE_IDS;
+  // CLI 인자로 특정 타입만 테스트 가능(예: `... ts 12`), 생략 시 부산 전체 타입 한 번에
+  const filterType = process.argv[2];
   const client = new MongoClient(mongoUri!);
   await client.connect();
   const places = client.db("cultural_fit_busan").collection("places");
 
   const limit = process.env.INGEST_LIMIT ? parseInt(process.env.INGEST_LIMIT, 10) : undefined;
-  const festivalDates = targetTypes.includes("15") ? await fetchFestivalDates() : null;
+  const festivalDates = !filterType || filterType === "15" ? await fetchFestivalDates() : null;
+
+  const fullList = await fetchAreaList(filterType);
+  const list = limit ? fullList.slice(0, limit) : fullList;
+  console.log(`목록 ${fullList.length}건 수집${limit ? ` (테스트: ${list.length}건만 처리)` : ""}`);
 
   let total = 0;
-  for (const contentTypeId of targetTypes) {
-    const fullList = await fetchAreaList(contentTypeId);
-    const list = limit ? fullList.slice(0, limit) : fullList;
-    console.log(`[${contentTypeId}] 목록 ${fullList.length}건 수집${limit ? ` (테스트: ${list.length}건만 처리)` : ""}`);
+  for (const item of list) {
+    const contentTypeId = item.contenttypeid;
+    const detail = await fetchDetail(item.contentid, contentTypeId);
+    const dates = festivalDates?.get(item.contentid);
 
-    for (const item of list) {
-      const detail = await fetchDetail(item.contentid, contentTypeId);
-      const dates = festivalDates?.get(item.contentid);
-
-      await places.updateOne(
-        { _id: item.contentid as unknown as never },
-        {
-          $set: {
-            contentTypeId,
-            title: item.title,
-            addr1: item.addr1,
-            addr2: item.addr2,
-            areaCode: item.areacode,
-            sigunguCode: item.sigungucode,
-            mapX: parseFloat(item.mapx),
-            mapY: parseFloat(item.mapy),
-            firstImage: item.firstimage || null,
-            firstImage2: item.firstimage2 || null,
-            cpyrhtDivCd: item.cpyrhtDivCd || null,
-            tel: item.tel || null,
-            lDongRegnCd: item.lDongRegnCd,
-            lDongSignguCd: item.lDongSignguCd,
-            lclsSystm1: item.lclsSystm1,
-            lclsSystm2: item.lclsSystm2,
-            lclsSystm3: item.lclsSystm3,
-            modifiedTime: item.modifiedtime,
-            ...detail,
-            ...(dates ?? {}),
-            syncedAt: new Date(),
-          },
+    await places.updateOne(
+      // TourAPI contentId를 그대로 _id(PK)로 사용 — mongodb 타입 정의가 string _id를 기본으로 안 받아줘서 캐스팅
+      { _id: item.contentid as unknown as never },
+      {
+        $set: {
+          contentTypeId,
+          title: item.title,
+          addr1: item.addr1,
+          addr2: item.addr2,
+          areaCode: item.areacode,
+          sigunguCode: item.sigungucode,
+          mapX: parseFloat(item.mapx),
+          mapY: parseFloat(item.mapy),
+          firstImage: item.firstimage || null,
+          firstImage2: item.firstimage2 || null,
+          cpyrhtDivCd: item.cpyrhtDivCd || null,
+          tel: item.tel || null,
+          lDongRegnCd: item.lDongRegnCd,
+          lDongSignguCd: item.lDongSignguCd,
+          lclsSystm1: item.lclsSystm1,
+          lclsSystm2: item.lclsSystm2,
+          lclsSystm3: item.lclsSystm3,
+          modifiedTime: item.modifiedtime,
+          ...detail,
+          ...(dates ?? {}),
+          syncedAt: new Date(),
         },
-        { upsert: true }
-      );
-      total += 1;
-      process.stdout.write(`\r  적재 중... ${total}건`);
-    }
+      },
+      { upsert: true }
+    );
+    total += 1;
+    process.stdout.write(`\r  적재 중... ${total}건`);
   }
 
   console.log(`\n완료: 총 ${total}건 upsert`);

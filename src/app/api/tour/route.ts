@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 const TOUR_API_BASE = "https://apis.data.go.kr/B551011/KorService2";
 
+// 실제 사용 중이거나 근시일 내 쓸 예정인 오퍼레이션만 (docs/TourAPI_오퍼레이션_정리.md 참고)
+// detailPetTour2·searchStay2(보류)·locationBasedList2(아키텍처상 미사용)·ldongCode2/lclsSystmCode2(정적 상수로 대체, src/lib/tourApiCodes.ts)는 제외
 const ALLOWED_OPERATIONS = [
   "areaBasedList2",
   "areaBasedSyncList2",
@@ -9,13 +11,8 @@ const ALLOWED_OPERATIONS = [
   "detailCommon2",
   "detailInfo2",
   "detailImage2",
-  "detailPetTour2",
   "searchFestival2",
   "searchKeyword2",
-  "searchStay2",
-  "locationBasedList2",
-  "ldongCode2",
-  "lclsSystmCode2",
 ] as const;
 
 type TourOperation = (typeof ALLOWED_OPERATIONS)[number];

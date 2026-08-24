@@ -8,16 +8,16 @@
 
 | # | 오퍼레이션명(영문) | 국문명 | 필수 파라미터 | 사용 여부 | 용도 |
 |---|---|---|---|---|---|
-| 1 | `areaBasedList2` | 지역기반 관광정보 조회 | areaCode 등(좌표 불필요) | ✅ 사용 | 장소 목록 초기 수집 |
+| 1 | `areaBasedList2` | 지역기반 관광정보 조회 | `lDongRegnCd`(좌표 불필요) | ✅ 사용 | 장소 목록 초기 수집 |
 | 2 | `locationBasedList2` | 위치기반 관광정보 조회 | mapX/mapY/radius 필수 | ❌ 미사용 | 좌표를 서버로 보내지 않는 아키텍처와 안 맞음 |
 | 3 | `searchKeyword2` | 키워드 검색 조회 | keyword | ✅ **사용 확정 (신규)** | 검색 기능(S11) — Mongo 텍스트 인덱스 대신 이걸로 대체 가능 |
 | 4 | `searchFestival2` | 행사정보 조회 | eventStartDate | ✅ 사용 | 축제/행사 정보 |
-| 5 | `searchStay2` | 숙박정보 조회 | - | ❌ 보류 | 숙박 콘텐츠타입(32) 다룰지 미정, 다루면 필요 |
+| 5 | `searchStay2` | 숙박정보 조회 | - | ❌ 보류 | 숙박(32)은 `areaBasedList2`로 이미 적재 중이라 이 오퍼레이션 자체는 여전히 불필요 |
 | 6 | `detailCommon2` | 공통정보 조회(상세1) | contentId | ✅ 사용 | 장소 개요·주소·홈페이지 |
 | 7 | `detailIntro2` | 소개정보 조회(상세2) | contentId, contentTypeId | ✅ 사용 | 운영시간·주차 등 (contentTypeId별로 필드 다름) |
 | 8 | `detailInfo2` | 반복정보 조회(상세3) | contentId, contentTypeId | ✅ **사용 확정 (신규)** | 입장료·이용안내 등 반복 항목 (숙박=객실정보, 여행코스=코스정보) |
 | 9 | `detailImage2` | 이미지정보 조회(상세4) | contentId | ✅ **사용 확정 (신규)** | S20 상세화면 이미지 여러 장 (firstimage 1장만으로 부족했음) |
-| 10 | `areaBasedSyncList2` | 국문 관광정보 동기화 목록 조회 | areaCode 등 | ✅ 사용 | 배치 동기화, `showflag`로 삭제/비노출 감지 |
+| 10 | `areaBasedSyncList2` | 국문 관광정보 동기화 목록 조회 | `lDongRegnCd` | ✅ 사용 | 배치 동기화, `showflag`로 삭제/비노출 감지 |
 | 11 | `detailPetTour2` | 반려동물 동반여행 정보 조회 | contentId | ❌ 미사용 | 서비스 범위 밖으로 판단 |
 | 12 | `ldongCode2` | 법정동 코드 조회 | (없음, 전체조회 가능) | ✅ **사용 확정 (신규)** | `lDongRegnCd`/`lDongSignguCd` 코드→지역명 매핑 |
 | 13 | `lclsSystmCode2` | 분류체계 코드 조회 | (없음, 전체조회 가능) | ⏸ 보류 | `lclsSystm1~3` 코드→분류명 매핑, 화면에 카테고리명 노출할 때 필요 |
@@ -25,6 +25,12 @@
 **주의**: 예전에 있던 `areaCode2`(지역코드조회)·`categoryCode2`(서비스분류코드조회)는 v4.4(2026-02-10) changelog에서 "오퍼레이션 삭제"로 명시됨. `2026 OpenAPI 설명회 자료.pdf`엔 아직 "26년 폐기예정"으로 표시돼있어 실제 완전 제거 시점은 불명확 — **위 표의 12·13번(`ldongCode2`/`lclsSystmCode2`)이 그 대체 오퍼레이션이니 새 걸로만 쓰면 됨**, 옛 이름은 안 씀.
 
 참고: `contentTypeId` 코드는 API 호출 없이 매뉴얼에 고정으로 나와있음 — 12 관광지 / 14 문화시설 / 15 축제공연행사 / 25 여행코스 / 28 레포츠 / 32 숙박 / 38 쇼핑 / 39 음식점.
+
+## ⚠️ 지역 필터 파라미터 정정 (8/24)
+
+`areaBasedList2`/`areaBasedSyncList2`/`searchFestival2`의 **공식 지역 필터는 `lDongRegnCd`(법정동 시도코드, 부산=26)이지 `areaCode`가 아님.** `areaCode`는 이 표에도 처음부터 없었는데, 이전 세션 리서치 노트를 그대로 믿고 8/21~8/24 초반까지 `areaCode=6`으로 적재했었음 — 문서에 없는 파라미터인데도 조용히 동작해서(에러 없음) 못 알아챘고, 그 결과 실제보다 최대 19배 적은 데이터만 적재됨(쇼핑: 52건 vs 실제 980건). 팀원 제보로 발견, `lDongRegnCd=26`으로 재적재 완료(부산 전체 2,231건 — 공식 수치와 정확히 일치 확인).
+
+**콘텐츠타입도 하드코딩 안 함**: 처음엔 4개 타입만 골라서 적재했는데, `contentTypeId` 없이 호출하면 전체 타입이 한 번에 나오는 걸 확인해서 필터 자체를 제거함 — 나중에 TourAPI에 새 타입이 추가돼도 코드 수정 없이 자동 반영됨(`scripts/ingest-places.ts` 참고). 데이터 용량도 8개 타입 전부 합쳐 3MB 수준이라 부담 없음.
 
 ---
 

@@ -13,16 +13,16 @@ function connect(): Promise<MongoClient> {
   return new MongoClient(uri).connect();
 }
 
-/** 실제 연결은 호출 시점(런타임)에만 시도한다 — 빌드 시 env 미설정으로 죽지 않도록 */
+/**
+ * 실제 연결은 호출 시점(런타임)에만 시도한다 — 빌드 시 env 미설정으로 죽지 않도록.
+ * dev(HMR 재연결 방지)뿐 아니라 production(Vercel 서버리스 warm 컨테이너 재사용,
+ * Atlas M0 동시 연결 제한 500개 고려)에서도 global 캐싱한다.
+ */
 function getClientPromise(): Promise<MongoClient> {
-  if (process.env.NODE_ENV === "development") {
-    // dev 모드 HMR 시 커넥션이 계속 새로 생기는 것을 막기 위해 global에 캐싱
-    if (!global._mongoClientPromise) {
-      global._mongoClientPromise = connect();
-    }
-    return global._mongoClientPromise;
+  if (!global._mongoClientPromise) {
+    global._mongoClientPromise = connect();
   }
-  return connect();
+  return global._mongoClientPromise;
 }
 
 export async function getDb() {
