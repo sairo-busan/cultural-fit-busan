@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans_KR, Cormorant_Garamond } from "next/font/google";
+import { Providers } from "@/providers/Providers";
 import "./globals.css";
 
 const notoSansKr = Noto_Sans_KR({
@@ -37,7 +38,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${notoSansKr.variable} ${cormorantGaramond.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans font-light">
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
