@@ -44,21 +44,18 @@ const SHEET_PAGES = [
     description: "해당하는 곳은 추천에서 아예 빼드립니다. 없으면 건너뛰셔도 됩니다.",
     groupTitle: "못 먹는 것",
     badge: "복수 선택",
-    groupDescription: "해당하는 메뉴가 주력인 곳은 목록에서 빠집니다",
   },
   {
     title: "못 드시는 게 있으면\n알려주세요",
     description: "해당하는 곳은 추천에서 아예 빼드립니다.",
     groupTitle: "비건 여부",
     badge: "하나만",
-    groupDescription: "채식 옵션이 없는 곳은 빠집니다",
   },
   {
     title: "어디서 드실래요",
     description: "좌판·포장마차를 포함할지 정합니다.",
     groupTitle: "식사 장소",
     badge: "하나만",
-    groupDescription: "좌판·포장마차를 포함할지 정합니다",
   },
 ] as const;
 
@@ -87,7 +84,7 @@ export function OnboardingPage() {
     if (currentStep > TOTAL_STEPS && allAnswered) {
       show("이미 모두 작성했어요. 수정하거나 결과를 확인하세요.");
     } else if (currentStep > 1) {
-      show("이전에 작성한 응답이 있어요. 이어서 진행합��다.");
+      show("이전에 작성한 응답이 있어요. 이어서 진행합니다.");
     }
   }, [currentStep, answers, show]);
 
@@ -160,7 +157,11 @@ export function OnboardingPage() {
         setSlideDirection(null);
       }, 250);
     } else {
-      handleComplete();
+      // 완료 → 값 유지하면서 step 6으로 복귀
+      setSheetClosing(true);
+      setTimeout(() => {
+        setCurrentStep(TOTAL_STEPS);
+      }, 300);
     }
   };
 
@@ -249,6 +250,25 @@ export function OnboardingPage() {
               {quizStep.options.map((option, index) => {
                 const isSelected = selectedValue === option.value;
                 const isDismissing = transitioning !== null && !isSelected;
+                const showTags = isSelected && currentStep === TOTAL_STEPS && !transitioning;
+
+                // 선택된 카드에 표시할 태그 생성
+                const tags: string[] = [];
+                if (showTags) {
+                  hardFilter.cannotEat.forEach((val) => {
+                    const found = HARD_FILTER_CANNOT_EAT.find((opt) => opt.value === val);
+                    if (found) tags.push(found.label);
+                  });
+                  if (hardFilter.veganStatus) {
+                    const found = HARD_FILTER_VEGAN.find((opt) => opt.value === hardFilter.veganStatus);
+                    if (found) tags.push(found.label);
+                  }
+                  if (hardFilter.diningPreference) {
+                    const found = HARD_FILTER_DINING.find((opt) => opt.value === hardFilter.diningPreference);
+                    if (found) tags.push(found.label);
+                  }
+                }
+
                 return (
                   <div
                     key={option.value}
@@ -268,14 +288,41 @@ export function OnboardingPage() {
                       description={option.description}
                       selected={isSelected}
                       onClick={() => handleSelectAnswer(option.value)}
-                    />
+                    >
+                      {showTags && (
+                        <div
+                          className="flex flex-wrap items-center gap-[6px] pt-[4px]"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setCurrentStep(TOTAL_STEPS + 1);
+                          }}
+                        >
+                          {tags.length > 0 ? (
+                            <>
+                              {tags.map((tag) => (
+                                <span
+                                  key={tag}
+                                  className="rounded-full bg-[#f0f1f3] px-[10px] py-[4px] text-[11px] font-light text-muted"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                              <span className="ml-auto text-[11px] font-light text-muted">수정</span>
+                            </>
+                          ) : (
+                            <span className="rounded-full bg-[#f0f1f3] px-[10px] py-[4px] text-[11px] font-light text-muted">
+                              음식 추가 설정
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </QuizOption>
                   </div>
                 );
               })}
             </div>
           </>
         )}
-
         {/* 바텀시트 뒤에 보이는 step 6 콘텐츠 (비활성) */}
         {isHardFilterStep && (
           <div className="pointer-events-none opacity-40">
@@ -297,6 +344,20 @@ export function OnboardingPage() {
         )}
       </div>
 
+      {/* Step 6 완료 버튼 + 바텀시트 재진입 — 바텀시트 닫고 돌아왔을 때 */}
+      {quizStep && currentStep === TOTAL_STEPS && selectedValue && !transitioning && (
+        <div className="px-[20px] pt-[12px] pb-[32px]">
+          <button
+            type="button"
+            onClick={handleComplete}
+            className="flex h-[54px] w-full items-center justify-center rounded-[12px] bg-foreground text-[13px] font-light text-white transition-all active:scale-[0.98]"
+            style={{ letterSpacing: "1.3px" }}
+          >
+            완료
+          </button>
+        </div>
+      )}
+
       {/* ── 바텀시트 오버레이 (step 7 캐러셀) ── */}
       {isHardFilterStep && (
         <>
@@ -314,7 +375,7 @@ export function OnboardingPage() {
               sheetClosing ? "" : "animate-sheet-up"
             }`}
             style={{
-              top: `${SHEET_TOP}px`,
+              maxHeight: `calc(100% - ${SHEET_TOP}px)`,
               transform: sheetClosing
                 ? "translateY(100%)"
                 : `translateY(${dragOffset}px)`,
@@ -341,7 +402,9 @@ export function OnboardingPage() {
                 className={`h-full overflow-y-auto transition-all duration-250 ${
                   slideDirection === "left"
                     ? "translate-x-[-100%] opacity-0"
-                    : ""
+                    : slideDirection === "right"
+                      ? "translate-x-[100%] opacity-0"
+                      : ""
                 }`}
                 key={sheetPage}
               >
@@ -351,7 +414,7 @@ export function OnboardingPage() {
                     className="w-fit rounded-full bg-[#f0f1f3] px-[12px] py-[5px] text-[9.5px] font-normal uppercase text-muted"
                     style={{ letterSpacing: "2.47px" }}
                   >
-                    음식 · 추가 정보
+                    음식 · 추가 정보 {sheetPage + 1}/3
                   </span>
                   <h2
                     className="whitespace-pre-line text-[29px] font-thin text-foreground"
@@ -381,12 +444,6 @@ export function OnboardingPage() {
                         {currentSheetPage.badge}
                       </span>
                     </div>
-                    <p
-                      className="text-[11.5px] font-light text-muted"
-                      style={{ lineHeight: 1.75 }}
-                    >
-                      {currentSheetPage.groupDescription}
-                    </p>
                   </div>
 
                   {/* Page 0: 못 먹는 것 */}
@@ -456,27 +513,15 @@ export function OnboardingPage() {
               </div>
             </div>
 
-            {/* 하단 버튼 + 건너뛰기 */}
-            <div className="flex flex-col items-center gap-[12px] px-[20px] pt-[12px] pb-[16px] shadow-[0_-1px_8px_rgba(0,0,0,0.04)]">
+            {/* 하단 다음 버튼 */}
+            <div className="px-[20px] pt-[12px] pb-[32px]">
               <button
                 type="button"
                 onClick={handleSheetNext}
-                disabled={!currentPageHasSelection}
-                className={`flex h-[54px] w-full items-center justify-center rounded-[12px] text-[13px] font-light transition-all active:scale-[0.98] ${
-                  currentPageHasSelection
-                    ? "bg-foreground text-white"
-                    : "bg-[#f0f1f3] text-muted"
-                }`}
+                className="flex h-[54px] w-full items-center justify-center rounded-[12px] bg-foreground text-[13px] font-light text-white transition-all active:scale-[0.98]"
                 style={{ letterSpacing: "1.3px" }}
               >
                 {sheetPage === 2 ? "완료" : "다음"}
-              </button>
-              <button
-                type="button"
-                onClick={handleComplete}
-                className="text-[12px] font-light text-muted transition-colors active:text-foreground"
-              >
-                건너뛰기
               </button>
             </div>
           </div>

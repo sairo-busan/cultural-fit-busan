@@ -3,9 +3,10 @@ type QuizOptionProps = {
   description: string;
   selected: boolean;
   onClick: () => void;
+  children?: React.ReactNode;
 };
 
-export function QuizOption({ label, description, selected, onClick }: QuizOptionProps) {
+export function QuizOption({ label, description, selected, onClick, children }: QuizOptionProps) {
   return (
     <button
       type="button"
@@ -29,6 +30,7 @@ export function QuizOption({ label, description, selected, onClick }: QuizOption
           {description}
         </p>
       )}
+      {children}
     </button>
   );
 }
