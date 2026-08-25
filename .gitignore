@@ -32,9 +32,14 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
+
+# AI 개발 운영킷 — 개인 운영 문서 (팀 공유 docs/tickets/는 제외하고 gitignore)
+docs/_internal/
+.claude/
 
 # typescript
 *.tsbuildinfo
