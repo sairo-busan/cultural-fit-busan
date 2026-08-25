@@ -114,4 +114,9 @@
 
 ## Implementation Notes
 
-(구현 완료 후 작성)
+### 2026-08-25: 구현 완료
+
+- `src/lib/recommend.ts`, `src/app/api/recommend/route.ts` 신규
+- 검증: 정상(해운대 좌표 → 거리순 3건), 에러(좌표 누락 → 400), contentTypeId 필터(39만 반환) 전부 통과
+- `npm run build` 통과 확인 (`/api/recommend` 라우트 정상 인식)
+- `placeTags` 없는 장소는 `EMPTY_TAGS`(coverage:0, 나머지 null)로 채워짐 — 타입 계약 유지 확인
