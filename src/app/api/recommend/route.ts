@@ -15,8 +15,16 @@ export async function GET(request: NextRequest) {
 
   const contentTypeId = searchParams.get("contentTypeId") ?? undefined;
   const limitParam = searchParams.get("limit");
-  const limit = limitParam ? parseInt(limitParam, 10) : undefined;
+  const parsedLimit = limitParam ? parseInt(limitParam, 10) : undefined;
+  const limit = parsedLimit !== undefined && Number.isNaN(parsedLimit) ? undefined : parsedLimit;
 
-  const results = await getRecommendations({ lat, lng, contentTypeId, limit });
-  return NextResponse.json(results);
+  try {
+    const results = await getRecommendations({ lat, lng, contentTypeId, limit });
+    return NextResponse.json(results);
+  } catch (error) {
+    return NextResponse.json(
+      { error: "추천 조회 실패", detail: (error as Error).message },
+      { status: 500 }
+    );
+  }
 }
