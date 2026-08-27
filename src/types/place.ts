@@ -48,6 +48,15 @@ export type Place = {
   whyKo: string | null;
   whyEn: string | null;
   coverage: number; // 0~100. 70+ 정상노출 / 40~69 하향노출 / 40미만 Hard Filter 제외
+
+  // === APP S20 전용 (목데이터 확장, 에린 API 확정 후 구조 조정 예정) ===
+  titleEn?: string | null;
+  howToUse?: string[] | null; // 이용 방법 3단계
+  reviewGood?: string | null;
+  reviewBad?: string | null;
+  reviewTip?: string | null;
+  parking?: string | null;
+  alternativeIds?: string[]; // 대안 장소 contentId 목록
 };
 
 /**
@@ -57,6 +66,6 @@ export type Place = {
 export type RecommendedPlace = Place & {
   fitScore: number; // 0~100
   reasons: string[]; // 문장형 근거, S20 등 상세 설명용. 예: ["조용한 곳을 찾으신다면", "현지인이 가는 곳"]
-  tags: string[]; // 짧은 라벨, S10 카드용. 예: ["활기", "바다"] (fitScore는 카드에서 별도 % 표기)
+  tags: string[]; // 짧은 라벨, S10 카드용. 예: ["활기", "바다"]
   distanceMin: number | null; // 도보 분, 위치 권한 없으면 null
 };
