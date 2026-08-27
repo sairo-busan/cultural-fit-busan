@@ -119,6 +119,15 @@ body {
 .animate-reveal-d5 { animation-delay: 540ms; }
 .animate-reveal-d6 { animation-delay: 660ms; }
 
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.75); }
+}
+
+.animate-live-pulse {
+  animation: live-pulse 2s ease-in-out infinite;
+}
+
 @layer components {
   .typo-title {
     font-size: 30px;

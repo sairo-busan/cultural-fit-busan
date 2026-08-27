@@ -1,18 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronLeft, X } from "lucide-react";
+import { ChevronLeft, Menu, X } from "lucide-react";
 
 type AppHeaderProps = {
   onBack?: () => void;
   onClose?: () => void;
+  onMenu?: () => void;
   logo?: boolean;
   right?: React.ReactNode;
 };
 
-export function AppHeader({ onBack, onClose, logo, right }: AppHeaderProps) {
+export function AppHeader({ onBack, onClose, onMenu, logo, right }: AppHeaderProps) {
   return (
-    <div className="flex items-center justify-between px-[20px] py-[16px]">
+    <div className="flex items-center justify-between px-[20px] pt-[56px] pb-[12px]">
       <div className="flex items-center">
         {onBack && (
           <button
@@ -44,7 +45,19 @@ export function AppHeader({ onBack, onClose, logo, right }: AppHeaderProps) {
           </Link>
         )}
       </div>
-      {right && <div className="flex items-center gap-[16px]">{right}</div>}
+      <div className="flex items-center gap-[16px]">
+        {right}
+        {onMenu && (
+          <button
+            type="button"
+            onClick={onMenu}
+            className="flex size-[32px] items-center justify-center transition-all active:scale-[0.95]"
+            aria-label="메뉴"
+          >
+            <Menu size={20} strokeWidth={1.5} />
+          </button>
+        )}
+      </div>
     </div>
   );
 }
