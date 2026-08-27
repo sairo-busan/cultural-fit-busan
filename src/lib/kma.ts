@@ -47,25 +47,37 @@ function pad2(n: number): string {
   return n.toString().padStart(2, "0");
 }
 
-function formatBaseDate(d: Date): string {
-  return `${d.getFullYear()}${pad2(d.getMonth() + 1)}${pad2(d.getDate())}`;
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+
+/**
+ * 서버 프로세스의 로컬 타임존에 의존하지 않고 KST(UTC+9) 벽시계 시각을 얻는다.
+ * (로컬 개발 환경은 보통 Asia/Seoul이라 문제가 안 보이지만, Vercel 서버리스 함수는
+ * 기본 타임존이 UTC라서 getHours() 등 로컬 게터를 그대로 쓰면 9시간 어긋난다.
+ * UTC 기준 시각에 9시간을 더한 뒤 UTC 게터로 읽어서 우회한다.)
+ */
+function toKstShifted(now: Date): Date {
+  return new Date(now.getTime() + KST_OFFSET_MS);
+}
+
+function formatBaseDate(kst: Date): string {
+  return `${kst.getUTCFullYear()}${pad2(kst.getUTCMonth() + 1)}${pad2(kst.getUTCDate())}`;
 }
 
 /** 초단기실황(getUltraSrtNcst): 매시 정각 발표, 10분 이후 호출 가능 */
 export function getUltraSrtNcstBaseTime(now: Date): { base_date: string; base_time: string } {
-  const t = new Date(now);
-  if (t.getMinutes() < 10) {
-    t.setHours(t.getHours() - 1);
+  const kst = toKstShifted(now);
+  if (kst.getUTCMinutes() < 10) {
+    kst.setUTCHours(kst.getUTCHours() - 1);
   }
-  t.setMinutes(0, 0, 0);
-  return { base_date: formatBaseDate(t), base_time: `${pad2(t.getHours())}00` };
+  kst.setUTCMinutes(0, 0, 0);
+  return { base_date: formatBaseDate(kst), base_time: `${pad2(kst.getUTCHours())}00` };
 }
 
 /** 단기예보(getVilageFcst): 02/05/08/11/14/17/20/23시 발표, 10분 이후 호출 가능 */
 export function getVilageFcstBaseTime(now: Date): { base_date: string; base_time: string } {
   const slots = [2, 5, 8, 11, 14, 17, 20, 23];
-  const t = new Date(now);
-  const currentMinuteOfDay = t.getHours() * 60 + t.getMinutes();
+  const kst = toKstShifted(now);
+  const currentMinuteOfDay = kst.getUTCHours() * 60 + kst.getUTCMinutes();
 
   let chosenHour: number | null = null;
   for (let i = slots.length - 1; i >= 0; i--) {
@@ -77,9 +89,9 @@ export function getVilageFcstBaseTime(now: Date): { base_date: string; base_time
   }
   if (chosenHour === null) {
     // 자정~02:10 사이 → 전날 23시 발표분
-    t.setDate(t.getDate() - 1);
+    kst.setUTCDate(kst.getUTCDate() - 1);
     chosenHour = 23;
   }
-  t.setHours(chosenHour, 0, 0, 0);
-  return { base_date: formatBaseDate(t), base_time: `${pad2(chosenHour)}00` };
+  kst.setUTCHours(chosenHour, 0, 0, 0);
+  return { base_date: formatBaseDate(kst), base_time: `${pad2(chosenHour)}00` };
 }
