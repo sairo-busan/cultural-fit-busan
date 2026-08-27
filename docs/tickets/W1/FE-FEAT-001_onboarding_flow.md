@@ -12,7 +12,7 @@
 | Type | FEAT |
 | Severity | Critical |
 | Layer | Page / Component / Hook / Type |
-| Status | In Progress |
+| Status | Done |
 | Screen | S00, S01-1~7, S02 |
 | Depends | - |
 | Related | - |
