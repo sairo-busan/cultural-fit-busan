@@ -33,7 +33,7 @@ export default function FeedPage() {
     <div className="flex min-h-full flex-col pb-20">
       <AppHeader
         logo
-        onMenu={() => {/* S05 전체 메뉴 — W2 구현 예정 */}}
+        onMenu={() => {/* S50 전체 메뉴 (구 S05) — W2 구현 예정 */}}
       />
 
       <LiveStatusBar weather="맑음" temperature={27} location="해운대" />
