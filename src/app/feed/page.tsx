@@ -6,7 +6,8 @@ import { BottomTabBar } from "@/components/common/BottomTabBar";
 import { LiveStatusBar } from "@/components/feed/LiveStatusBar";
 import { PlaceCard } from "@/components/feed/PlaceCard";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { buildCfpProfile } from "@/lib/cfp";
+import { buildCf8Profile } from "@/lib/cfp";
+import { STORAGE_KEYS } from "@/lib/storage";
 import { DEFAULT_QUIZ_ANSWERS, DEFAULT_HARD_FILTER } from "@/data/quiz";
 import { MOCK_RECOMMENDED } from "@/data/mock-places";
 
@@ -19,14 +20,17 @@ const CATEGORY_CHIPS = [
 ];
 
 export default function FeedPage() {
-  const [answers] = useLocalStorage("cfb-quiz-answers", DEFAULT_QUIZ_ANSWERS);
-  const [hardFilter] = useLocalStorage("cfb-hard-filter", DEFAULT_HARD_FILTER);
+  const [answers] = useLocalStorage(STORAGE_KEYS.answers, DEFAULT_QUIZ_ANSWERS);
+  const [hardFilter] = useLocalStorage(
+    STORAGE_KEYS.hardFilter,
+    DEFAULT_HARD_FILTER,
+  );
   const [mounted, setMounted] = useState(false);
   const [activeChip, setActiveChip] = useState(0);
 
   useEffect(() => { setMounted(true); }, []);
 
-  const profile = buildCfpProfile(answers, hardFilter);
+  const profile = buildCf8Profile(answers, hardFilter);
   const hasProfile = mounted && profile !== null;
 
   return (
@@ -78,11 +82,11 @@ export default function FeedPage() {
         ))}
       </section>
 
-      {/* CFP 뱃지 (프로필 있을 때) */}
+      {/* CF8 유형 뱃지 (프로필 있을 때) — 코드·점수는 노출하지 않는다 */}
       {hasProfile && (
         <div className="mt-[32px] flex justify-center">
           <span className="rounded-full border border-accent px-[12px] py-[6px] text-[11px] font-light text-accent">
-            {profile.typeCode} · {profile.nameKo}
+            {profile.nameKo}
           </span>
         </div>
       )}

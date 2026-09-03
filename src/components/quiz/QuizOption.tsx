@@ -1,35 +1,46 @@
+/**
+ * S01 선택지 카드.
+ * 디자인 시스템 v1 — Title 2(15px Medium) · 리스트 카드 안쪽 20px ·
+ * 행 최소 높이 64px · 모서리 12px · 선택 표시는 잉크 농도로만.
+ */
+
 type QuizOptionProps = {
   label: string;
-  description: string;
+  description?: string;
   selected: boolean;
   onClick: () => void;
   children?: React.ReactNode;
 };
 
-export function QuizOption({ label, description, selected, onClick, children }: QuizOptionProps) {
+export function QuizOption({
+  label,
+  description,
+  selected,
+  onClick,
+  children,
+}: QuizOptionProps) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`flex w-full flex-col gap-[10px] rounded-[12px] px-[22px] py-[24px] text-left transition-all duration-200 active:scale-[0.98] ${
+      aria-pressed={selected}
+      className={`flex min-h-[64px] w-full flex-col gap-[8px] rounded-[12px] px-[20px] py-[16px] text-left transition-all duration-200 active:scale-[0.98] ${
         selected
-          ? "border border-[#35363a]"
-          : "border border-border"
+          ? "border border-ink bg-ds-surface"
+          : "border border-gray-200 bg-transparent"
       }`}
     >
       <div className="flex w-full items-center gap-[12px]">
-        <span className="flex-1 text-[17px] font-normal text-foreground" style={{ letterSpacing: "-0.51px" }}>
-          {label}
+        <span className="ds-title-2 flex-1 text-ink">{label}</span>
+        <span
+          className={`flex size-[20px] shrink-0 items-center justify-center rounded-full border transition-colors ${
+            selected ? "border-ink" : "border-gray-300"
+          }`}
+        >
+          {selected && <span className="size-[9px] rounded-full bg-ink" />}
         </span>
-        {selected && (
-          <span className="size-[8px] rounded-full bg-[#368fff]" />
-        )}
       </div>
-      {description && (
-        <p className="text-[12.5px] font-light text-muted" style={{ lineHeight: 1.75 }}>
-          {description}
-        </p>
-      )}
+      {description && <p className="ds-caption text-gray-600">{description}</p>}
       {children}
     </button>
   );

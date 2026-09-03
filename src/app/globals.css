@@ -16,6 +16,20 @@
   --sub-accent: #a06a48;
   --border: #ecedee;
   --surface: #f4f5f5;
+
+  /* ──────────────────────────────────────────
+     SAIRO Design System v1 (피그마 `01 · COLOR`)
+     "색을 쓰지 않습니다. 강조는 잉크 농도와 여백으로만 만듭니다."
+     위 토큰은 구버전 — /feed · /place 가 아직 사용 중이라 남겨둔다.
+     ────────────────────────────────────────── */
+  --ds-ink: #111213;        /* 본문 · 버튼 · 선택 */
+  --ds-gray-800: #35363a;   /* 선택 테두리 · hover */
+  --ds-gray-600: #74767c;   /* 보조 설명 */
+  --ds-gray-500: #9c9ea4;   /* 라벨 · 메타 */
+  --ds-gray-300: #dcdde0;   /* 구분선 · 기본 테두리 */
+  --ds-gray-200: #ededef;   /* 카드 테두리 */
+  --ds-surface: #f2f2f1;    /* 선택 배경 · 정보 박스 */
+  --ds-page: #ffffff;
 }
 
 @theme inline {
@@ -30,6 +44,14 @@
   --color-surface: var(--surface);
   --font-sans: var(--font-noto-sans-kr);
   --font-serif: var(--font-cormorant-garamond);
+
+  --color-ink: var(--ds-ink);
+  --color-gray-800: var(--ds-gray-800);
+  --color-gray-600: var(--ds-gray-600);
+  --color-gray-500: var(--ds-gray-500);
+  --color-gray-300: var(--ds-gray-300);
+  --color-gray-200: var(--ds-gray-200);
+  --color-ds-surface: var(--ds-surface);
 }
 
 body {
@@ -126,6 +148,81 @@ body {
 
 .animate-live-pulse {
   animation: live-pulse 2s ease-in-out infinite;
+}
+
+/* ──────────────────────────────────────────
+   SAIRO Design System v1 — 타이포그래피 (피그마 `02 · TYPOGRAPHY`)
+   Noto Sans KR. 본문 최소 12px.
+   "60~70대 사용자를 고려해 Light 를 본문에 쓰지 않고 Regular 이상을 씁니다."
+   ────────────────────────────────────────── */
+@layer components {
+  /* 진단 질문 · 화면 제목 */
+  .ds-display {
+    font-size: 28px;
+    font-weight: 100;
+    line-height: 1.4;
+    letter-spacing: -0.015em;
+  }
+
+  /* 코스 제목 · 결과 이름 */
+  .ds-headline {
+    font-size: 22px;
+    font-weight: 500;
+    line-height: 1.45;
+    letter-spacing: -0.02em;
+  }
+
+  /* 카드 제목 · 장소명 */
+  .ds-title-1 {
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.5;
+    letter-spacing: -0.01em;
+  }
+
+  /* 리스트 제목 · 선택지 */
+  .ds-title-2 {
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.5;
+    letter-spacing: -0.01em;
+  }
+
+  /* 본문 · 설명 · 기본 크기 */
+  .ds-body-1 {
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 1.75;
+  }
+
+  /* 보조 본문 · 메타 */
+  .ds-body-2 {
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.7;
+  }
+
+  /* 캡션 · 각주 · 최소 크기 */
+  .ds-caption {
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.65;
+  }
+
+  /* 섹션 라벨 · 대문자 */
+  .ds-label {
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.5;
+    letter-spacing: 0.15em;
+  }
+
+  /* 시각 · 거리 · 개수 */
+  .ds-numeral {
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.2;
+  }
 }
 
 @layer components {
