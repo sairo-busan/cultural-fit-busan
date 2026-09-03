@@ -2,25 +2,25 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Menu } from "lucide-react";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { buildCfpProfile } from "@/lib/cfp";
+import { buildCf8Profile } from "@/lib/cfp";
+import { useToast } from "@/contexts/ToastContext";
 import { AppHeader } from "@/components/common/AppHeader";
 import { AxisSlider } from "@/components/profile/AxisSlider";
 import { DEFAULT_QUIZ_ANSWERS, DEFAULT_HARD_FILTER } from "@/data/quiz";
 import {
-  COMPANION_LABEL,
-  WALKING_LABEL,
   AXIS_CONFIG,
+  AXIS_STYLE,
   AXIS_GUIDE,
+  PROFILE_COPY,
 } from "@/data/profile";
-import type { CfpAxes } from "@/types/cfp";
+import { STORAGE_KEYS, clearDiagnosis } from "@/lib/storage";
+import type { Cf8Axes } from "@/types/cfp";
 
 const LOADING_STEPS = [
   "분위기 취향을 분석하고 있어요",
   "장소 성향을 파악하고 있어요",
-  "음식 취향을 확인하고 있어요",
-  "동선을 계산하고 있어요",
+  "여행 방식을 확인하고 있어요",
   "프로필을 생성하고 있어요",
 ];
 
@@ -28,14 +28,13 @@ const STEP_DURATION = 450;
 
 export function ProfilePage() {
   const router = useRouter();
+  const { show } = useToast();
   const [loading, setLoading] = useState(true);
   const [loadingStep, setLoadingStep] = useState(0);
-  const [answers] = useLocalStorage(
-    "cfb-quiz-answers",
-    DEFAULT_QUIZ_ANSWERS,
-  );
+  const [answers] = useLocalStorage(STORAGE_KEYS.answers, DEFAULT_QUIZ_ANSWERS);
+  const [, setCf8Code] = useLocalStorage(STORAGE_KEYS.cf8Code, "");
   const [hardFilter] = useLocalStorage(
-    "cfb-hard-filter",
+    STORAGE_KEYS.hardFilter,
     DEFAULT_HARD_FILTER,
   );
 
@@ -49,17 +48,19 @@ export function ProfilePage() {
       return () => clearTimeout(timer);
     }
 
-    // 마지막 step 표시 후 결과 화면 전환
     const finishTimer = setTimeout(() => setLoading(false), 400);
     return () => clearTimeout(finishTimer);
   }, [loading, loadingStep]);
 
-  const profile = buildCfpProfile(answers, hardFilter);
+  const profile = buildCf8Profile(answers, hardFilter);
+
+  // 진단 결과 코드를 저장한다 (재방문 시 진단 건너뛰기 분기에 사용)
+  useEffect(() => {
+    setCf8Code(profile.code);
+  }, [profile.code, setCf8Code]);
 
   const handleRetry = () => {
-    localStorage.removeItem("cfb-quiz-answers");
-    localStorage.removeItem("cfb-hard-filter");
-    localStorage.removeItem("cfb-quiz-step");
+    clearDiagnosis();
     // 전체 새로고침으로 React 상태까지 확실히 초기화
     // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     window.location.href = "/onboarding";
@@ -69,42 +70,36 @@ export function ProfilePage() {
     router.push("/feed");
   };
 
-  const companionText = COMPANION_LABEL[profile.companion] ?? "혼자";
-  const walkingText = WALKING_LABEL[profile.walkingDistance] ?? "도보 15분";
+  const handleMoreConditions = () => {
+    // S03 조건 입력 — FE-FEAT-004에서 구현
+    show("조건 입력은 곧 제공됩니다. 먼저 추천을 확인해보세요.");
+  };
 
-  const guideCodes = [
+  const axisCodes = [
     profile.axes.atmosphere.code,
     profile.axes.placeType.code,
-    profile.axes.palate.code,
-    profile.axes.pace.code,
+    profile.axes.experience.code,
   ];
 
   if (loading) {
     const progress = (loadingStep / LOADING_STEPS.length) * 100;
-    const currentMessage = LOADING_STEPS[Math.min(loadingStep, LOADING_STEPS.length - 1)];
+    const currentMessage =
+      LOADING_STEPS[Math.min(loadingStep, LOADING_STEPS.length - 1)];
 
     return (
       <div className="flex flex-1 flex-col items-center justify-center px-[32px]">
-        <p
-          className="font-serif text-[18px] font-normal text-foreground"
-          style={{ letterSpacing: "-0.36px" }}
-        >
-          Cultural Fit Busan
-        </p>
+        <p className="ds-title-1 font-serif text-ink">Cultural Fit Busan</p>
 
         <div className="mt-[48px] w-full max-w-[260px]">
-          <div className="h-[3px] w-full rounded-full bg-[#e8e9ea]">
+          <div className="h-[3px] w-full rounded-full bg-gray-300">
             <div
-              className="h-full rounded-full bg-[#368fff] transition-all duration-400 ease-out"
+              className="h-full rounded-full bg-ink transition-all duration-400 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>
         </div>
 
-        <p
-          className="mt-[20px] h-[20px] text-[12.5px] font-light text-muted transition-opacity duration-300"
-          style={{ lineHeight: 1.6 }}
-        >
+        <p className="ds-caption mt-[20px] h-[20px] text-gray-600 transition-opacity duration-300">
           {currentMessage}
         </p>
       </div>
@@ -114,124 +109,106 @@ export function ProfilePage() {
   return (
     <div className="flex flex-1 flex-col">
       <AppHeader
-        logo
+        onBack={() => router.push("/onboarding")}
         right={
-          <button type="button" aria-label="메뉴">
-            <Menu size={20} strokeWidth={1.5} />
+          <button
+            type="button"
+            onClick={handleRetry}
+            className="ds-caption text-gray-600"
+          >
+            {PROFILE_COPY.retry}
           </button>
         }
       />
 
-      {/* 스크롤 가능 콘텐츠 */}
       <div className="flex-1 overflow-y-auto">
-        {/* 프로필 결과 */}
-        <div className="flex flex-col gap-[14px] px-[24px] pt-[46px]">
-          <p
-            className="animate-reveal animate-reveal-d1 typo-label text-muted"
-            style={{ letterSpacing: "2.47px" }}
-          >
-            MY TRAVEL PROFILE
+        {/* 유형 — 상단 첫 요소 32px */}
+        <div className="flex flex-col gap-[8px] px-[24px] pt-[32px]">
+          <p className="animate-reveal animate-reveal-d1 ds-caption text-gray-500">
+            {PROFILE_COPY.sectionLabel}
           </p>
-          <h1
-            className="animate-reveal animate-reveal-d2 text-[30px] font-thin text-foreground"
-            style={{ lineHeight: 1.4, letterSpacing: "-1.35px" }}
-          >
+          <p className="animate-reveal animate-reveal-d2 ds-caption text-gray-600">
+            {PROFILE_COPY.typeLabel}
+          </p>
+          <h1 className="animate-reveal animate-reveal-d2 ds-headline text-ink">
             {profile.nameKo}
           </h1>
-          <p
-            className="animate-reveal animate-reveal-d3 text-[13px] font-light text-muted"
-            style={{ lineHeight: 1.9 }}
-          >
+          <p className="animate-reveal animate-reveal-d3 ds-body-1 text-gray-600">
             {profile.description}
           </p>
-          <div className="animate-reveal animate-reveal-d3 flex gap-[8px]">
-            <span className="rounded-full bg-[#f0f1f3] px-[10px] py-[4px] text-[11px] font-light text-muted">
-              {companionText}
-            </span>
-            <span className="rounded-full bg-[#f0f1f3] px-[10px] py-[4px] text-[11px] font-light text-muted">
-              {walkingText}
-            </span>
+        </div>
+
+        {/* 이런 스타일이에요 — 섹션 간격 48px */}
+        <div className="animate-reveal animate-reveal-d4 flex flex-col gap-[16px] px-[24px] pt-[48px]">
+          <p className="ds-caption text-gray-500">
+            {PROFILE_COPY.styleHeading}
+          </p>
+
+          <div className="flex flex-col gap-[12px]">
+            {AXIS_CONFIG.map((axis, index) => {
+              const axisData = profile.axes[axis.key as keyof Cf8Axes];
+              const copy = AXIS_STYLE[axisCodes[index]];
+              if (!copy) return null;
+
+              return (
+                <div
+                  key={axis.key}
+                  className="flex flex-col gap-[8px] rounded-[12px] bg-ds-surface px-[24px] py-[20px]"
+                >
+                  <p className="ds-title-1 text-ink">{copy.title}</p>
+                  <p className="ds-body-2 text-gray-600">{copy.description}</p>
+                  <div className="pt-[8px]">
+                    <AxisSlider
+                      left={axis.left}
+                      right={axis.right}
+                      value={axisData.value}
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        {/* 4축 슬라이더 */}
-        <div className="animate-reveal animate-reveal-d4 mx-[24px] mt-[32px] flex flex-col gap-[24px] rounded-[16px] bg-[#f5f6f7] px-[20px] py-[24px]">
-          {AXIS_CONFIG.map((axis) => {
-            const axisData = profile.axes[axis.key as keyof CfpAxes];
-            return (
-              <AxisSlider
-                key={axis.key}
-                label={axis.label}
-                left={axis.left}
-                right={axis.right}
-                value={axisData.value}
-              />
-            );
-          })}
-        </div>
-
         {/* 이렇게 안내하겠습니다 */}
-        <div className="animate-reveal animate-reveal-d5 flex flex-col px-[24px] pt-[40px]">
-          <p
-            className="text-[12px] font-light text-muted pb-[16px]"
-            style={{ letterSpacing: "2.16px" }}
-          >
-            이렇게 안내하겠습니다
+        <div className="animate-reveal animate-reveal-d5 flex flex-col px-[24px] pt-[48px] pb-[32px]">
+          <p className="ds-caption pb-[16px] text-gray-500">
+            {PROFILE_COPY.guideHeading}
           </p>
-          {guideCodes.map((code) => {
+          {axisCodes.map((code) => {
             const guide = AXIS_GUIDE[code];
             if (!guide) return null;
             return (
               <div
                 key={code}
-                className="flex gap-[20px] border-t border-border py-[20px]"
+                className="flex flex-col gap-[4px] border-t border-gray-300 py-[16px]"
               >
-                <span
-                  className="w-[72px] shrink-0 text-[15px] font-normal text-foreground"
-                  style={{ letterSpacing: "-0.3px" }}
-                >
-                  {guide.title}
-                </span>
-                <p
-                  className="flex-1 text-[12.5px] font-light text-muted"
-                  style={{ lineHeight: 1.75 }}
-                >
-                  {guide.description}
-                </p>
+                <span className="ds-title-2 text-ink">{guide.title}</span>
+                <p className="ds-body-2 text-gray-600">{guide.description}</p>
               </div>
             );
           })}
         </div>
-
-        {/* 안내 문구 */}
-        <div className="animate-reveal animate-reveal-d5 flex items-start gap-[9px] px-[24px] pt-[32px] pb-[24px]">
-          <span className="mt-[6px] size-[6px] shrink-0 rounded-full bg-[#368fff]" />
-          <p
-            className="flex-1 text-[11.5px] font-light text-[#163c8c]"
-            style={{ lineHeight: 1.75 }}
-          >
-            지금 계신 해운대에서 두 시간 동선을 추천드립니다
-          </p>
-        </div>
       </div>
 
       {/* CTA */}
-      <div className="animate-reveal animate-reveal-d6 flex flex-col gap-[10px] px-[20px] pt-[12px] pb-[16px] shadow-[0_-1px_8px_rgba(0,0,0,0.04)]">
+      <div className="animate-reveal animate-reveal-d6 flex shrink-0 flex-col gap-[12px] px-[24px] pt-[16px] pb-[32px]">
+        <p className="ds-caption text-center text-gray-500">
+          {PROFILE_COPY.actionHint}
+        </p>
         <button
           type="button"
           onClick={handleStart}
-          className="flex h-[54px] w-full items-center justify-center rounded-[12px] bg-foreground text-[13px] font-light text-white transition-all active:scale-[0.98]"
-          style={{ letterSpacing: "1.3px" }}
+          className="ds-title-2 flex h-[52px] w-full items-center justify-center rounded-[12px] bg-ink text-white transition-all active:scale-[0.98]"
         >
-          안내 시작하기
+          {PROFILE_COPY.primaryCta}
         </button>
         <button
           type="button"
-          onClick={handleRetry}
-          className="flex h-[54px] w-full items-center justify-center rounded-[12px] border border-border text-[13px] font-light text-foreground transition-all active:scale-[0.98]"
-          style={{ letterSpacing: "1.3px" }}
+          onClick={handleMoreConditions}
+          className="ds-title-2 flex h-[52px] w-full items-center justify-center rounded-[12px] border border-gray-300 text-ink transition-all active:scale-[0.98]"
         >
-          다시 하기
+          {PROFILE_COPY.secondaryCta}
         </button>
       </div>
     </div>

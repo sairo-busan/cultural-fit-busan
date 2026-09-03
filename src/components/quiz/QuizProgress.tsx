@@ -1,41 +1,54 @@
+/**
+ * S01 진행 표시.
+ * 디자인 시스템 v1 — 색을 쓰지 않고 잉크 농도로만 상태를 구분한다.
+ */
+
 type QuizProgressProps = {
   currentStep: number;
   totalSteps: number;
+  /** 단계 라벨 (예: "1단계 · 분위기") */
+  labels?: string[];
   onStepClick?: (step: number) => void;
 };
 
-const TOTAL_SEGMENTS = 6;
-
-export function QuizProgress({ currentStep, totalSteps, onStepClick }: QuizProgressProps) {
-  const getSegmentStyle = (index: number) => {
-    if (index < currentStep - 1) return "bg-[#368fff]"; // 완료
-    if (index === currentStep - 1) return "bg-[#368fff] scale-y-150"; // 현재
-    return "bg-[#e8e9ea]"; // 미완료
-  };
-
+export function QuizProgress({
+  currentStep,
+  totalSteps,
+  labels,
+  onStepClick,
+}: QuizProgressProps) {
   return (
-    <div className="flex items-center gap-[12px] px-[24px] pt-[10px] w-full">
-      <p
-        className="font-serif text-[13px] font-normal text-muted whitespace-nowrap"
-        style={{ letterSpacing: "1.04px" }}
-      >
-        STEP {String(currentStep).padStart(2, "0")} / {String(totalSteps).padStart(2, "0")}
-      </p>
-      <div className="flex flex-1 gap-[4px] items-center">
-        {Array.from({ length: TOTAL_SEGMENTS }, (_, index) => (
+    <div className="flex w-full gap-[8px] px-[24px] pt-[12px]">
+      {Array.from({ length: totalSteps }, (_, index) => {
+        const isDone = index < currentStep - 1;
+        const isCurrent = index === currentStep - 1;
+
+        return (
           <button
             key={index}
             type="button"
             onClick={() => onStepClick?.(index + 1)}
-            className="flex-1 py-[10px]"
-            aria-label={`Step ${index + 1}`}
+            className="flex flex-1 flex-col gap-[8px] pb-[12px] text-left"
+            aria-label={labels?.[index] ?? `${index + 1}단계`}
+            aria-current={isCurrent ? "step" : undefined}
           >
             <div
-              className={`h-[3px] w-full rounded-full transition-all duration-300 ${getSegmentStyle(index)}`}
+              className={`h-[3px] w-full rounded-full transition-colors duration-300 ${
+                isCurrent || isDone ? "bg-ink" : "bg-gray-300"
+              }`}
             />
+            {labels?.[index] && (
+              <span
+                className={`ds-caption truncate ${
+                  isCurrent ? "text-ink" : "text-gray-500"
+                }`}
+              >
+                {labels[index]}
+              </span>
+            )}
           </button>
-        ))}
-      </div>
+        );
+      })}
     </div>
   );
 }
