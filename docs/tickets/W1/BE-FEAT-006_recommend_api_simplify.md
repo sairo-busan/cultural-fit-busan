@@ -99,4 +99,11 @@ BE-FEAT-003에서 만든 `/api/recommend`는 `lat`/`lng`를 받아 서버에서 
 - `route.ts`에서 `lat`/`lng` 파라미터·400 검증 제거
 - `recommend.ts`에서 `distanceMinutes()` 삭제, `distanceMin: null` 고정, 정렬 로직 제거
 - `npm run build` 통과, 실행 중인 dev 서버로 스모크 테스트: `GET /api/recommend?limit=2` 정상 200, `GET /api/recommend?contentTypeId=39&limit=1` 필터 정상 동작 확인
-- `distanceMinutes()` 함수는 FE-FEAT-003에서 프론트로 그대로 옮겨 재사용 예정(haversine → 80m/분 공식 그대로)
+- `distanceMinutes()` 함수는 FE-FEAT-005에서 프론트로 그대로 옮겨 재사용 예정(haversine → 80m/분 공식 그대로)
+
+### 2026-09-03: QA 경고 2건 수정
+
+- `limit` 상한 없음(최대 2,231건 반환 가능) → `Math.min(limit, 100)`으로 상한
+- `limit` 음수 시 `.slice(0,-n)`으로 예상 밖 동작 → `< 1`이면 기본값(20)으로 폴백
+- 실제 요청으로 검증: `limit=-3`→20건, `limit=99999`→100건, `limit=abc`→20건, `limit=5`→5건
+- `distanceMin: null` 관련 — `PlaceCard.tsx`/`place/[id]/page.tsx`가 이 필드를 쓰지만 현재 `mock-places.ts` 목데이터 경유라 이 API 미연결 상태, 지금 머지해도 회귀 없음(FE-FEAT-005 연결 시 채워짐)

@@ -7,7 +7,11 @@ export async function GET(request: NextRequest) {
   const contentTypeId = searchParams.get("contentTypeId") ?? undefined;
   const limitParam = searchParams.get("limit");
   const parsedLimit = limitParam ? parseInt(limitParam, 10) : undefined;
-  const limit = parsedLimit !== undefined && Number.isNaN(parsedLimit) ? undefined : parsedLimit;
+  // 1~100으로 고정 — 비정상값(NaN·음수·상한초과)은 전부 기본값(20)이나 상한(100)으로 흡수
+  const limit =
+    parsedLimit === undefined || Number.isNaN(parsedLimit) || parsedLimit < 1
+      ? undefined
+      : Math.min(parsedLimit, 100);
 
   try {
     const results = await getRecommendations({ contentTypeId, limit });
