@@ -13,7 +13,7 @@
 | Severity | Medium |
 | Layer | Route / Lib |
 | Status | Done |
-| Screen | S20, S40, S44 (날씨 보정이 필요한 화면) |
+| Screen | S20, S32, S36 (구 S40·S44 · 날씨 보정이 필요한 화면) |
 | Depends | - |
 | Related | BE-FEAT-003(추천 API) — 후속으로 상황보정(−15) 반영 시 사용 |
 

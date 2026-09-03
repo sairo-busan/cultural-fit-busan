@@ -52,7 +52,7 @@ export default function PlaceDetailPage() {
       <AppHeader
         onBack={() => router.back()}
         logo
-        onMenu={() => {/* S05 전체 메뉴 — W2 구현 예정 */}}
+        onMenu={() => {/* S50 전체 메뉴 (구 S05) — W2 구현 예정 */}}
       />
 
       {/* 히어로 이미지 */}
