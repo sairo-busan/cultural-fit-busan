@@ -3,15 +3,6 @@ import { getRecommendations } from "@/lib/recommend";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const lat = parseFloat(searchParams.get("lat") ?? "");
-  const lng = parseFloat(searchParams.get("lng") ?? "");
-
-  if (Number.isNaN(lat) || Number.isNaN(lng)) {
-    return NextResponse.json(
-      { error: "lat, lng는 필수 숫자 파라미터입니다" },
-      { status: 400 }
-    );
-  }
 
   const contentTypeId = searchParams.get("contentTypeId") ?? undefined;
   const limitParam = searchParams.get("limit");
@@ -19,7 +10,7 @@ export async function GET(request: NextRequest) {
   const limit = parsedLimit !== undefined && Number.isNaN(parsedLimit) ? undefined : parsedLimit;
 
   try {
-    const results = await getRecommendations({ lat, lng, contentTypeId, limit });
+    const results = await getRecommendations({ contentTypeId, limit });
     return NextResponse.json(results);
   } catch (error) {
     return NextResponse.json(

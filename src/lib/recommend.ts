@@ -63,34 +63,17 @@ const EMPTY_TAGS: Omit<PlaceTagsDoc, "contentId"> = {
   coverage: 0,
 };
 
-/** 추천_알고리즘_명세서_v2.md 5번 섹션: haversine → 80m/분 */
-function distanceMinutes(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const R = 6371000; // 지구 반지름(m)
-  const toRad = (deg: number) => (deg * Math.PI) / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLng = toRad(lng2 - lng1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
-  const meters = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return meters / 80; // 80m/분
-}
-
 export type RecommendParams = {
-  lat: number;
-  lng: number;
   contentTypeId?: string;
   limit?: number;
 };
 
 /**
- * Phase 1: Hard Filter(좌표 유효성) + 거리순 정렬.
- * Coverage 게이트는 의도적으로 비활성 — placeTags가 아직 비어있어서 켜면 0건이 됨.
- * placeTags 데이터가 들어오면 BE-FEAT-004에서 CFP 축 점수·Coverage 필터를 얹는다.
+ * BE-FEAT-006: 좌표는 서버로 전송받지 않는다(위치 정보 사용 리스크 검토 참고).
+ * 거리 계산·정렬·CF8 매칭은 전부 클라이언트(FE-FEAT-003)에서 수행 — 이 함수는
+ * places+placeTags를 조인한 목록만 제공한다.
  */
 export async function getRecommendations({
-  lat,
-  lng,
   contentTypeId,
   limit = 20,
 }: RecommendParams): Promise<RecommendedPlace[]> {
@@ -151,14 +134,13 @@ export async function getRecommendations({
       whyEn: tags.whyEn,
       coverage: tags.coverage,
 
-      // Fit 점수 계산은 BE-FEAT-004(placeTags 데이터 들어온 후)
+      // Fit 점수·거리는 클라이언트(FE-FEAT-003)가 계산
       fitScore: 0,
       reasons: [],
       tags: [],
-      distanceMin: Math.round(distanceMinutes(lat, lng, place.mapY, place.mapX)),
+      distanceMin: null,
     };
   });
 
-  results.sort((a, b) => (a.distanceMin ?? Infinity) - (b.distanceMin ?? Infinity));
   return results.slice(0, limit);
 }

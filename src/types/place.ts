@@ -35,7 +35,7 @@ export type Place = {
   crowdPeak: string | null;
   crowdCalm: string | null;
   localDepth: number | null; // 1~5
-  englishSupport: number | null; // 0~5
+  englishSupport: number | null; // 0~2 (0=불가, 1=메뉴판·표지판만, 2=대화 가능)
   spiceLevel: number | null; // 0~5, 0 = 음식점 아님
   weatherType: "indoor" | "outdoor" | "both" | null; // both = 실내외 겸용(예: 자갈치시장)
   bestTime: string | null;
