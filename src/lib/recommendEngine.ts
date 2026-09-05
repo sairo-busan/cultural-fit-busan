@@ -23,6 +23,7 @@ import {
 import { calculateFinalScore } from "./finalScore";
 import { resolveActiveFilters, type TripSetupLike, type TripSetupMode } from "./tripSetupMode";
 import { generateReasons } from "./reasonText";
+import { distanceMinutes } from "./distance";
 
 export type EngineContext = {
   cf8Code: string;
@@ -30,16 +31,25 @@ export type EngineContext = {
   tripSetup: TripSetupLike | null;
   weather: Weather;
   now?: Date; // 테스트용 주입 지점, 생략하면 현재 시각
+  /** 있으면 카드·상세 표시용 도보 분을 계산(순위엔 미반영). 없으면 distanceMin은 null. */
+  userLocation?: { lat: number; lng: number };
 };
 
 export type EnginePlaceInput = PlaceForFilter &
   PlaceSituationalScores &
-  PlaceAxisScores & { contentId: string; whyKo: string | null; whyEn: string | null };
+  PlaceAxisScores & {
+    contentId: string;
+    whyKo: string | null;
+    whyEn: string | null;
+    mapX: number;
+    mapY: number;
+  };
 
 export type RankedPlace<T extends EnginePlaceInput> = T & {
   fitScore: number;
   matchesSoftFoodPreference: boolean;
   reasons: string[];
+  distanceMin: number | null;
 };
 
 /**
@@ -75,6 +85,14 @@ export function rankPlaces<T extends EnginePlaceInput>(
       fitScore: finalScore ?? 0,
       matchesSoftFoodPreference: matchesSoftFoodPreference(place, filters.foodRestrictions),
       reasons: generateReasons({ ...scoreInputs, whyKo: place.whyKo, whyEn: place.whyEn }),
+      distanceMin: context.userLocation
+        ? distanceMinutes(
+            context.userLocation.lat,
+            context.userLocation.lng,
+            place.mapY,
+            place.mapX
+          )
+        : null,
     });
   }
 

@@ -56,7 +56,10 @@ export function useRecommendations(): UseRecommendationsResult {
         tripSetup = null;
       }
 
-      const { lat, lng } = await getCurrentPosition().catch(() => BUSAN_CITY_HALL);
+      // 실제 GPS 확보 여부를 구분한다 — 거리 표시는 폴백 좌표로 계산하면
+      // 실제와 다른 값을 사실처럼 보여주게 되므로, 진짜 위치를 얻었을 때만 계산한다.
+      const position = await getCurrentPosition().catch(() => null);
+      const { lat, lng } = position ?? BUSAN_CITY_HALL;
 
       try {
         const [recommendRes, weatherRes] = await Promise.all([
@@ -74,7 +77,13 @@ export function useRecommendations(): UseRecommendationsResult {
           if (resolved) weather = resolved;
         }
 
-        const ranked = rankPlaces(candidates, { cf8Code, mode, tripSetup, weather });
+        const ranked = rankPlaces(candidates, {
+          cf8Code,
+          mode,
+          tripSetup,
+          weather,
+          userLocation: position ?? undefined,
+        });
         if (!cancelled) setPlaces(ranked);
       } catch (e) {
         if (!cancelled) setError((e as Error).message);
