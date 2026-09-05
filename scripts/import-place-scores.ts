@@ -96,28 +96,23 @@ async function main() {
   await client.connect();
   const placeTags = client.db("cultural_fit_busan").collection("placeTags");
 
-  let updated = 0;
+  // 유효한 content_id 목록을 먼저 뽑아서, 49번 findOne 대신 단 한 번의 조회로
+  // 기존 문서를 전부 가져온다(N+1 방지).
+  const rowsWithId = dataRows
+    .map((row) => ({ row, contentId: col(row, "content_id")?.trim() }))
+    .filter((r): r is { row: string[]; contentId: string } => !!r.contentId);
+
+  const existingDocs = await placeTags
+    .find({ contentId: { $in: rowsWithId.map((r) => r.contentId) } })
+    .toArray();
+  const existingByContentId = new Map(existingDocs.map((d) => [d.contentId, d]));
+
   let notFound = 0;
   const foodMismatches: string[] = [];
+  const writes = [];
 
-  for (const row of dataRows) {
-    const contentId = col(row, "content_id")?.trim();
-    if (!contentId) continue;
-
-    const scores = {
-      cfAtmosphereScore: toNum(col(row, "분위기축(-2~2)")),
-      cfLocalFamousScore: toNum(col(row, "로컬↔대표축(-2~2)")),
-      cfDeepVarietyScore: toNum(col(row, "깊게↔다양축(-2~2)")),
-      photoMemoryValue: toNum(col(row, "사진·기억(0~100)")),
-      culturalValue: toNum(col(row, "문화(0~100)")),
-      natureValue: toNum(col(row, "자연(0~100)")),
-      foodValue: toNum(col(row, "음식(0~100)")),
-      walkingRequired: toNum(col(row, "걷기필요(0~100)")),
-      restAvailability: toNum(col(row, "휴식가능(0~100)")),
-      indoorShelter: toNum(col(row, "실내차양(0~100)")),
-    };
-
-    const existing = await placeTags.findOne({ contentId });
+  for (const { row, contentId } of rowsWithId) {
+    const existing = existingByContentId.get(contentId);
     if (!existing) {
       notFound++;
       continue;
@@ -137,11 +132,31 @@ async function main() {
       );
     }
 
-    await placeTags.updateOne({ contentId }, { $set: scores });
-    updated++;
+    writes.push({
+      updateOne: {
+        filter: { contentId },
+        update: {
+          $set: {
+            cfAtmosphereScore: toNum(col(row, "분위기축(-2~2)")),
+            cfLocalFamousScore: toNum(col(row, "로컬↔대표축(-2~2)")),
+            cfDeepVarietyScore: toNum(col(row, "깊게↔다양축(-2~2)")),
+            photoMemoryValue: toNum(col(row, "사진·기억(0~100)")),
+            culturalValue: toNum(col(row, "문화(0~100)")),
+            natureValue: toNum(col(row, "자연(0~100)")),
+            foodValue: toNum(col(row, "음식(0~100)")),
+            walkingRequired: toNum(col(row, "걷기필요(0~100)")),
+            restAvailability: toNum(col(row, "휴식가능(0~100)")),
+            indoorShelter: toNum(col(row, "실내차양(0~100)")),
+          },
+        },
+      },
+    });
   }
 
-  console.log(`\n적재 완료: ${updated}건 업데이트, ${notFound}건 매칭 실패(92번에 없는 content_id)`);
+  const result = writes.length > 0 ? await placeTags.bulkWrite(writes) : { matchedCount: 0, modifiedCount: 0 };
+  console.log(
+    `\n적재 완료: ${result.matchedCount}건 매칭(그중 실제 값 변경 ${result.modifiedCount}건), ${notFound}건 매칭 실패(92번에 없는 content_id)`
+  );
   console.log(`\n날것/육류만/해산물중심 불일치 ${foodMismatches.length}건:`);
   foodMismatches.forEach((m) => console.log(`  ${m}`));
 
