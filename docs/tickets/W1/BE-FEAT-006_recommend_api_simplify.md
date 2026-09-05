@@ -15,14 +15,14 @@ BE-FEAT-003에서 만든 `/api/recommend`는 `lat`/`lng`를 받아 서버에서 
 | Status | Done |
 | Screen | S10, S20 |
 | Depends | BE-FEAT-003(현재 구현) |
-| Related | FE-FEAT-003(클라이언트 매칭 엔진 — 이 API의 소비자) |
+| Related | FE-FEAT-005(클라이언트 매칭 엔진 — 이 API의 소비자) |
 
 ---
 
 ## Problem
 
 - **현재 동작**: `GET /api/recommend?lat=&lng=&contentTypeId=&limit=` — 서버(`src/lib/recommend.ts`)가 `lat`/`lng`로 haversine 거리 계산·정렬까지 수행
-- **기대 동작**: `lat`/`lng` 파라미터 제거. 서버는 `places`+`placeTags` 조인한 목록만 반환(정렬 없음, 또는 contentId 순). 거리 계산·정렬은 프론트(FE-FEAT-003)가 기기 내 GPS로 수행
+- **기대 동작**: `lat`/`lng` 파라미터 제거. 서버는 `places`+`placeTags` 조인한 목록만 반환(정렬 없음, 또는 contentId 순). 거리 계산·정렬은 프론트(FE-FEAT-005)가 기기 내 GPS로 수행
 - **영향 범위**: `src/app/api/recommend/route.ts`, `src/lib/recommend.ts`
 
 ---
@@ -49,12 +49,12 @@ BE-FEAT-003에서 만든 `/api/recommend`는 `lat`/`lng`를 받아 서버에서 
 - `GET /api/recommend?contentTypeId=&limit=` — 좌표 파라미터 없이 목록 반환
 - `places`+`placeTags` 조인은 기존 로직 유지(BE-FEAT-003 그대로)
 - 응답에서 `distanceMin`은 항상 `null`(클라이언트가 채움)
-- 정렬 없음 또는 `contentId` 순— 실제 정렬은 프론트(FE-FEAT-003)에서 수행
+- 정렬 없음 또는 `contentId` 순— 실제 정렬은 프론트(FE-FEAT-005)에서 수행
 
 ### 제외
 
-- 거리 계산 로직 자체(삭제가 아니라 이관) — `distanceMinutes()` 함수는 프론트(FE-FEAT-003)로 그대로 복사해서 재사용
-- CF8 매칭 로직 — FE-FEAT-003 스코프
+- 거리 계산 로직 자체(삭제가 아니라 이관) — `distanceMinutes()` 함수는 프론트(FE-FEAT-005)로 그대로 복사해서 재사용
+- CF8 매칭 로직 — FE-FEAT-005 스코프
 
 ---
 
@@ -69,10 +69,10 @@ BE-FEAT-003에서 만든 `/api/recommend`는 `lat`/`lng`를 받아 서버에서 
 
 ## Acceptance Criteria
 
-- [ ] `lat`/`lng` 없이 요청해도 정상 200 응답
-- [ ] 네트워크 요청/응답 어디에도 위치 좌표가 포함되지 않음(개발자 도구로 확인)
-- [ ] `contentTypeId`/`limit` 필터 기존과 동일하게 동작(회귀 없음)
-- [ ] 응답의 `distanceMin`이 항상 `null`
+- [x] `lat`/`lng` 없이 요청해도 정상 200 응답
+- [x] 네트워크 요청/응답 어디에도 위치 좌표가 포함되지 않음(개발자 도구로 확인)
+- [x] `contentTypeId`/`limit` 필터 기존과 동일하게 동작(회귀 없음)
+- [x] 응답의 `distanceMin`이 항상 `null`
 
 ---
 
@@ -107,3 +107,20 @@ BE-FEAT-003에서 만든 `/api/recommend`는 `lat`/`lng`를 받아 서버에서 
 - `limit` 음수 시 `.slice(0,-n)`으로 예상 밖 동작 → `< 1`이면 기본값(20)으로 폴백
 - 실제 요청으로 검증: `limit=-3`→20건, `limit=99999`→100건, `limit=abc`→20건, `limit=5`→5건
 - `distanceMin: null` 관련 — `PlaceCard.tsx`/`place/[id]/page.tsx`가 이 필드를 쓰지만 현재 `mock-places.ts` 목데이터 경유라 이 API 미연결 상태, 지금 머지해도 회귀 없음(FE-FEAT-005 연결 시 채워짐)
+
+### 2026-09-05: 소피 리뷰(CHANGES_REQUESTED) 대응 — 후보군을 태깅된 장소로 한정
+
+**지적 내용**: 정렬 로직이 빠지면서 `places` 2,231건 전체 조회 후 `.slice(0, limit)`만 남아, "가까운 N곳"이 아니라 "적재 순서상 앞 N곳"이 반환됨. 동시에 20건 응답을 위해 2,231건 전체(overview·images·info 포함)를 조회·객체화한 뒤 버려서 비효율.
+
+**대응**: `places` 전체가 아니라 `placeTags`가 있는 장소만 후보로 좁힘(태깅 안 된 곳은 추천하지 않는다는 설계 원칙과도 일치). `_id: { $in: 태깅된 contentId 목록 }`으로 쿼리 범위를 태깅 건수(현재 49건)로 줄이고, Mongo `.limit()`을 직접 적용해 후처리 `.slice()`를 제거. `EMPTY_TAGS` 폴백 삭제(쿼리 자체가 태깅된 곳만 반환하므로 불필요).
+
+- 실제 위치 기반 정렬은 이 PR 스코프가 아니라 CF8 엔진(FE-FEAT-005) 붙일 때 클라이언트가 처리하는 걸로 유지 — 소피가 제안한 3안(권역 파라미터 A / 경량 목록+재요청 B / FEATURED만 C) 중 채택 안 함, 대신 "태깅된 곳만" 필터로 후보군 자체를 49~62건 규모로 줄여 문제의 영향도를 낮춤
+- 검증(dev 서버 실행 중, `http://localhost:3001`):
+  - `GET /api/recommend?limit=100` → 49건, 전부 `coverage > 0`
+  - `GET /api/recommend?contentTypeId=39&limit=100` → 0건(태깅된 49건 중 음식점(39) 자체가 없음, 회귀 아님 — `Counter({'12': 34, '38': 10, '14': 4, '28': 1})`로 확인)
+  - `GET /api/recommend` (limit 기본값) → 20건
+  - `limit=-3`→20, `limit=99999`→49(태깅 건수가 상한 100보다 적어서), `limit=abc`→20 — 전부 기존 폴백 규칙대로 동작
+  - `distanceMin` 전부 `null` 유지
+  - `lat`/`lng` 파라미터를 보내도 무시(200, 에러 아님) — 하위호환 확인
+- 티켓 번호 통일: 본문 전체의 `FE-FEAT-003` → `FE-FEAT-005`로 수정(소피 PR#8 리뷰 지적 반영)
+- Acceptance Criteria 체크박스 반영(Status=Done인데 미체크 상태였던 것 정리)

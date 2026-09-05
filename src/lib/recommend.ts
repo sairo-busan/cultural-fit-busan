@@ -42,27 +42,6 @@ type PlaceTagsDoc = {
   coverage: number;
 };
 
-const EMPTY_TAGS: Omit<PlaceTagsDoc, "contentId"> = {
-  noiseLevel: null,
-  crowdLevel: null,
-  crowdPeak: null,
-  crowdCalm: null,
-  localDepth: null,
-  englishSupport: null,
-  spiceLevel: null,
-  weatherType: null,
-  bestTime: null,
-  placeType: null,
-  fitSolo: null,
-  tipType: null,
-  tipHeadline: null,
-  pro: null,
-  con: null,
-  whyKo: null,
-  whyEn: null,
-  coverage: 0,
-};
-
 export type RecommendParams = {
   contentTypeId?: string;
   limit?: number;
@@ -70,8 +49,15 @@ export type RecommendParams = {
 
 /**
  * BE-FEAT-006: 좌표는 서버로 전송받지 않는다(위치 정보 사용 리스크 검토 참고).
- * 거리 계산·정렬·CF8 매칭은 전부 클라이언트(FE-FEAT-003)에서 수행 — 이 함수는
+ * 거리 계산·정렬·CF8 매칭은 전부 클라이언트(FE-FEAT-005)에서 수행 — 이 함수는
  * places+placeTags를 조인한 목록만 제공한다.
+ *
+ * 후보는 placeTags가 있는 장소로 한정한다(태깅 안 된 곳은 추천하지 않는다는
+ * 설계 원칙). PR#9 리뷰 지적 대응: 이전엔 places 2,231건 전체를 조회한 뒤
+ * 정렬 없이 앞 N건만 잘라 반환해 "가까운 N곳"이 아니라 "적재 순서상 앞 N곳"이
+ * 나가는 문제가 있었다 — 태깅된 곳(현재 49건)만 후보로 좁혀서 그 왜곡을 줄이고,
+ * 조회량도 2,231건에서 태깅 건수로 줄인다. 실제 위치 기반 정렬은 CF8 엔진
+ * 붙일 때(FE-FEAT-005) 클라이언트가 처리한다.
  */
 export async function getRecommendations({
   contentTypeId,
@@ -79,23 +65,24 @@ export async function getRecommendations({
 }: RecommendParams): Promise<RecommendedPlace[]> {
   const db = await getDb();
 
+  const tagDocs = await db.collection<PlaceTagsDoc>("placeTags").find({}).toArray();
+  const tagsByContentId = new Map(tagDocs.map((t) => [t.contentId, t]));
+
   const query: Record<string, unknown> = {
+    _id: { $in: tagDocs.map((t) => t.contentId) },
     mapX: { $type: "number" },
     mapY: { $type: "number" },
   };
   if (contentTypeId) query.contentTypeId = contentTypeId;
 
-  const placeDocs = await db.collection<PlaceDoc>("places").find(query).toArray();
-
-  const contentIds = placeDocs.map((p) => p._id);
-  const tagDocs = await db
-    .collection<PlaceTagsDoc>("placeTags")
-    .find({ contentId: { $in: contentIds } })
+  const placeDocs = await db
+    .collection<PlaceDoc>("places")
+    .find(query)
+    .limit(limit)
     .toArray();
-  const tagsByContentId = new Map(tagDocs.map((t) => [t.contentId, t]));
 
   const results: RecommendedPlace[] = placeDocs.map((place) => {
-    const tags = tagsByContentId.get(place._id) ?? EMPTY_TAGS;
+    const tags = tagsByContentId.get(place._id)!;
 
     return {
       contentId: place._id,
@@ -134,7 +121,7 @@ export async function getRecommendations({
       whyEn: tags.whyEn,
       coverage: tags.coverage,
 
-      // Fit 점수·거리는 클라이언트(FE-FEAT-003)가 계산
+      // Fit 점수·거리는 클라이언트(FE-FEAT-005)가 계산
       fitScore: 0,
       reasons: [],
       tags: [],
@@ -142,5 +129,5 @@ export async function getRecommendations({
     };
   });
 
-  return results.slice(0, limit);
+  return results;
 }
