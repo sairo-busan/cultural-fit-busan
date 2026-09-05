@@ -47,7 +47,7 @@ export function selectCompanionScore(
   companions: Companion[]
 ): number | null {
   const scores = companions
-    .map((c) => place[COMPANION_FIELD[c]])
+    .map((c) => place[COMPANION_FIELD[c]] ?? null)
     .filter((s): s is number => s !== null);
   if (scores.length === 0) return null;
   return scores.reduce((sum, s) => sum + s, 0) / scores.length;
@@ -60,7 +60,7 @@ const WEATHER_FIELD: Record<Weather, keyof PlaceSituationalScores> = {
 };
 
 export function selectWeatherScore(place: PlaceSituationalScores, weather: Weather): number | null {
-  return place[WEATHER_FIELD[weather]];
+  return place[WEATHER_FIELD[weather]] ?? null;
 }
 
 const SEASON_FIELD: Record<Season, keyof PlaceSituationalScores> = {
@@ -71,7 +71,7 @@ const SEASON_FIELD: Record<Season, keyof PlaceSituationalScores> = {
 };
 
 export function selectSeasonScore(place: PlaceSituationalScores, season: Season): number | null {
-  return place[SEASON_FIELD[season]];
+  return place[SEASON_FIELD[season]] ?? null;
 }
 
 const TIME_FIELD: Record<TimeOfDay, keyof PlaceSituationalScores> = {
@@ -81,7 +81,7 @@ const TIME_FIELD: Record<TimeOfDay, keyof PlaceSituationalScores> = {
 };
 
 export function selectTimeScore(place: PlaceSituationalScores, timeOfDay: TimeOfDay): number | null {
-  return place[TIME_FIELD[timeOfDay]];
+  return place[TIME_FIELD[timeOfDay]] ?? null;
 }
 
 /** 현재 날짜로 계절 자동 판단(서버 응답 대기 없이 클라이언트에서 바로 계산 가능) */

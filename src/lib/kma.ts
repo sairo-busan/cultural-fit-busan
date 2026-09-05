@@ -95,3 +95,16 @@ export function getVilageFcstBaseTime(now: Date): { base_date: string; base_time
   kst.setUTCHours(chosenHour, 0, 0, 0);
   return { base_date: formatBaseDate(kst), base_time: `${pad2(chosenHour)}00` };
 }
+
+export type WeatherBucket = "sunny" | "rainy" | "cloudy";
+
+/**
+ * KMA 공식 코드값(기상청 API 가이드 표) → placeTags weatherScore* 3분류 매핑.
+ * PTY(강수형태): 0=없음, 1=비, 2=비/눈, 3=눈, 4=소나기, 5~7=빗방울류
+ * SKY(하늘상태): 1=맑음, 3=구름많음, 4=흐림
+ */
+export function classifyWeather(sky: string, pty: string): WeatherBucket {
+  if (pty !== "0") return "rainy";
+  if (sky === "1") return "sunny";
+  return "cloudy"; // SKY 3(구름많음)·4(흐림)
+}

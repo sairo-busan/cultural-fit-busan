@@ -21,7 +21,7 @@ export type ScoreComponent = { weight: number; value: number | null };
 /** null인 성분은 제외하고 남은 가중치 비율대로 재정규화한 가중평균. 전부 null이면 null. */
 export function weightedAverageWithReweight(components: ScoreComponent[]): number | null {
   const available = components.filter(
-    (c): c is { weight: number; value: number } => c.value !== null
+    (c): c is { weight: number; value: number } => c.value != null && !Number.isNaN(c.value)
   );
   if (available.length === 0) return null;
 

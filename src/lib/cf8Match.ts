@@ -40,9 +40,9 @@ function axisMatchScore(userAxis: -1 | 1, placeAxis: number): number {
  */
 export function cf8FitScore(userAxes: UserAxes, place: PlaceAxisScores): number | null {
   const pairs: [number, number | null][] = [
-    [userAxes.atmosphere, place.cfAtmosphereScore],
-    [userAxes.place, place.cfLocalFamousScore],
-    [userAxes.pace, place.cfDeepVarietyScore],
+    [userAxes.atmosphere, place.cfAtmosphereScore ?? null],
+    [userAxes.place, place.cfLocalFamousScore ?? null],
+    [userAxes.pace, place.cfDeepVarietyScore ?? null],
   ];
 
   const scores = pairs
