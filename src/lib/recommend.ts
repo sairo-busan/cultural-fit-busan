@@ -42,77 +42,47 @@ type PlaceTagsDoc = {
   coverage: number;
 };
 
-const EMPTY_TAGS: Omit<PlaceTagsDoc, "contentId"> = {
-  noiseLevel: null,
-  crowdLevel: null,
-  crowdPeak: null,
-  crowdCalm: null,
-  localDepth: null,
-  englishSupport: null,
-  spiceLevel: null,
-  weatherType: null,
-  bestTime: null,
-  placeType: null,
-  fitSolo: null,
-  tipType: null,
-  tipHeadline: null,
-  pro: null,
-  con: null,
-  whyKo: null,
-  whyEn: null,
-  coverage: 0,
-};
-
-/** 추천_알고리즘_명세서_v2.md 5번 섹션: haversine → 80m/분 */
-function distanceMinutes(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const R = 6371000; // 지구 반지름(m)
-  const toRad = (deg: number) => (deg * Math.PI) / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLng = toRad(lng2 - lng1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
-  const meters = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return meters / 80; // 80m/분
-}
-
 export type RecommendParams = {
-  lat: number;
-  lng: number;
   contentTypeId?: string;
   limit?: number;
 };
 
 /**
- * Phase 1: Hard Filter(좌표 유효성) + 거리순 정렬.
- * Coverage 게이트는 의도적으로 비활성 — placeTags가 아직 비어있어서 켜면 0건이 됨.
- * placeTags 데이터가 들어오면 BE-FEAT-004에서 CFP 축 점수·Coverage 필터를 얹는다.
+ * BE-FEAT-006: 좌표는 서버로 전송받지 않는다(위치 정보 사용 리스크 검토 참고).
+ * 거리 계산·정렬·CF8 매칭은 전부 클라이언트(FE-FEAT-005)에서 수행 — 이 함수는
+ * places+placeTags를 조인한 목록만 제공한다.
+ *
+ * 후보는 placeTags가 있는 장소로 한정한다(태깅 안 된 곳은 추천하지 않는다는
+ * 설계 원칙). PR#9 리뷰 지적 대응: 이전엔 places 2,231건 전체를 조회한 뒤
+ * 정렬 없이 앞 N건만 잘라 반환해 "가까운 N곳"이 아니라 "적재 순서상 앞 N곳"이
+ * 나가는 문제가 있었다 — 태깅된 곳(현재 49건)만 후보로 좁혀서 그 왜곡을 줄이고,
+ * 조회량도 2,231건에서 태깅 건수로 줄인다. 실제 위치 기반 정렬은 CF8 엔진
+ * 붙일 때(FE-FEAT-005) 클라이언트가 처리한다.
  */
 export async function getRecommendations({
-  lat,
-  lng,
   contentTypeId,
   limit = 20,
 }: RecommendParams): Promise<RecommendedPlace[]> {
   const db = await getDb();
 
+  const tagDocs = await db.collection<PlaceTagsDoc>("placeTags").find({}).toArray();
+  const tagsByContentId = new Map(tagDocs.map((t) => [t.contentId, t]));
+
   const query: Record<string, unknown> = {
+    _id: { $in: tagDocs.map((t) => t.contentId) },
     mapX: { $type: "number" },
     mapY: { $type: "number" },
   };
   if (contentTypeId) query.contentTypeId = contentTypeId;
 
-  const placeDocs = await db.collection<PlaceDoc>("places").find(query).toArray();
-
-  const contentIds = placeDocs.map((p) => p._id);
-  const tagDocs = await db
-    .collection<PlaceTagsDoc>("placeTags")
-    .find({ contentId: { $in: contentIds } })
+  const placeDocs = await db
+    .collection<PlaceDoc>("places")
+    .find(query)
+    .limit(limit)
     .toArray();
-  const tagsByContentId = new Map(tagDocs.map((t) => [t.contentId, t]));
 
   const results: RecommendedPlace[] = placeDocs.map((place) => {
-    const tags = tagsByContentId.get(place._id) ?? EMPTY_TAGS;
+    const tags = tagsByContentId.get(place._id)!;
 
     return {
       contentId: place._id,
@@ -151,14 +121,13 @@ export async function getRecommendations({
       whyEn: tags.whyEn,
       coverage: tags.coverage,
 
-      // Fit 점수 계산은 BE-FEAT-004(placeTags 데이터 들어온 후)
+      // Fit 점수·거리는 클라이언트(FE-FEAT-005)가 계산
       fitScore: 0,
       reasons: [],
       tags: [],
-      distanceMin: Math.round(distanceMinutes(lat, lng, place.mapY, place.mapX)),
+      distanceMin: null,
     };
   });
 
-  results.sort((a, b) => (a.distanceMin ?? Infinity) - (b.distanceMin ?? Infinity));
-  return results.slice(0, limit);
+  return results;
 }
