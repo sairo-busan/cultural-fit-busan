@@ -29,7 +29,7 @@ type PlaceTagsDoc = {
   localDepth: number | null;
   englishSupport: number | null;
   spiceLevel: number | null;
-  weatherType: "indoor" | "outdoor" | "both" | null;
+  weatherType: "indoor" | "outdoor" | "mixed" | null;
   bestTime: string | null;
   placeType: "식음형" | "시장형" | "해양야경형" | "문화역사형" | null;
   fitSolo: number | null;
@@ -40,6 +40,61 @@ type PlaceTagsDoc = {
   whyKo: string | null;
   whyEn: string | null;
   coverage: number;
+
+  cf8Match: string | null;
+  hasRaw: boolean | null;
+  hasMeatOnly: boolean | null;
+  hasSeafoodOnly: boolean | null;
+  seatingType: "street" | "indoor" | "mixed" | null;
+  fitCouple: number | null;
+  fitFriends: number | null;
+  fitFamily: number | null;
+  stayMinutes: number | null;
+  budgetLevel: number | null;
+  proEn: string | null;
+  conEn: string | null;
+  infoKo: string | null;
+  infoEn: string | null;
+  sourceUrl: string | null;
+  taggedStatus: "review" | "done" | null;
+  alternativeIds: string[];
+
+  placeId: string | null;
+
+  cfAtmosphereScore: number | null;
+  cfLocalFamousScore: number | null;
+  cfDeepVarietyScore: number | null;
+
+  photoMemoryValue: number | null;
+  culturalValue: number | null;
+  natureValue: number | null;
+  foodValue: number | null;
+  walkingRequired: number | null;
+  restAvailability: number | null;
+  indoorShelter: number | null;
+
+  companionScoreSolo: number | null;
+  companionScoreCouple: number | null;
+  companionScoreFriends: number | null;
+  companionScoreParents: number | null;
+  companionScoreKid: number | null;
+  companionScorePet: number | null;
+
+  weatherScoreSunny: number | null;
+  weatherScoreRainy: number | null;
+  weatherScoreCloudy: number | null;
+  seasonScoreSpring: number | null;
+  seasonScoreSummer: number | null;
+  seasonScoreFall: number | null;
+  seasonScoreWinter: number | null;
+  timeScoreMorning: number | null;
+  timeScoreAfternoon: number | null;
+  timeScoreEvening: number | null;
+
+  petAllowed: boolean | null;
+  wheelchairAccessible: boolean | null;
+  strollerAccessible: boolean | null;
+  stairsAlternative: boolean | null;
 };
 
 export type RecommendParams = {
@@ -120,6 +175,64 @@ export async function getRecommendations({
       whyKo: tags.whyKo,
       whyEn: tags.whyEn,
       coverage: tags.coverage,
+
+      cf8Match: tags.cf8Match,
+      hasRaw: tags.hasRaw,
+      hasMeatOnly: tags.hasMeatOnly,
+      hasSeafoodOnly: tags.hasSeafoodOnly,
+      seatingType: tags.seatingType,
+      fitCouple: tags.fitCouple,
+      fitFriends: tags.fitFriends,
+      fitFamily: tags.fitFamily,
+      stayMinutes: tags.stayMinutes,
+      budgetLevel: tags.budgetLevel,
+      proEn: tags.proEn,
+      conEn: tags.conEn,
+      infoKo: tags.infoKo,
+      infoEn: tags.infoEn,
+      sourceUrl: tags.sourceUrl,
+      taggedStatus: tags.taggedStatus,
+      alternativeIds: tags.alternativeIds,
+
+      // 92번/CF8추천구조 미반영분 — 아래는 유나 확인 대기 중이라 DB에 키 자체가
+      // 없을 수 있음. undefined면 JSON.stringify가 키를 통째로 지워버려 타입
+      // 계약(T | null, 필수 필드)이 깨지므로 명시적으로 null 폴백
+      placeId: tags.placeId ?? null,
+
+      cfAtmosphereScore: tags.cfAtmosphereScore ?? null,
+      cfLocalFamousScore: tags.cfLocalFamousScore ?? null,
+      cfDeepVarietyScore: tags.cfDeepVarietyScore ?? null,
+
+      photoMemoryValue: tags.photoMemoryValue ?? null,
+      culturalValue: tags.culturalValue ?? null,
+      natureValue: tags.natureValue ?? null,
+      foodValue: tags.foodValue ?? null,
+      walkingRequired: tags.walkingRequired ?? null,
+      restAvailability: tags.restAvailability ?? null,
+      indoorShelter: tags.indoorShelter ?? null,
+
+      companionScoreSolo: tags.companionScoreSolo ?? null,
+      companionScoreCouple: tags.companionScoreCouple ?? null,
+      companionScoreFriends: tags.companionScoreFriends ?? null,
+      companionScoreParents: tags.companionScoreParents ?? null,
+      companionScoreKid: tags.companionScoreKid ?? null,
+      companionScorePet: tags.companionScorePet ?? null,
+
+      weatherScoreSunny: tags.weatherScoreSunny ?? null,
+      weatherScoreRainy: tags.weatherScoreRainy ?? null,
+      weatherScoreCloudy: tags.weatherScoreCloudy ?? null,
+      seasonScoreSpring: tags.seasonScoreSpring ?? null,
+      seasonScoreSummer: tags.seasonScoreSummer ?? null,
+      seasonScoreFall: tags.seasonScoreFall ?? null,
+      seasonScoreWinter: tags.seasonScoreWinter ?? null,
+      timeScoreMorning: tags.timeScoreMorning ?? null,
+      timeScoreAfternoon: tags.timeScoreAfternoon ?? null,
+      timeScoreEvening: tags.timeScoreEvening ?? null,
+
+      petAllowed: tags.petAllowed ?? null,
+      wheelchairAccessible: tags.wheelchairAccessible ?? null,
+      strollerAccessible: tags.strollerAccessible ?? null,
+      stairsAlternative: tags.stairsAlternative ?? null,
 
       // Fit 점수·거리는 클라이언트(FE-FEAT-005)가 계산
       fitScore: 0,
