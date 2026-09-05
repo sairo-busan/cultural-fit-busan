@@ -37,31 +37,31 @@ export function useRecommendations(): UseRecommendationsResult {
       setLoading(true);
       setError(null);
 
-      const cf8Code = localStorage.getItem(STORAGE_KEYS.cf8Code);
-      if (!cf8Code) {
-        if (!cancelled) {
-          setError("CF8 진단이 필요합니다");
-          setLoading(false);
+      try {
+        const cf8Code = localStorage.getItem(STORAGE_KEYS.cf8Code);
+        if (!cf8Code) {
+          if (!cancelled) {
+            setError("CF8 진단이 필요합니다");
+            setLoading(false);
+          }
+          return;
         }
-        return;
-      }
 
-      const modeRaw = localStorage.getItem(STORAGE_KEYS.tripSetupMode);
-      const mode: TripSetupMode = modeRaw === "CUSTOM" ? "CUSTOM" : "QUICK";
-      const tripSetupRaw = localStorage.getItem(STORAGE_KEYS.tripSetup);
-      let tripSetup: TripSetupLike | null = null;
-      try {
-        tripSetup = tripSetupRaw ? JSON.parse(tripSetupRaw) : null;
-      } catch {
-        tripSetup = null;
-      }
+        const modeRaw = localStorage.getItem(STORAGE_KEYS.tripSetupMode);
+        const mode: TripSetupMode = modeRaw === "CUSTOM" ? "CUSTOM" : "QUICK";
+        const tripSetupRaw = localStorage.getItem(STORAGE_KEYS.tripSetup);
+        let tripSetup: TripSetupLike | null = null;
+        try {
+          tripSetup = tripSetupRaw ? JSON.parse(tripSetupRaw) : null;
+        } catch {
+          tripSetup = null;
+        }
 
-      // 실제 GPS 확보 여부를 구분한다 — 거리 표시는 폴백 좌표로 계산하면
-      // 실제와 다른 값을 사실처럼 보여주게 되므로, 진짜 위치를 얻었을 때만 계산한다.
-      const position = await getCurrentPosition().catch(() => null);
-      const { lat, lng } = position ?? BUSAN_CITY_HALL;
+        // 실제 GPS 확보 여부를 구분한다 — 거리 표시는 폴백 좌표로 계산하면
+        // 실제와 다른 값을 사실처럼 보여주게 되므로, 진짜 위치를 얻었을 때만 계산한다.
+        const position = await getCurrentPosition().catch(() => null);
+        const { lat, lng } = position ?? BUSAN_CITY_HALL;
 
-      try {
         const [recommendRes, weatherRes] = await Promise.all([
           fetch("/api/recommend?limit=100"),
           fetch(`/api/weather?lat=${lat}&lng=${lng}&op=forecast`),
