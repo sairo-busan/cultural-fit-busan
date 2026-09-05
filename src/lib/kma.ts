@@ -108,3 +108,29 @@ export function classifyWeather(sky: string, pty: string): WeatherBucket {
   if (sky === "1") return "sunny";
   return "cloudy"; // SKY 3(구름많음)·4(흐림)
 }
+
+export type KmaForecastItem = {
+  category: string;
+  fcstDate: string;
+  fcstTime: string;
+  fcstValue: string;
+};
+
+/**
+ * getUltraSrtNcst(초단기실황)엔 SKY 카테고리가 없다(PTY만 있음) — 실측으로 확인함.
+ * SKY는 getVilageFcst(단기예보) 응답에만 있으므로, forecast op 결과에서 가장 이른
+ * fcstTime(=지금과 가장 가까운 예보 슬롯) 하나를 골라 SKY/PTY를 함께 뽑는다.
+ */
+export function currentWeatherFromForecast(items: KmaForecastItem[]): WeatherBucket | null {
+  const times = [...new Set(items.map((i) => `${i.fcstDate}${i.fcstTime}`))].sort();
+  const nearest = times[0];
+  if (!nearest) return null;
+
+  const sky = items.find((i) => `${i.fcstDate}${i.fcstTime}` === nearest && i.category === "SKY")
+    ?.fcstValue;
+  const pty = items.find((i) => `${i.fcstDate}${i.fcstTime}` === nearest && i.category === "PTY")
+    ?.fcstValue;
+  if (!sky || !pty) return null;
+
+  return classifyWeather(sky, pty);
+}
