@@ -12,7 +12,9 @@ export const STORAGE_KEYS = {
   answers: "cfb-cf8-answers",
   /** S01 진행 중인 문항 번호 */
   step: "cfb-cf8-step",
-  /** S03 조건 입력 (FE-FEAT-004에서 사용) */
+  /** S03 조건 입력 — 피그마 UXF2 확정 키 */
+  tripSetup: "trip_setup",
+  /** 구버전 진단의 음식 Hard Filter. S03로 대체됨 */
   hardFilter: "cfb-hard-filter",
 } as const;
 
@@ -27,6 +29,7 @@ export function clearDiagnosis() {
     STORAGE_KEYS.cf8Code,
     STORAGE_KEYS.answers,
     STORAGE_KEYS.step,
+    STORAGE_KEYS.tripSetup,
     STORAGE_KEYS.hardFilter,
     ...LEGACY_KEYS,
   ].forEach((key) => localStorage.removeItem(key));

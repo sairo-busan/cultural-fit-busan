@@ -12,7 +12,7 @@ CFP 16유형(4축 6문항)으로 구현된 진단을 **CF8 8유형(3축 3문항)
 | Type | FEAT |
 | Severity | Critical |
 | Layer | Page / Component / Lib |
-| Status | In Progress |
+| Status | Done |
 | Screen | S01, S02 |
 | Depends | — |
 | Related | FE-FEAT-001(온보딩 최초 구현, PR #1) · PR #7(CF8 문서 정리, 머지 대기) · BE-FEAT-005(에린 — 이 티켓이 확정하는 `cf8_code` 가 입력 규격) |
