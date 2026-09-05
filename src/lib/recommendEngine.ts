@@ -50,6 +50,8 @@ export type RankedPlace<T extends EnginePlaceInput> = T & {
   matchesSoftFoodPreference: boolean;
   reasons: string[];
   distanceMin: number | null;
+  /** 예시_CF8추천구조의 RANK(AD,...,0)과 동일한 동점 처리 — 동점은 같은 순위, 다음 순위는 그만큼 건너뜀(1,2,2,4). */
+  rank: number;
 };
 
 /**
@@ -93,8 +95,16 @@ export function rankPlaces<T extends EnginePlaceInput>(
             place.mapX
           )
         : null,
+      rank: 0, // 정렬 후 아래서 채움
     });
   }
 
-  return ranked.sort((a, b) => b.fitScore - a.fitScore);
+  ranked.sort((a, b) => b.fitScore - a.fitScore);
+
+  // RANK(AD,...,0) 동일 규칙: 동점은 같은 순위, 다음 순위는 동점 개수만큼 건너뜀
+  ranked.forEach((p, i) => {
+    p.rank = i > 0 && ranked[i - 1].fitScore === p.fitScore ? ranked[i - 1].rank : i + 1;
+  });
+
+  return ranked;
 }
