@@ -22,6 +22,7 @@ import {
 } from "./situationalScore";
 import { calculateFinalScore } from "./finalScore";
 import { resolveActiveFilters, type TripSetupLike, type TripSetupMode } from "./tripSetupMode";
+import { generateReasons } from "./reasonText";
 
 export type EngineContext = {
   cf8Code: string;
@@ -33,11 +34,12 @@ export type EngineContext = {
 
 export type EnginePlaceInput = PlaceForFilter &
   PlaceSituationalScores &
-  PlaceAxisScores & { contentId: string };
+  PlaceAxisScores & { contentId: string; whyKo: string | null; whyEn: string | null };
 
 export type RankedPlace<T extends EnginePlaceInput> = T & {
   fitScore: number;
   matchesSoftFoodPreference: boolean;
+  reasons: string[];
 };
 
 /**
@@ -59,18 +61,20 @@ export function rankPlaces<T extends EnginePlaceInput>(
     const hf = applyHardFilter(place, filters.foodRestrictions, filters.walkingDifficulties);
     if (hf.excluded) continue;
 
-    const finalScore = calculateFinalScore({
+    const scoreInputs = {
       cf8FitScore: cf8FitScoreFromCode(context.cf8Code, place),
       companionScore: selectCompanionScore(place, filters.companions),
       weatherScore: selectWeatherScore(place, context.weather),
       seasonScore: selectSeasonScore(place, season),
       timeScore: selectTimeScore(place, timeOfDay),
-    });
+    };
+    const finalScore = calculateFinalScore(scoreInputs);
 
     ranked.push({
       ...place,
       fitScore: finalScore ?? 0,
       matchesSoftFoodPreference: matchesSoftFoodPreference(place, filters.foodRestrictions),
+      reasons: generateReasons({ ...scoreInputs, whyKo: place.whyKo, whyEn: place.whyEn }),
     });
   }
 
