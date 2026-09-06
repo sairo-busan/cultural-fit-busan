@@ -12,7 +12,7 @@
 | Type | FEAT |
 | Severity | Critical |
 | Layer | Lib / Hook |
-| Status | In Progress |
+| Status | In Progress (Step 11 S10 연결만 남음, 소피 요청) |
 | Screen | S10, S20, S21(구 S30), S36(구 S44) |
 | Depends | FE-FEAT-001(CF8 진단 3문항, 완료), BE-FEAT-006(`/api/recommend` 단순화, 완료), BE-FEAT-007(placeTags 확장, 진행중) |
 | Related | 담당은 에린(추천 엔진 설계자). **티켓 접두사는 FE지만 소피가 짜는 코드가 아님** — 위치·CF8·trip_setup 등 개인 프로필 데이터가 기기 밖으로 나가면 안 되어서 코드가 브라우저에서 실행될 뿐, 소유자는 에린([위치 정보 사용 리스크 검토](https://app.notion.com/p/3c92178256a88009895dfad11322b28c) 참고) |
@@ -78,6 +78,7 @@ CF8 = 3축 2지선다 (기존 CFP16/4축16유형 대체)
 - 검색 API 연동 — 팀 결정으로 보류
 - 도착 안내(S36)·문화 충돌 안내(S21) 상세 UI — 이 티켓은 점수 계산 로직까지만
 - `recommendationSnapshots` — 저장 안 하기로 결정(2026-09-05, 추천엔진_로직_및_DB구조.md §3-2 참고), 매 요청 즉시 계산만
+- **S20 상세페이지 "추천 이유" 풀 섹션** — Figma(node 670:1404, S20 · 장소 상세)에 유형명+장소설명 2문장 템플릿·CF8 3축 매칭 칩 3개·동행조건 섹션이 별도로 있음. 이 티켓은 S10 카드용 1줄 이유(R060, `reasonText.ts`)까지만 — S20 richer 버전은 후속 티켓으로 분리(미발급)
 
 ---
 
@@ -88,13 +89,13 @@ CF8 = 3축 2지선다 (기존 CFP16/4축16유형 대체)
 ### Step 3: ✅ 92_V5상세태깅60 `review_status` 확인 — 필드 없음 확정, `coverage`가 게이트 역할 대체 중이라 조치 불필요
 ### Step 4: ✅ `recommendationSnapshots` 생략 결정 — 완료
 ### Step 5: ✅ CF8 축 매칭 함수(`src/lib/cf8Match.ts`) — 완료, 496건 검증
-### Step 6: 하드필터 로직 — 음식제약(기존 구현) + 접근성 UNKNOWN 처리(제외 아님, 표시만)
-### Step 7: 상황보정 점수 추출 함수 — companionScore/weatherScore/seasonScore/timeScore 선택 로직(데이터 오면 바로 동작하게 미리 구현)
-### Step 8: 최종점수 계산 — CALC_04 가중치 + R031 재정규화 결합, **에린 확인 필요**(고정가중치 vs 재정규화 우선순위)
-### Step 9: `trip_setup_mode` QUICK/CUSTOM 분기 로직
-### Step 10: 클라이언트 훅/모듈 조립(`src/lib/recommendClient.ts` 또는 협의된 위치, "use client" 경계) — `/api/recommend` 호출 → 전체 파이프라인 실행 → 정렬된 목록 반환
-### Step 11: S10 피드 화면에 연결(현재 목데이터 대체)
-### Step 12: QA(`/qa`)
+### Step 6: ✅ 하드필터 로직(`hardFilter.ts`) — raw_meat/raw_seafood 확인시 제외, vegan/spicy는 배지만(점수 가산 없음, 이유는 Implementation Notes)
+### Step 7: ✅ 상황보정 점수 추출 함수(`situationalScore.ts`) — 4건 실데이터 오버레이로 로직 동작 확인(DB엔 안 씀)
+### Step 8: ✅ 최종점수 계산(`finalScore.ts`) — CALC_04 + R031 재정규화, 13건 실데이터 대조 검증
+### Step 9: ✅ `trip_setup_mode` QUICK/CUSTOM 분기(`tripSetupMode.ts`)
+### Step 10: ✅ 클라이언트 훅 조립(`recommendEngine.ts` 순수로직 + `useRecommendations.ts` 브라우저 I/O)
+### Step 11: ⬜ S10 피드 화면에 연결(현재 목데이터 대체) — **소피 요청, PR#12 코멘트로 전달**
+### Step 12: ✅ QA(`/qa`) — 1차 실행, 발견된 버그 2건(localStorage try/catch 누락, import 스크립트 N+1) 수정 완료
 
 ---
 
@@ -134,4 +135,15 @@ CF8 = 3축 2지선다 (기존 CFP16/4축16유형 대체)
 - `src/lib/cf8Match.ts` 작성 — `parseCf8Code`, `cf8FitScore`, `cf8FitScoreFromCode`
 - 공식 `50+25×user_axis×place_axis` → 3축 평균, UNKNOWN 축은 제외 후 재정규화(R031)
 - `12_CF8매칭검증`(gid=319874358) 실데이터 62곳×8유형=496건 전수 대조 검증, 불일치 0건
-- 아직 어떤 화면/모듈에서도 호출 안 함 — Step 10(클라이언트 조립)에서 실제 연결 예정
+
+### 2026-09-05~06: 나머지 6개 모듈 + 훅 완성
+
+- `hardFilter.ts`: raw_meat/raw_seafood는 확인된(true) 것만 하드 제외, vegan/spicy는 CALC_04에 가중치가 없어 점수 가산 대신 `matchesSoftFoodPreference` 배지만. 접근성은 확인된 false만 제외, null은 통과
+- `situationalScore.ts`/`finalScore.ts`: DB에서 아직 없는 필드가 `undefined`로 와서 `!== null` 체크를 새어나가 NaN 발생하던 실버그 발견·수정(`?? null` 방어)
+- `tripSetupMode.ts`: R024 QUICK/CUSTOM 분기, 미응답은 빈 배열로 안전 처리
+- `recommendEngine.ts`(`rankPlaces`): 5개 모듈 조립 + `reasonText.ts`(R060, whyKo 우선·최강축 폴백) + `distance.ts`(표시전용, 순위 미반영) + `rank`(시트 RANK() 동점처리 동일 구현) 전부 통합
+- `kma.ts`: `getUltraSrtNcst`엔 SKY 카테고리가 없다는 걸 실측으로 발견 → `getVilageFcst`로 전환, 가장 이른 fcstTime에서 SKY+PTY 조합
+- `useRecommendations.ts`: localStorage+geolocation+두 API 호출 조립 훅
+- QA 1차: `useRecommendations.ts` localStorage 예외처리 누락(try 블록 확장), `import-place-scores.ts` N+1(bulkWrite로 전환) 수정
+- 상세 유저플로우·시퀀스 다이어그램: `docs/FE-FEAT-005_유저플로우_실행흐름.md` 참고
+- 실행 로직은 전부 완성, **Step 11(S10 연결)만 남음** — PR#12로 push, 소피에게 요청
