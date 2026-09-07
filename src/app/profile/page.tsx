@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { buildCf8Profile } from "@/lib/cfp";
-import { useToast } from "@/contexts/ToastContext";
 import { AppHeader } from "@/components/common/AppHeader";
 import { AxisSlider } from "@/components/profile/AxisSlider";
 import { DEFAULT_QUIZ_ANSWERS, DEFAULT_HARD_FILTER } from "@/data/quiz";
@@ -28,7 +27,6 @@ const STEP_DURATION = 450;
 
 export function ProfilePage() {
   const router = useRouter();
-  const { show } = useToast();
   const [loading, setLoading] = useState(true);
   const [loadingStep, setLoadingStep] = useState(0);
   const [answers] = useLocalStorage(STORAGE_KEYS.answers, DEFAULT_QUIZ_ANSWERS);
@@ -71,8 +69,7 @@ export function ProfilePage() {
   };
 
   const handleMoreConditions = () => {
-    // S03 조건 입력 — FE-FEAT-004에서 구현
-    show("조건 입력은 곧 제공됩니다. 먼저 추천을 확인해보세요.");
+    router.push("/trip-setup");
   };
 
   const axisCodes = [
