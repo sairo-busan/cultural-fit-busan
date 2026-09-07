@@ -16,6 +16,10 @@ export const STORAGE_KEYS = {
   tripSetup: "trip_setup",
   /** 구버전 진단의 음식 Hard Filter. S03로 대체됨 */
   hardFilter: "cfb-hard-filter",
+  /** S03에서 저장하는 TripSetup 객체(JSON) — FE-FEAT-004/005 공통 */
+  tripSetup: "trip_setup",
+  /** "QUICK" | "CUSTOM" — S03 스킵 여부(04_추천로직 R024) */
+  tripSetupMode: "trip_setup_mode",
 } as const;
 
 /** CFP16 시절 키. 남아 있으면 진단 초기화 시 함께 지운다. */

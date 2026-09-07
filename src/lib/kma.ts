@@ -95,3 +95,42 @@ export function getVilageFcstBaseTime(now: Date): { base_date: string; base_time
   kst.setUTCHours(chosenHour, 0, 0, 0);
   return { base_date: formatBaseDate(kst), base_time: `${pad2(chosenHour)}00` };
 }
+
+export type WeatherBucket = "sunny" | "rainy" | "cloudy";
+
+/**
+ * KMA 공식 코드값(기상청 API 가이드 표) → placeTags weatherScore* 3분류 매핑.
+ * PTY(강수형태): 0=없음, 1=비, 2=비/눈, 3=눈, 4=소나기, 5~7=빗방울류
+ * SKY(하늘상태): 1=맑음, 3=구름많음, 4=흐림
+ */
+export function classifyWeather(sky: string, pty: string): WeatherBucket {
+  if (pty !== "0") return "rainy";
+  if (sky === "1") return "sunny";
+  return "cloudy"; // SKY 3(구름많음)·4(흐림)
+}
+
+export type KmaForecastItem = {
+  category: string;
+  fcstDate: string;
+  fcstTime: string;
+  fcstValue: string;
+};
+
+/**
+ * getUltraSrtNcst(초단기실황)엔 SKY 카테고리가 없다(PTY만 있음) — 실측으로 확인함.
+ * SKY는 getVilageFcst(단기예보) 응답에만 있으므로, forecast op 결과에서 가장 이른
+ * fcstTime(=지금과 가장 가까운 예보 슬롯) 하나를 골라 SKY/PTY를 함께 뽑는다.
+ */
+export function currentWeatherFromForecast(items: KmaForecastItem[]): WeatherBucket | null {
+  const times = [...new Set(items.map((i) => `${i.fcstDate}${i.fcstTime}`))].sort();
+  const nearest = times[0];
+  if (!nearest) return null;
+
+  const sky = items.find((i) => `${i.fcstDate}${i.fcstTime}` === nearest && i.category === "SKY")
+    ?.fcstValue;
+  const pty = items.find((i) => `${i.fcstDate}${i.fcstTime}` === nearest && i.category === "PTY")
+    ?.fcstValue;
+  if (!sky || !pty) return null;
+
+  return classifyWeather(sky, pty);
+}
