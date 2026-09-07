@@ -12,7 +12,7 @@ export function PlaceCard({ place }: PlaceCardProps) {
   const weatherLabel =
     place.weatherType === "indoor"
       ? "실내"
-      : place.weatherType === "both"
+      : place.weatherType === "mixed"
         ? "실내외"
         : "야외";
 
