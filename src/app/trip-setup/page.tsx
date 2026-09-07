@@ -15,9 +15,6 @@ import {
 import { STORAGE_KEYS } from "@/lib/storage";
 import type { TripSetup, ChipOption } from "@/types/trip";
 
-/** 음식 제약에서 이걸 고르면 나머지가 해제된다 */
-const FOOD_NONE = "none";
-
 export function TripSetupPage() {
   const router = useRouter();
   const [setup, setSetup] = useLocalStorage<TripSetup>(
@@ -27,19 +24,25 @@ export function TripSetupPage() {
 
   const labels = summaryLabels(setup);
 
-  /** 복수 선택 토글 */
-  const toggleMulti = (key: keyof TripSetup, value: string) => {
+  /**
+   * 복수 선택 토글.
+   * `exclusiveOption`(혼자 · 특별히 없어요)은 같은 섹션의 다른 선택과 공존하지 않는다.
+   */
+  const toggleMulti = (
+    key: keyof TripSetup,
+    value: string,
+    exclusiveOption?: string,
+  ) => {
     const current = (setup[key] as string[]) ?? [];
     let next = current.includes(value)
       ? current.filter((v) => v !== value)
       : [...current, value];
 
-    // 음식 제약 — "특별히 없어요"는 다른 선택과 공존하지 않는다
-    if (key === "foodRestriction") {
-      if (value === FOOD_NONE && !current.includes(FOOD_NONE)) {
-        next = [FOOD_NONE];
-      } else if (value !== FOOD_NONE) {
-        next = next.filter((v) => v !== FOOD_NONE);
+    if (exclusiveOption) {
+      if (value === exclusiveOption && !current.includes(exclusiveOption)) {
+        next = [exclusiveOption];
+      } else if (value !== exclusiveOption) {
+        next = next.filter((v) => v !== exclusiveOption);
       }
     }
 
@@ -77,6 +80,7 @@ export function TripSetupPage() {
     key: keyof TripSetup,
     options: readonly ChipOption[],
     multiple: boolean,
+    exclusiveOption?: string,
   ) => (
     <div className="flex flex-wrap gap-[8px]">
       {options.map((option) => (
@@ -86,7 +90,7 @@ export function TripSetupPage() {
           selected={isSelected(key, option.value)}
           onClick={() =>
             multiple
-              ? toggleMulti(key, option.value)
+              ? toggleMulti(key, option.value, exclusiveOption)
               : toggleSingle(key, option.value)
           }
         />
@@ -148,7 +152,12 @@ export function TripSetupPage() {
                 )}
               </div>
 
-              {renderChips(section.key, section.options, section.multiple)}
+              {renderChips(
+                section.key,
+                section.options,
+                section.multiple,
+                section.exclusiveOption,
+              )}
 
               {/* 함께하는 분 뒤에 조건부 확장 */}
               {section.key === "travelWith" && (

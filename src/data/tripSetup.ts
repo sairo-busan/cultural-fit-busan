@@ -21,9 +21,12 @@ export const TRIP_SECTIONS: TripSection[] = [
     title: "함께하는 분",
     helperText: "복수로 고르실 수 있어요",
     multiple: true,
+    // 혼자면 동반자가 없으므로 다른 선택을 해제한다
+    exclusiveOption: "solo",
     options: [
       { value: "solo", label: "혼자" },
-      { value: "friends_couple", label: "친구·연인" },
+      { value: "couple", label: "연인" },
+      { value: "friends", label: "친구" },
       { value: "parents", label: "부모님" },
       { value: "kid", label: "아이 동반" },
       { value: "pet", label: "반려동물 동반" },
@@ -56,6 +59,7 @@ export const TRIP_SECTIONS: TripSection[] = [
     title: "음식 제약",
     helperText: "고르신 항목은 추천에서 아예 제외합니다",
     multiple: true,
+    exclusiveOption: "none",
     options: [
       { value: "none", label: "특별히 없어요" },
       { value: "spicy", label: "매운 음식" },
