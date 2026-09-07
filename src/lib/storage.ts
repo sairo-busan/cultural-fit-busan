@@ -12,14 +12,12 @@ export const STORAGE_KEYS = {
   answers: "cfb-cf8-answers",
   /** S01 진행 중인 문항 번호 */
   step: "cfb-cf8-step",
-  /** S03 조건 입력 — 피그마 UXF2 확정 키 */
-  tripSetup: "trip_setup",
-  /** 구버전 진단의 음식 Hard Filter. S03로 대체됨 */
-  hardFilter: "cfb-hard-filter",
-  /** S03에서 저장하는 TripSetup 객체(JSON) — FE-FEAT-004/005 공통 */
+  /** S03에서 저장하는 TripSetup 객체(JSON) — 피그마 UXF2 확정 키 */
   tripSetup: "trip_setup",
   /** "QUICK" | "CUSTOM" — S03 스킵 여부(04_추천로직 R024) */
   tripSetupMode: "trip_setup_mode",
+  /** 구버전 진단의 음식 Hard Filter. S03로 대체됨 */
+  hardFilter: "cfb-hard-filter",
 } as const;
 
 /** CFP16 시절 키. 남아 있으면 진단 초기화 시 함께 지운다. */
@@ -34,6 +32,7 @@ export function clearDiagnosis() {
     STORAGE_KEYS.answers,
     STORAGE_KEYS.step,
     STORAGE_KEYS.tripSetup,
+    STORAGE_KEYS.tripSetupMode,
     STORAGE_KEYS.hardFilter,
     ...LEGACY_KEYS,
   ].forEach((key) => localStorage.removeItem(key));
