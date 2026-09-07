@@ -12,7 +12,7 @@ import {
   DEFAULT_TRIP_SETUP,
   summaryLabels,
 } from "@/data/tripSetup";
-import { STORAGE_KEYS } from "@/lib/storage";
+import { STORAGE_KEYS, setTripSetupMode } from "@/lib/storage";
 import type { TripSetup, ChipOption } from "@/types/trip";
 
 export function TripSetupPage() {
@@ -69,10 +69,16 @@ export function TripSetupPage() {
     return Array.isArray(current) ? current.includes(value) : current === value;
   };
 
-  const handleSubmit = () => router.push("/feed");
+  const handleSubmit = () => {
+    setTripSetupMode("CUSTOM");
+    router.push("/feed");
+  };
 
+  // 건너뛰면 조건을 "없음"으로 답한 게 아니라 "묻지 않은" 상태다.
+  // QUICK으로 되돌려 엔진이 빈 값을 명시적 응답으로 오해하지 않게 한다 (R024·R031).
   const handleSkip = () => {
     setSetup(DEFAULT_TRIP_SETUP);
+    setTripSetupMode("QUICK");
     router.push("/feed");
   };
 
