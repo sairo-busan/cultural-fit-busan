@@ -18,7 +18,7 @@
 | Type | FEAT |
 | Severity | Critical |
 | Layer | Page / Components / Data / Types |
-| Status | Done |
+| Status | In Progress |
 | Depends | FE-FEAT-007 (PR #14 — `ChoiceChipGroup`·`trip_setup_mode`) |
 | Related | FE-FEAT-006 (PR #13 — 추천 엔진이 `trip_setup` 을 소비) |
 
