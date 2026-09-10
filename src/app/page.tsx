@@ -8,7 +8,7 @@ export function LandingPage() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <div className="flex justify-end px-[20px] py-[16px]">
+      <div className="flex justify-end px-5 py-4">
         <LocaleDropdown />
       </div>
 
@@ -35,11 +35,11 @@ export function LandingPage() {
         </div>
 
         {/* CTA — 62px 높이 */}
-        <div className="flex w-full flex-col gap-[10px] pt-[26px]">
+        <div className="flex w-full flex-col gap-2.5 pt-[26px]">
           <button
             type="button"
             onClick={() => router.push("/onboarding")}
-            className="h-[62px] w-full rounded-[8px] bg-foreground text-[14px] font-light text-white transition-colors"
+            className="h-[62px] w-full rounded-lg bg-foreground text-[14px] font-light text-white transition-colors"
             style={{ lineHeight: 2 }}
           >
             내 여행 스타일 찾기
@@ -47,7 +47,7 @@ export function LandingPage() {
           <button
             type="button"
             onClick={() => router.push("/feed")}
-            className="h-[62px] w-full rounded-[8px] border border-border text-[14px] font-light text-foreground transition-colors"
+            className="h-[62px] w-full rounded-lg border border-border text-[14px] font-light text-foreground transition-colors"
             style={{ lineHeight: 2 }}
           >
             둘러보기
@@ -59,7 +59,7 @@ export function LandingPage() {
           className="text-[10.5px] font-light text-muted"
           style={{ letterSpacing: "1.05px", lineHeight: 1.6 }}
         >
-          6문항 1분 · 회원가입 없이 이용
+          회원가입 없이 이용
         </p>
       </div>
 
