@@ -28,17 +28,14 @@ export function TripSetupPage() {
 
   const update = (
     key: keyof TripSetup,
-    value: string | string[] | null,
+    value: string | string[] | boolean | null,
   ) => {
     const next: TripSetup = { ...setup, [key]: value };
 
     // 트리거가 풀리면 딸린 조건부 답을 비운다 (화면설계서 §C).
     // 남겨두면 화면에 안 보이는 값이 엔진으로 넘어간다.
-    if (key === "companion_type") {
-      const picked = (value ?? []) as string[];
-      if (!picked.includes("CHILD")) next.child_age_group = null;
-      if (!picked.includes("PET")) next.pet_carry = null;
-    }
+    if (key === "child_with" && !value) next.child_age_group = null;
+    if (key === "pet_with" && !value) next.pet_carry = null;
 
     setSetup(next);
   };
@@ -99,7 +96,7 @@ export function TripSetupPage() {
                     <p id={titleId} className="ds-title-1 text-ink">
                       {question.title}
                     </p>
-                    {!question.multiple && (
+                    {!question.multiple && !question.toggles && (
                       <span className="ds-caption text-gray-600">
                         {TRIP_SETUP_COPY.singleHint}
                       </span>
@@ -126,6 +123,28 @@ export function TripSetupPage() {
                     value={setup[question.key] as string | null}
                     onChange={(value) => update(question.key, value)}
                     onDeselect={() => update(question.key, null)}
+                  />
+                )}
+
+                {question.toggles && (
+                  <CheckChipGroup
+                    labelledBy={titleId}
+                    options={question.toggles.map((t) => t.option)}
+                    values={question.toggles
+                      .filter((t) => setup[t.key])
+                      .map((t) => t.option.value)}
+                    onChange={(values) => {
+                      const next = { ...setup };
+                      for (const toggle of question.toggles ?? []) {
+                        const on = values.includes(toggle.option.value);
+                        (next[toggle.key] as boolean) = on;
+                        if (!on && toggle.key === "child_with")
+                          next.child_age_group = null;
+                        if (!on && toggle.key === "pet_with")
+                          next.pet_carry = null;
+                      }
+                      setSetup(next);
+                    }}
                   />
                 )}
               </div>

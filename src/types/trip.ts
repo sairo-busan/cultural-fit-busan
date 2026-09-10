@@ -16,13 +16,8 @@ import type { ChoiceOption } from "@/components/common/ChoiceChipGroup";
  * ─────────────────────────────────────────────────────────────
  */
 
-/** `CMP01` — 함께하는 분. 엑셀 점수판의 동행 5컬럼과 1:1 대응한다. */
-export type CompanionType =
-  | "SOLO"
-  | "FRIEND_COUPLE"
-  | "PARENTS"
-  | "CHILD"
-  | "PET";
+/** `CMP01` — 주 동행. 아이·반려동물은 별도 boolean 으로 나눠 저장한다. */
+export type PrimaryCompanion = "SOLO" | "FRIEND_COUPLE" | "PARENTS";
 
 /** `CHILD01` — `companion_type = CHILD` 일 때만 */
 export type ChildAgeGroup = "INFANT" | "PRESCHOOL" | "ELEMENTARY" | "TEEN";
@@ -32,23 +27,14 @@ export type PetCarry = "LEASH" | "CARRIER" | "BOTH";
 
 /** `MOB01` — 보행 부담 */
 export type MobilityCare =
-  | "NONE"
-  | "LONG_WALK"
-  | "STAIRS"
-  | "STROLLER"
-  | "WHEELCHAIR";
+  "NONE" | "LONG_WALK" | "STAIRS" | "STROLLER" | "WHEELCHAIR";
 
 /** `TRN01` — 이동 수단. 동선 계산에만 쓰고 CF8·동행 점수에는 반영하지 않는다. */
 export type TransportMode = "WALK" | "TRANSIT" | "CAR";
 
 /** `FOOD01` — 음식 제약. 충돌이 **확인된** 장소만 제외한다(UNKNOWN은 유지). */
 export type FoodRestriction =
-  | "NONE"
-  | "NO_SPICY"
-  | "VEGAN"
-  | "NO_RAW_MEAT"
-  | "NO_RAW_SEAFOOD"
-  | "NO_PORK";
+  "NONE" | "NO_SPICY" | "VEGAN" | "NO_RAW_MEAT" | "NO_RAW_SEAFOOD" | "NO_PORK";
 
 /**
  * `CTX01` — 현재 상황.
@@ -66,10 +52,14 @@ export type CurrentContext =
 // === 저장 객체 ===
 
 export type TripSetup = {
-  companion_type: CompanionType[];
-  /** `companion_type` 에 `CHILD` 가 없으면 null */
+  /** 주 동행 — 셋 중 하나. 유나 9/10 확정 */
+  primary_companion: PrimaryCompanion | null;
+  /** 주 동행과 별개로 추가 선택 */
+  child_with: boolean;
+  pet_with: boolean;
+  /** `child_with` 가 false 면 null */
   child_age_group: ChildAgeGroup | null;
-  /** `companion_type` 에 `PET` 이 없으면 null */
+  /** `pet_with` 가 false 면 null */
   pet_carry: PetCarry | null;
   /** 복수 — "오래 걷기 어렵고 계단도 어려움" 같은 조합이 흔하다 */
   mobility_care: MobilityCare[];
@@ -92,8 +82,13 @@ export type TripQuestion = {
   helperText?: string;
   options: ChoiceOption[];
   /**
+   * 같은 문항 안에서 독립으로 켜고 끄는 선택지 (CMP01 의 아이·반려동물 동반).
+   * 주 선택과 배타가 아니라 함께 고를 수 있다.
+   */
+  toggles?: { key: keyof TripSetup; option: ChoiceOption }[];
+  /**
    * 조건부 노출. 트리거 문항에서 이 값이 골라졌을 때만 보인다.
    * 시트 `show_when` 의 `companion_type=CHILD` 를 옮긴 것.
    */
-  showWhen?: { key: keyof TripSetup; equals: string };
+  showWhen?: { key: keyof TripSetup; equals: string | boolean };
 };

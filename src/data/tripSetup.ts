@@ -23,13 +23,12 @@ export const TRIP_SETUP_COPY = {
 export const TRIP_QUESTIONS: TripQuestion[] = [
   {
     id: "CMP01",
-    key: "companion_type",
-    multiple: true,
+    key: "primary_companion",
     title: "함께하는 분",
+    helperText: "한 분을 고르고, 아이·반려동물은 함께 고를 수 있어요.",
     options: [
       {
         value: "SOLO",
-        conflictsWith: ["FRIEND_COUPLE", "PARENTS", "CHILD"],
         label: "혼자",
         description: "내 일정과 속도에 맞는 장소를 찾습니다.",
       },
@@ -43,15 +42,23 @@ export const TRIP_QUESTIONS: TripQuestion[] = [
         label: "부모님",
         description: "함께 편안하게 이용할 수 있는 장소를 찾습니다.",
       },
+    ],
+    toggles: [
       {
-        value: "CHILD",
-        label: "아이 동반",
-        description: "아이의 연령을 확인해 안전성과 흥미를 반영합니다.",
+        key: "child_with",
+        option: {
+          value: "CHILD",
+          label: "아이 동반",
+          description: "아이의 연령을 확인해 안전성과 흥미를 반영합니다.",
+        },
       },
       {
-        value: "PET",
-        label: "반려동물 동반",
-        description: "동반 허용 여부와 이동 조건을 확인합니다.",
+        key: "pet_with",
+        option: {
+          value: "PET",
+          label: "반려동물 동반",
+          description: "동반 허용 여부와 이동 조건을 확인합니다.",
+        },
       },
     ],
   },
@@ -60,7 +67,7 @@ export const TRIP_QUESTIONS: TripQuestion[] = [
     key: "child_age_group",
     title: "아이는 몇 살인가요?",
     helperText: "여러 명이면 가장 어린 아이를 기준으로 골라주세요.",
-    showWhen: { key: "companion_type", equals: "CHILD" },
+    showWhen: { key: "child_with", equals: true },
     options: [
       {
         value: "INFANT",
@@ -89,7 +96,7 @@ export const TRIP_QUESTIONS: TripQuestion[] = [
     key: "pet_carry",
     title: "반려동물과 어떻게 이동하시나요?",
     helperText: "캐리어를 쓰시면 실내도 가능한 곳이 늘어납니다.",
-    showWhen: { key: "companion_type", equals: "PET" },
+    showWhen: { key: "pet_with", equals: true },
     options: [
       {
         value: "LEASH",
@@ -200,7 +207,8 @@ export const TRIP_QUESTIONS: TripQuestion[] = [
       {
         value: "NO_PORK",
         label: "돼지고기",
-        description: "돼지고기 없는 선택지가 확인된 장소를 우선하고, 충돌이 확인된 후보는 제외합니다.",
+        description:
+          "돼지고기 없는 선택지가 확인된 장소를 우선하고, 충돌이 확인된 후보는 제외합니다.",
       },
     ],
   },
@@ -239,20 +247,24 @@ export const TRIP_QUESTIONS: TripQuestion[] = [
       {
         value: "AVOID_CROWD",
         label: "혼잡 피하기",
-        description: "실시간이라고 표현하지 않고 예상 혼잡이 낮은 후보를 우선합니다.",
+        description:
+          "실시간이라고 표현하지 않고 예상 혼잡이 낮은 후보를 우선합니다.",
       },
       {
         value: "NONE",
         exclusive: true,
         label: "특별히 없어요",
-        description: "추가 상황 보정을 적용하지 않습니다. 자동 날씨·계절·시간 보정은 유지됩니다.",
+        description:
+          "추가 상황 보정을 적용하지 않습니다. 자동 날씨·계절·시간 보정은 유지됩니다.",
       },
     ],
   },
 ];
 
 export const DEFAULT_TRIP_SETUP: TripSetup = {
-  companion_type: [],
+  primary_companion: null,
+  child_with: false,
+  pet_with: false,
   child_age_group: null,
   pet_carry: null,
   mobility_care: [],
@@ -263,15 +275,10 @@ export const DEFAULT_TRIP_SETUP: TripSetup = {
 
 /** 지금 화면에 보여야 하는 문항만 (조건부 문항 필터) */
 export function visibleQuestions(setup: TripSetup): TripQuestion[] {
-  return TRIP_QUESTIONS.filter(
-    (q) => {
-      if (!q.showWhen) return true;
-      const value = setup[q.showWhen.key];
-      return Array.isArray(value)
-        ? value.includes(q.showWhen.equals as never)
-        : value === q.showWhen.equals;
-    },
-  );
+  return TRIP_QUESTIONS.filter((q) => {
+    if (!q.showWhen) return true;
+    return setup[q.showWhen.key] === q.showWhen.equals;
+  });
 }
 
 /**
@@ -283,14 +290,17 @@ export function summaryLabels(setup: TripSetup): string[] {
 
   for (const question of visibleQuestions(setup)) {
     const value = setup[question.key];
-    const picked = Array.isArray(value) ? value : value === null ? [] : [value];
+    const picked = Array.isArray(value) ? value : value ? [value] : [];
 
     for (const code of picked) {
       const label = question.options.find((o) => o.value === code)?.label;
       if (label) labels.push(label);
     }
+
+    for (const toggle of question.toggles ?? []) {
+      if (setup[toggle.key]) labels.push(toggle.option.label);
+    }
   }
 
   return labels;
 }
-
