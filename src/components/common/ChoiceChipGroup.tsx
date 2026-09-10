@@ -3,31 +3,15 @@
 import * as RadioGroup from "@radix-ui/react-radio-group";
 
 /**
- * S03 조건 입력 선택지 — 칩 형태.
- *
- * 화면설계서(`Sairo_화면설계서_08Sep26.pptx`) slide3~4 기준으로 칩이다.
- * 카드보다 촘촘해 한 화면에 7문항이 들어간다.
- *
- * 단일 선택은 Radix `RadioGroup` 을 쓴다 — 칩으로 보여도 의미는 라디오라
- * 화살표 키 이동·roving tabindex·`role="radiogroup"`·`aria-checked` 가 필요하다.
- * 복수 선택은 네이티브 checkbox + `fieldset` 을 쓴다. Radix에 체크박스 *그룹*
- * 프리미티브가 없고(`Checkbox` 는 단일 컨트롤), 브라우저가 그룹 의미와 키보드
- * 동작을 이미 제공한다.
- *
- * 칩에는 설명문을 넣지 않는다. 시트 `option_description` 은 문항 단위 안내로만
- * 쓰고, 선택지에는 `option_label` 만 보인다 (화면설계서와 동일).
+ * 선택지 칩. 단일은 Radix `RadioGroup`, 복수는 네이티브 checkbox + `fieldset`.
+ * 칩으로 보여도 의미는 라디오라 화살표 이동·`role="radiogroup"` 이 필요하고,
+ * Radix에는 체크박스 *그룹* 프리미티브가 없어 복수는 브라우저 기본을 쓴다.
  */
 
-/**
- * `chip` — S03. 촘촘해서 한 화면에 7문항이 들어간다. 라벨만 보인다.
- * `row`  — S01. 문항 카드 안에 세로로 쌓이는 행. 라디오 표시가 왼쪽에 온다.
- */
+/** `chip` — S03, 라벨만. `row` — S01, 라디오 표시가 왼쪽에 오는 행. */
 export type ChoiceVariant = "chip" | "row";
 
-/**
- * 선택지 하나. 도메인 타입에 의존하지 않는다 —
- * S01(축 값)과 S03(조건 코드)이 같은 컴포넌트를 쓰기 때문이다.
- */
+/** 도메인 타입에 의존하지 않는다 — S01(축 값)과 S03(조건 코드)이 함께 쓴다 */
 export type ChoiceOption = {
   /** 선택 시 저장되는 값 */
   value: string;

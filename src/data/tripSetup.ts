@@ -2,9 +2,6 @@ import type { TripQuestion, TripSetup } from "@/types/trip";
 
 /**
  * S03 조건 입력 화면 데이터 — 구글 시트 S03 문항 탭(`CMP01`~`ACT01`) 사본.
- *
- * 문구·값은 시트의 `question` · `helper_text` · `option_label` ·
- * `option_description` · `option_code` 를 그대로 옮겼다.
  * 시트가 바뀌면 이 파일만 고친다.
  */
 
@@ -281,10 +278,7 @@ export function visibleQuestions(setup: TripSetup): TripQuestion[] {
   });
 }
 
-/**
- * 선택 요약 바에 쓸 라벨 목록. 문항 순서대로, 조건부 문항 값도 포함한다
- * (화면설계서 §2 — "아이 나이·반려동물 이동 방식도 포함합니다").
- */
+/** 요약 바 라벨. 문항 순서대로, 조건부 문항 값도 포함한다 */
 export function summaryLabels(setup: TripSetup): string[] {
   const labels: string[] = [];
 

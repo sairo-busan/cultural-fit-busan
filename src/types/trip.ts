@@ -1,28 +1,20 @@
 import type { ChoiceOption } from "@/components/common/ChoiceChipGroup";
 
 /**
- * S03 조건 입력 — 추천 엔진 입력 계약
+ * S03 조건 입력 — 추천 엔진 입력 계약. 저장 키 `trip_setup`.
  *
- * 정본: 필드명·값은 구글 시트 S03 문항 탭 (`CMP01` ~ `ACT01`),
- *       선택 방식은 화면설계서 `Sairo_화면설계서_08Sep26.pptx` slide5 표
- * 저장 키: `trip_setup` (피그마 UXF2)
- *
- * ─────────────────────────────────────────────────────────────
- * 필드명과 값은 시트의 `stored_field` · `option_code` 를 그대로 쓴다.
- * 저장 객체가 곧 엔진과의 계약이라, 이름을 바꾸면 양쪽에서 번역이 필요해진다.
- * 그래서 TS 관례(camelCase)를 따르지 않고 시트 표기(snake_case)를 유지한다.
- *
- * 선택 방식은 화면설계서를 따른다 (시트는 전부 `SINGLE` — 유나 확인 대기).
- * ─────────────────────────────────────────────────────────────
+ * 필드명·값은 시트의 `stored_field`·`option_code` 를 그대로 쓴다. 저장 객체가
+ * 곧 엔진과의 계약이라 이름을 바꾸면 양쪽에서 번역이 필요해진다 — TS 관례
+ * (camelCase) 대신 snake_case 를 쓰는 이유다.
  */
 
-/** `CMP01` — 주 동행. 아이·반려동물은 별도 boolean 으로 나눠 저장한다. */
+/** `CMP01` — 주 동행 */
 export type PrimaryCompanion = "SOLO" | "FRIEND_COUPLE" | "PARENTS";
 
-/** `CHILD01` — `companion_type = CHILD` 일 때만 */
+/** `CHILD01` */
 export type ChildAgeGroup = "INFANT" | "PRESCHOOL" | "ELEMENTARY" | "TEEN";
 
-/** `PET01` — `companion_type = PET` 일 때만 */
+/** `PET01` */
 export type PetCarry = "LEASH" | "CARRIER" | "BOTH";
 
 /** `MOB01` — 보행 부담 */
@@ -52,19 +44,16 @@ export type CurrentContext =
 // === 저장 객체 ===
 
 export type TripSetup = {
-  /** 주 동행 — 셋 중 하나. 유나 9/10 확정 */
   primary_companion: PrimaryCompanion | null;
-  /** 주 동행과 별개로 추가 선택 */
+  /** 주 동행과 별개로 함께 고를 수 있다 */
   child_with: boolean;
   pet_with: boolean;
   /** `child_with` 가 false 면 null */
   child_age_group: ChildAgeGroup | null;
   /** `pet_with` 가 false 면 null */
   pet_carry: PetCarry | null;
-  /** 복수 — "오래 걷기 어렵고 계단도 어려움" 같은 조합이 흔하다 */
   mobility_care: MobilityCare[];
   transport_mode: TransportMode | null;
-  /** 복수 — "채식인데 매운 것도 못 먹음" 같은 조합이 흔하다 */
   food_restriction: FoodRestriction[];
   current_context: CurrentContext[];
 };
@@ -72,7 +61,7 @@ export type TripSetup = {
 // === 화면 데이터 구조 ===
 
 export type TripQuestion = {
-  /** 시트 `question_id` — `CMP01` 등 */
+  /** 시트 `question_id` */
   id: string;
   key: keyof TripSetup;
   multiple?: true;
@@ -81,14 +70,8 @@ export type TripQuestion = {
   /** 시트 `helper_text` */
   helperText?: string;
   options: ChoiceOption[];
-  /**
-   * 같은 문항 안에서 독립으로 켜고 끄는 선택지 (CMP01 의 아이·반려동물 동반).
-   * 주 선택과 배타가 아니라 함께 고를 수 있다.
-   */
+  /** 주 선택과 배타가 아니라 함께 고르는 선택지 (CMP01 아이·반려동물) */
   toggles?: { key: keyof TripSetup; option: ChoiceOption }[];
-  /**
-   * 조건부 노출. 트리거 문항에서 이 값이 골라졌을 때만 보인다.
-   * 시트 `show_when` 의 `companion_type=CHILD` 를 옮긴 것.
-   */
+  /** 트리거 문항의 값이 이것과 같을 때만 보인다 (시트 `show_when`) */
   showWhen?: { key: keyof TripSetup; equals: string | boolean };
 };

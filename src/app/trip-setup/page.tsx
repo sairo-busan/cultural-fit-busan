@@ -32,8 +32,7 @@ export function TripSetupPage() {
   ) => {
     const next: TripSetup = { ...setup, [key]: value };
 
-    // 트리거가 풀리면 딸린 조건부 답을 비운다 (화면설계서 §C).
-    // 남겨두면 화면에 안 보이는 값이 엔진으로 넘어간다.
+    // 남겨두면 화면에 안 보이는 값이 엔진으로 넘어간다
     if (key === "child_with" && !value) next.child_age_group = null;
     if (key === "pet_with" && !value) next.pet_carry = null;
 
