@@ -1,13 +1,10 @@
 /**
  * CF8 진단 환산 — S01 응답 → cf8_code → S02 표시용 프로필
  *
- * 화면 정본: 피그마 Page 2_최종 S01(1007:1661) — 4/4/3지선다
- * 체계 정본: 기획 구글 시트 [최] SAIRO 통합본
- * - "CF8 코드 = left/right_code 3개 조합. 예: C + L + D → CLD"
- * - cf_code 8종 + profile_name + explanation_template (status: ACTIVE_V6)
+ * 문항·문구 정본: `05_CFQ_취향문항`(gid=1808300501) — 3문항 전부 2지선다
+ * 계산 정본:     `4_03A-2_CF점수기준`(gid=11755224) — CALC_01 왼쪽 -1 / 오른쪽 +1
  *
- * ⚠️ 정본 시트는 2지선다(−1/+1)인데 화면은 4/4/3지선다다. 선택지를 축 값으로
- *    접는 규칙이 어느 자료에도 없어 화면 단계 수에 맞춰 정했다. 유나 확인 필요.
+ * "CF8 코드 = left/right_code 3개 조합. 예: C + L + D → CLD"
  */
 
 import type {
@@ -99,15 +96,14 @@ export const CF8_PRESETS = {
 
 /**
  * 응답(축 값) → 3축.
- * 부호가 축 코드를 결정하고, 0(중립)은 왼쪽으로 귀결시킨다.
- * 미응답 축은 왼쪽 끝(−2)으로 채운다.
+ * 부호가 축 코드를 결정한다. 미응답 축은 왼쪽(−1)으로 채운다.
  */
 function toAxis<T extends string>(
   value: AxisValue | null,
   left: T,
   right: T,
 ): { code: T; value: AxisValue } {
-  const resolved: AxisValue = value ?? -2;
+  const resolved: AxisValue = value ?? -1;
   return { code: resolved > 0 ? right : left, value: resolved };
 }
 
@@ -160,10 +156,7 @@ export function buildCf8Profile(
   };
 }
 
-/**
- * 코드 문자열에서 프로필 복원 (cf8_code만 저장된 재방문 경로용).
- * 축 값의 세기는 복원할 수 없으므로 양 끝(±2)으로 둔다.
- */
+/** 코드 문자열에서 프로필 복원 (cf8_code만 저장된 재방문 경로용). */
 export function profileFromCode(
   code: string,
   hardFilter: HardFilter,
@@ -171,9 +164,9 @@ export function profileFromCode(
   const safe = isCf8Code(code) ? code : FALLBACK_CODE;
   return buildCf8Profile(
     {
-      atmosphere: safe[0] === "C" ? -2 : 2,
-      placeType: safe[1] === "L" ? -2 : 2,
-      experience: safe[2] === "D" ? -2 : 2,
+      atmosphere: safe[0] === "C" ? -1 : 1,
+      placeType: safe[1] === "L" ? -1 : 1,
+      experience: safe[2] === "D" ? -1 : 1,
     },
     hardFilter,
   );
