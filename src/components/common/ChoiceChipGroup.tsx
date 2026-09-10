@@ -34,27 +34,24 @@ export type ChoiceOption = {
   label: string;
   /** 지금은 화면에 쓰지 않지만 데이터에는 있다 (시트 option_description) */
   description?: string;
+  /** 고르면 같은 문항의 나머지가 전부 해제된다 */
+  exclusive?: boolean;
+  /** 함께 고를 수 없는 값들. 한쪽에만 적어도 양방향으로 동작한다 */
+  conflictsWith?: readonly string[];
 };
 
-const itemClass = (
-  variant: ChoiceVariant,
-  selected: boolean,
-  invalid: boolean,
-) => {
-  const border = selected
-    ? "border-ink bg-ds-surface text-ink"
-    : invalid
-      ? "border-gray-800 text-gray-600"
-      : "border-gray-300 text-gray-600";
-
+const itemClass = (variant: ChoiceVariant, selected: boolean) => {
   if (variant === "chip") {
-    return `ds-body-2 rounded-full border px-4 py-2 transition-all active:scale-[0.97] ${border}`;
+    const fill = selected
+      ? "border-ink bg-white text-ink"
+      : "border-transparent bg-ds-surface text-gray-600";
+    return `ds-body-2 rounded-full border px-4 py-2 transition-all active:scale-[0.97] ${fill}`;
   }
 
   // row 는 개별 테두리를 두지 않는다 — 문항 카드가 이미 경계를 만든다
   return `ds-body-2 flex min-h-12 w-full items-center gap-3 rounded-lg px-1 py-2 text-left transition-colors ${
     selected ? "text-ink" : "text-gray-600"
-  }${invalid ? " text-ink" : ""}`;
+  }`;
 };
 
 const listClass = (variant: ChoiceVariant) =>
@@ -65,8 +62,6 @@ type BaseProps = {
   labelledBy: string;
   options: readonly ChoiceOption[];
   variant?: ChoiceVariant;
-  /** 미선택으로 지적된 문항이면 테두리를 올린다 */
-  invalid?: boolean;
 };
 
 // === 단일 선택 ===
@@ -76,9 +71,14 @@ export function RadioChipGroup({
   options,
   value,
   onChange,
+  onDeselect,
   variant = "chip",
-  invalid = false,
-}: BaseProps & { value: string | null; onChange: (value: string) => void }) {
+}: BaseProps & {
+  value: string | null;
+  onChange: (value: string) => void;
+  /** 넘기면 선택된 항목을 다시 눌러 해제할 수 있다 */
+  onDeselect?: () => void;
+}) {
   return (
     <RadioGroup.Root
       aria-labelledby={labelledBy}
@@ -93,7 +93,9 @@ export function RadioChipGroup({
           <RadioGroup.Item
             key={option.value}
             value={option.value}
-            className={itemClass(variant, selected, invalid)}
+            // Radix는 선택된 항목을 다시 눌러도 onValueChange를 부르지 않는다
+            onClick={selected ? onDeselect : undefined}
+            className={itemClass(variant, selected)}
           >
             {variant === "row" ? (
               <>
@@ -125,33 +127,33 @@ export function CheckChipGroup({
   options,
   values,
   onChange,
-  exclusiveGroups = [],
   variant = "chip",
-  invalid = false,
 }: BaseProps & {
   values: readonly string[];
   onChange: (values: string[]) => void;
-  /**
-   * 서로 함께 고를 수 없는 값 묶음.
-   * 화면설계서 §B — "가장 최근에 누른 항목을 남기고 기존 선택을 해제한다".
-   * 예) `[["NONE", "NO_SPICY", "VEGAN", …]]` · `[["INDOOR_FIRST", "OUTDOOR_PREFERRED"]]`
-   */
-  exclusiveGroups?: readonly (readonly string[])[];
 }) {
-  const toggle = (value: string) => {
-    if (values.includes(value)) {
-      onChange(values.filter((v) => v !== value));
+  /** 화면설계서 §B — 가장 최근에 누른 것을 남기고 충돌하는 기존 선택만 해제한다 */
+  const toggle = (option: ChoiceOption) => {
+    if (values.includes(option.value)) {
+      onChange(values.filter((v) => v !== option.value));
       return;
     }
 
-    // 방금 누른 값과 충돌하는 기존 선택만 걷어낸다
-    const conflicts = new Set(
-      exclusiveGroups
-        .filter((group) => group.includes(value))
-        .flatMap((group) => group.filter((v) => v !== value)),
-    );
+    if (option.exclusive) {
+      onChange([option.value]);
+      return;
+    }
 
-    onChange([...values.filter((v) => !conflicts.has(v)), value]);
+    const conflicts = new Set<string>(option.conflictsWith ?? []);
+    for (const other of options) {
+      // `exclusive` 는 나머지 전부와 충돌한다
+      if (other.exclusive) conflicts.add(other.value);
+      // 반대쪽에만 적혀 있어도 잡는다
+      if (other.conflictsWith?.includes(option.value))
+        conflicts.add(other.value);
+    }
+
+    onChange([...values.filter((v) => !conflicts.has(v)), option.value]);
   };
 
   return (
@@ -162,13 +164,13 @@ export function CheckChipGroup({
         return (
           <label
             key={option.value}
-            className={`${itemClass(variant, selected, invalid)} cursor-pointer has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ink`}
+            className={`${itemClass(variant, selected)} cursor-pointer has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ink`}
           >
             {/* 칩 전체가 클릭 영역이다. `sr-only` 라 포커스와 접근성 트리에는 남는다 */}
             <input
               type="checkbox"
               checked={selected}
-              onChange={() => toggle(option.value)}
+              onChange={() => toggle(option)}
               className="sr-only"
             />
             {option.label}
