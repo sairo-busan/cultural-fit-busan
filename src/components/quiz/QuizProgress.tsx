@@ -18,7 +18,7 @@ export function QuizProgress({
   onStepClick,
 }: QuizProgressProps) {
   return (
-    <div className="flex w-full gap-[8px] px-[24px] pt-[12px]">
+    <div className="flex w-full gap-2 px-6 pt-3">
       {Array.from({ length: totalSteps }, (_, index) => {
         const isDone = index < currentStep - 1;
         const isCurrent = index === currentStep - 1;
@@ -28,19 +28,19 @@ export function QuizProgress({
             key={index}
             type="button"
             onClick={() => onStepClick?.(index + 1)}
-            className="flex flex-1 flex-col gap-[8px] pb-[12px] text-left"
+            className="flex flex-1 flex-col gap-2 pb-3 text-left"
             aria-label={labels?.[index] ?? `${index + 1}단계`}
             aria-current={isCurrent ? "step" : undefined}
           >
             <div
-              className={`h-[3px] w-full rounded-full transition-colors duration-300 ${
+              className={`h-0.75 w-full rounded-full transition-colors duration-300 ${
                 isCurrent || isDone ? "bg-ink" : "bg-gray-300"
               }`}
             />
             {labels?.[index] && (
               <span
                 className={`ds-caption truncate ${
-                  isCurrent ? "text-ink" : "text-gray-500"
+                  isCurrent ? "text-ink" : "text-gray-600"
                 }`}
               >
                 {labels[index]}

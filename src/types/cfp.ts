@@ -34,10 +34,10 @@ export type Cf8Code =
  * S02는 그 단계를 슬라이더 위치로 보여준다. 장소 태깅도 −2~+2 5단계라
  * 같은 척도를 쓴다.
  *
- * 4지선다: -2 / -1 / +1 / +2
- * 3지선다: -2 /  0 / +2   (0 = 중립)
+ * 2지선다 전용이다 — 왼쪽 -1, 오른쪽 +1 (`4_03A-2_CF점수기준` `CALC_01`).
+ * 값 범위를 좁혀둬야 4지선다 잔재(-2·0·+2)가 들어올 때 컴파일 단계에서 걸린다.
  */
-export type AxisValue = -2 | -1 | 0 | 1 | 2;
+export type AxisValue = -1 | 1;
 
 // === S01 취향 진단 응답 ===
 
@@ -87,7 +87,10 @@ export type HardFilter = {
 // === 퀴즈 UI 데이터 구조 ===
 
 export type QuizChoiceData = {
+  /** 시트 `left_label` / `right_label` */
   label: string;
+  /** 시트 `left_description` / `right_description` */
+  description: string;
   /** 선택 시 축에 기록되는 값 */
   value: AxisValue;
 };
@@ -100,5 +103,7 @@ export type QuizQuestionData = {
   /** "1단계 · 분위기" */
   stepLabel: string;
   question: string;
+  /** 시트 `helper_text` */
+  helperText: string;
   choices: QuizChoiceData[];
 };
