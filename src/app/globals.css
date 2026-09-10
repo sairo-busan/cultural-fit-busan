@@ -159,7 +159,7 @@ body {
   /* 진단 질문 · 화면 제목 */
   .ds-display {
     font-size: 28px;
-    font-weight: 100;
+    font-weight: 300;
     line-height: 1.4;
     letter-spacing: -0.015em;
   }
@@ -190,7 +190,7 @@ body {
 
   /* 본문 · 설명 · 기본 크기 */
   .ds-body-1 {
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 400;
     line-height: 1.75;
   }
@@ -256,4 +256,56 @@ body {
     font-family: var(--font-cormorant-garamond);
     letter-spacing: 0.06em;
   }
+}
+
+/* ─────────────────────────────────────────────────────────────
+ * 접근성 보완 (ui-ux-pro-max · WCAG 2.2 감사 결과)
+ *
+ * DS v1은 색·타이포·간격을 정하지만 상태와 모션은 다루지 않는다.
+ * 아래는 그 빈 곳을 채우는 것이며 DS v1 토큰을 바꾸지 않는다.
+ *
+ * ⚠️ `--ds-gray-500`(#9c9ea4)은 흰 배경에서 2.68:1 로 WCAG 텍스트 기준
+ *    (본문 4.5:1 · 큰 글씨 3:1)을 못 넘는다. 텍스트에는 쓰지 말고
+ *    `gray-600` 이상을 쓸 것. 토큰 값 자체의 조정은 유나 확인이 필요하다.
+ *
+ *    기존 화면의 `text-gray-500` 교체는 아직 하지 않았다 — 대상이
+ *    S00·S20 등 구버전 화면이라 `FE-CHORE-001` 에서 화면 단위로 처리한다.
+ * ───────────────────────────────────────────────────────────── */
+
+/* 키보드 포커스 — 마우스 클릭에는 안 보이고 Tab 이동에만 보인다.
+   잉크 링 + 흰 오프셋으로 어떤 배경에서도 식별된다 (DS v1 무채색 유지). */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--ds-ink);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* 모션 감소 설정 존중 — 등장 애니메이션을 최종 상태로 즉시 고정한다.
+   `animation: none` 만 쓰면 opacity:0 시작 상태에 멈춰 화면이 빈다. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* 하단 고정 영역 안전 영역 — Capacitor Android 제스처 바와 겹치지 않게.
+   기본 32px(DS v1 하단 여백)에 기기 인셋을 더한다. */
+@utility pb-safe-cta {
+  padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px));
+}
+
+/* 상단 고정 헤더 — 기기 상태바 높이 + 기본 여백.
+   웹·데스크톱에서는 인셋이 0이라 기본 12px만 남는다. */
+@utility pt-safe-header {
+  padding-top: calc(12px + env(safe-area-inset-top, 0px));
 }
