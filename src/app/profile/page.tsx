@@ -13,7 +13,7 @@ import {
   AXIS_GUIDE,
   PROFILE_COPY,
 } from "@/data/profile";
-import { STORAGE_KEYS, clearDiagnosis } from "@/lib/storage";
+import { STORAGE_KEYS, clearDiagnosis, setTripSetupMode } from "@/lib/storage";
 import type { Cf8Axes } from "@/types/cfp";
 
 const LOADING_STEPS = [
@@ -64,11 +64,15 @@ export function ProfilePage() {
     window.location.href = "/onboarding";
   };
 
+  // S02의 두 갈래가 trip_setup_mode를 결정한다 (04_추천로직 R024).
+  // QUICK이면 엔진이 CF8 + 자동상황(날씨·계절·시간대)만 쓰고 S03 조건은 보지 않는다.
   const handleStart = () => {
+    setTripSetupMode("QUICK");
     router.push("/feed");
   };
 
   const handleMoreConditions = () => {
+    setTripSetupMode("CUSTOM");
     router.push("/trip-setup");
   };
 

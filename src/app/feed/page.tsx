@@ -1,32 +1,26 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/common/AppHeader";
 import { BottomTabBar } from "@/components/common/BottomTabBar";
 import { LiveStatusBar } from "@/components/feed/LiveStatusBar";
 import { PlaceCard } from "@/components/feed/PlaceCard";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useRecommendations } from "@/hooks/useRecommendations";
 import { buildCf8Profile } from "@/lib/cfp";
 import { STORAGE_KEYS } from "@/lib/storage";
 import { DEFAULT_QUIZ_ANSWERS, DEFAULT_HARD_FILTER } from "@/data/quiz";
-import { MOCK_RECOMMENDED } from "@/data/mock-places";
-
-// W1 하드코딩 — W2에서 추천 엔진 + 날씨 API + GPS로 교체 예정
-const CATEGORY_CHIPS = [
-  { label: "비를 피할 수 있는 곳", count: 4 },
-  { label: "걸어서 10분", count: 3 },
-  { label: "로컬 분위기", count: 2 },
-  { label: "혼자 가기 좋은", count: 3 },
-];
 
 export default function FeedPage() {
+  const router = useRouter();
   const [answers] = useLocalStorage(STORAGE_KEYS.answers, DEFAULT_QUIZ_ANSWERS);
   const [hardFilter] = useLocalStorage(
     STORAGE_KEYS.hardFilter,
     DEFAULT_HARD_FILTER,
   );
   const [mounted, setMounted] = useState(false);
-  const [activeChip, setActiveChip] = useState(0);
+  const { places, loading, error } = useRecommendations();
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -40,52 +34,67 @@ export default function FeedPage() {
         onMenu={() => {/* S50 전체 메뉴 (구 S05) — W2 구현 예정 */}}
       />
 
+      {/* TODO: 날씨·기온·현재 위치가 아직 하드코딩이다.
+          useRecommendations가 내부에서만 날씨를 쓰고 밖으로 내주지 않아
+          별도 티켓에서 훅 반환값 확장과 함께 처리한다. */}
       <LiveStatusBar weather="맑음" temperature={27} location="해운대" />
 
-      {/* 제목 + 부제 */}
       <section className="px-[20px] pb-[24px]">
-        <h1 className="text-[24px] font-normal leading-tight text-foreground">
-          해운대에서 지금
-        </h1>
-        <p className="mt-[8px] text-[14px] font-light leading-relaxed text-sub-text">
-          비가 와서 실내부터, 도보 10분 안쪽으로 골랐어요
+        <h1 className="ds-headline text-ink">지금 가기 좋은 곳</h1>
+        <p className="ds-body-2 mt-[8px] text-gray-600">
+          {loading
+            ? "취향과 조건에 맞는 장소를 고르고 있어요"
+            : `내 취향에 맞춰 ${places.length}곳을 골랐어요`}
         </p>
       </section>
 
-      {/* 카테고리 칩 — 가로 스크롤 */}
-      <div className="mb-[24px] flex gap-[8px] overflow-x-auto px-[20px] scrollbar-hide">
-        {CATEGORY_CHIPS.map((chip, chipIndex) => (
-          <button
-            key={chip.label}
-            type="button"
-            onClick={() => setActiveChip(chipIndex)}
-            className={`shrink-0 whitespace-nowrap rounded-full border px-[14px] py-[8px] text-[12px] font-light transition-colors ${
-              chipIndex === activeChip
-                ? "border-accent bg-accent text-white"
-                : "border-border text-foreground"
-            }`}
-          >
-            {chip.label} {chip.count}곳
-          </button>
-        ))}
-      </div>
-
-      {/* 왜 이 묶음인지 */}
-      <p className="mb-[24px] px-[20px] text-[12px] font-light text-muted">
-        비가 시작돼서 이 묶음을 먼저 보여드립니다
-      </p>
-
-      {/* 장소 카드 세로 리스트 */}
       <section className="flex flex-col gap-[40px] px-[20px]">
-        {MOCK_RECOMMENDED.map((place) => (
-          <PlaceCard key={place.contentId} place={place} />
-        ))}
+        {loading && (
+          <p className="ds-body-2 py-[40px] text-center text-gray-500">
+            불러오는 중이에요
+          </p>
+        )}
+
+        {/* 진단 전이면 추천을 만들 수 없다 — S01로 보낸다 */}
+        {!loading && error && (
+          <div className="flex flex-col items-center gap-[16px] py-[40px]">
+            <p className="ds-body-2 text-center text-gray-600">{error}</p>
+            <button
+              type="button"
+              onClick={() => router.push("/onboarding")}
+              className="ds-title-2 flex h-[48px] items-center justify-center rounded-[12px] bg-ink px-[24px] text-white transition-all active:scale-[0.98]"
+            >
+              취향 진단하기
+            </button>
+          </div>
+        )}
+
+        {!loading && !error && places.length === 0 && (
+          <div className="flex flex-col items-center gap-[16px] py-[40px]">
+            <p className="ds-body-2 text-center text-gray-600">
+              조건에 맞는 장소를 찾지 못했어요
+            </p>
+            <button
+              type="button"
+              onClick={() => router.push("/trip-setup")}
+              className="ds-title-2 flex h-[48px] items-center justify-center rounded-[12px] border border-gray-300 px-[24px] text-ink transition-all active:scale-[0.98]"
+            >
+              조건 다시 고르기
+            </button>
+          </div>
+        )}
+
+        {!loading &&
+          !error &&
+          places.map((place) => (
+            <PlaceCard key={place.contentId} place={place} />
+          ))}
       </section>
 
       {/* CF8 유형 뱃지 (프로필 있을 때) — 코드·점수는 노출하지 않는다 */}
-      {hasProfile && (
+      {hasProfile && !loading && !error && places.length > 0 && (
         <div className="mt-[32px] flex justify-center">
-          <span className="rounded-full border border-accent px-[12px] py-[6px] text-[11px] font-light text-accent">
+          <span className="ds-caption rounded-full border border-gray-300 px-[12px] py-[6px] text-gray-600">
             {profile.nameKo}
           </span>
         </div>

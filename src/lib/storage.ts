@@ -20,6 +20,21 @@ export const STORAGE_KEYS = {
   hardFilter: "cfb-hard-filter",
 } as const;
 
+/**
+ * `trip_setup_mode` 는 JSON이 아니라 원시 문자열로 저장한다.
+ *
+ * 추천 엔진(`useRecommendations`)이 `localStorage.getItem(...) === "CUSTOM"` 으로
+ * 직접 비교하기 때문이다. `useLocalStorage` 훅은 `JSON.stringify` 를 거쳐
+ * `"CUSTOM"`(따옴표 포함)으로 저장하므로, 그 훅을 쓰면 비교가 항상 실패해
+ * QUICK으로 처리된다 — 에러 없이 S03 조건만 조용히 무시된다.
+ */
+export type TripSetupMode = "QUICK" | "CUSTOM";
+
+export function setTripSetupMode(mode: TripSetupMode) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(STORAGE_KEYS.tripSetupMode, mode);
+}
+
 /** CFP16 시절 키. 남아 있으면 진단 초기화 시 함께 지운다. */
 const LEGACY_KEYS = ["cfb-quiz-answers", "cfb-quiz-step"] as const;
 
