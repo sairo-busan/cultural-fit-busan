@@ -24,11 +24,17 @@ export type ChoiceOption = {
   conflictsWith?: readonly string[];
 };
 
-const itemClass = (variant: ChoiceVariant, selected: boolean) => {
+const itemClass = (
+  variant: ChoiceVariant,
+  selected: boolean,
+  invalid = false,
+) => {
   if (variant === "chip") {
     const fill = selected
       ? "border-ink bg-white text-ink"
-      : "border-transparent bg-ds-surface text-gray-600";
+      : invalid
+        ? "border-ds-error bg-ds-surface text-ink"
+        : "border-transparent bg-ds-surface text-gray-600";
     return `ds-body-2 rounded-full border px-4 py-2 transition-all active:scale-[0.97] ${fill}`;
   }
 
@@ -46,6 +52,8 @@ type BaseProps = {
   labelledBy: string;
   options: readonly ChoiceOption[];
   variant?: ChoiceVariant;
+  /** 미선택으로 지적된 문항 — 테두리를 올려 눈에 띄게 한다 */
+  invalid?: boolean;
 };
 
 // === 단일 선택 ===
@@ -57,6 +65,7 @@ export function RadioChipGroup({
   onChange,
   onDeselect,
   variant = "chip",
+  invalid = false,
 }: BaseProps & {
   value: string | null;
   onChange: (value: string) => void;
@@ -79,7 +88,7 @@ export function RadioChipGroup({
             value={option.value}
             // Radix는 선택된 항목을 다시 눌러도 onValueChange를 부르지 않는다
             onClick={selected ? onDeselect : undefined}
-            className={itemClass(variant, selected)}
+            className={itemClass(variant, selected, invalid)}
           >
             {variant === "row" ? (
               <>
@@ -112,6 +121,7 @@ export function CheckChipGroup({
   values,
   onChange,
   variant = "chip",
+  invalid = false,
 }: BaseProps & {
   values: readonly string[];
   onChange: (values: string[]) => void;
@@ -148,7 +158,7 @@ export function CheckChipGroup({
         return (
           <label
             key={option.value}
-            className={`${itemClass(variant, selected)} cursor-pointer has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ink`}
+            className={`${itemClass(variant, selected, invalid)} cursor-pointer has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ink`}
           >
             {/* 칩 전체가 클릭 영역이다. `sr-only` 라 포커스와 접근성 트리에는 남는다 */}
             <input

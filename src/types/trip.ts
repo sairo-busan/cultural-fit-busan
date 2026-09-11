@@ -3,59 +3,61 @@ import type { ChoiceOption } from "@/components/common/ChoiceChipGroup";
 /**
  * S03 조건 입력 — 추천 엔진 입력 계약. 저장 키 `trip_setup`.
  *
- * 필드명·값은 시트의 `stored_field`·`option_code` 를 그대로 쓴다. 저장 객체가
- * 곧 엔진과의 계약이라 이름을 바꾸면 양쪽에서 번역이 필요해진다 — TS 관례
- * (camelCase) 대신 snake_case 를 쓰는 이유다.
+ * 필드명과 값 모두 엔진 표기를 따른다 — `lib/hardFilter.ts` · `lib/situationalScore.ts`.
+ * 시트 `option_code` 와의 대응표는 티켓 `FE-FEAT-008` 에 있다.
  */
 
-/** `CMP01` — 주 동행 */
-export type PrimaryCompanion = "SOLO" | "FRIEND_COUPLE" | "PARENTS";
+/** `CMP01` — 주 동행. `friend_couple` 만 엔진 `Companion` 에서 둘로 갈린다 */
+export type PrimaryCompanion = "solo" | "friend_couple" | "parents";
 
 /** `CHILD01` */
-export type ChildAgeGroup = "INFANT" | "PRESCHOOL" | "ELEMENTARY" | "TEEN";
+export type ChildAgeGroup = "infant" | "preschool" | "elementary" | "teen";
 
 /** `PET01` */
-export type PetCarry = "LEASH" | "CARRIER" | "BOTH";
+export type PetCarry = "leash" | "carrier" | "both";
 
-/** `MOB01` — 보행 부담 */
+/** `MOB01` — 엔진 `WalkingDifficulty` 와 같은 값 */
 export type MobilityCare =
-  "NONE" | "LONG_WALK" | "STAIRS" | "STROLLER" | "WHEELCHAIR";
+  "none" | "long_walk" | "stairs_slope" | "stroller" | "wheelchair";
 
 /** `TRN01` — 이동 수단. 동선 계산에만 쓰고 CF8·동행 점수에는 반영하지 않는다. */
-export type TransportMode = "WALK" | "TRANSIT" | "CAR";
-
-/** `FOOD01` — 음식 제약. 충돌이 **확인된** 장소만 제외한다(UNKNOWN은 유지). */
-export type FoodRestriction =
-  "NONE" | "NO_SPICY" | "VEGAN" | "NO_RAW_MEAT" | "NO_RAW_SEAFOOD" | "NO_PORK";
+export type TransportMode = "walk" | "transit" | "car";
 
 /**
- * `CTX01` — 현재 상황.
- * `NONE` 은 "추가 보정 없음"이며, 자동 날씨·계절·시간 보정은 그대로 적용된다.
+ * `FOOD01` — 엔진 `FoodRestriction` 과 같은 값에 `pork` 하나가 더 있다.
+ * 충돌이 **확인된** 장소만 제외한다(UNKNOWN은 유지).
+ */
+export type FoodRestriction =
+  "none" | "spicy" | "vegan" | "raw_meat" | "raw_seafood" | "pork";
+
+/**
+ * `CTX01` — 현재 상황. 엔진에 대응 타입이 아직 없다.
+ * `none` 은 "추가 보정 없음"이며, 자동 날씨·계절·시간 보정은 그대로 적용된다.
  */
 export type CurrentContext =
-  | "TIME_FLEXIBLE"
-  | "BEFORE_MEAL"
-  | "INDOOR_FIRST"
-  | "OUTDOOR_PREFERRED"
-  | "AVAILABLE_NOW"
-  | "AVOID_CROWD"
-  | "NONE";
+  | "time_flexible"
+  | "before_meal"
+  | "indoor_first"
+  | "outdoor_preferred"
+  | "available_now"
+  | "avoid_crowd"
+  | "none";
 
 // === 저장 객체 ===
 
 export type TripSetup = {
-  primary_companion: PrimaryCompanion | null;
+  primaryCompanion: PrimaryCompanion | null;
   /** 주 동행과 별개로 함께 고를 수 있다 */
-  child_with: boolean;
-  pet_with: boolean;
-  /** `child_with` 가 false 면 null */
-  child_age_group: ChildAgeGroup | null;
-  /** `pet_with` 가 false 면 null */
-  pet_carry: PetCarry | null;
-  mobility_care: MobilityCare[];
-  transport_mode: TransportMode | null;
-  food_restriction: FoodRestriction[];
-  current_context: CurrentContext[];
+  childWith: boolean;
+  petWith: boolean;
+  /** `childWith` 가 false 면 null */
+  childAgeGroup: ChildAgeGroup | null;
+  /** `petWith` 가 false 면 null */
+  petCarry: PetCarry | null;
+  mobilityCare: MobilityCare[];
+  transportMode: TransportMode | null;
+  foodRestriction: FoodRestriction[];
+  currentContext: CurrentContext[];
 };
 
 // === 화면 데이터 구조 ===
