@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import { useLocale } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { AppHeader } from "@/components/common/AppHeader";
@@ -8,13 +9,16 @@ import { RadioChipGroup } from "@/components/common/ChoiceChipGroup";
 import { QuizProgress } from "@/components/quiz/QuizProgress";
 import {
   QUIZ_QUESTIONS,
+  QUIZ_TEXT,
+  CHOICE_VALUES,
   TOTAL_QUESTIONS,
   QUIZ_INTRO,
   DEFAULT_QUIZ_ANSWERS,
 } from "@/data/quiz";
 import { isComplete } from "@/lib/cfp";
 import { STORAGE_KEYS } from "@/lib/storage";
-import type { QuizAnswers, AxisValue } from "@/types/cfp";
+import type { QuizAnswers } from "@/types/cfp";
+import type { Locale } from "@/i18n/routing";
 
 /**
  * S01 취향 진단.
@@ -27,6 +31,9 @@ import type { QuizAnswers, AxisValue } from "@/types/cfp";
  */
 export function OnboardingPage() {
   const router = useRouter();
+  const locale = useLocale() as Locale;
+  const intro = QUIZ_INTRO[locale];
+  const text = QUIZ_TEXT[locale];
   const [answers, setAnswers] = useLocalStorage<QuizAnswers>(
     STORAGE_KEYS.answers,
     DEFAULT_QUIZ_ANSWERS,
@@ -63,7 +70,7 @@ export function OnboardingPage() {
             onClick={() => router.push("/feed")}
             className="ds-caption text-gray-600"
           >
-            {QUIZ_INTRO.skipLabel}
+            {intro.skipLabel}
           </button>
         }
       />
@@ -71,15 +78,15 @@ export function OnboardingPage() {
       <QuizProgress
         currentStep={currentStep}
         totalSteps={TOTAL_QUESTIONS}
-        labels={QUIZ_QUESTIONS.map((q) => q.stepLabel)}
+        labels={QUIZ_QUESTIONS.map((q) => text[q.id].stepLabel)}
         onStepClick={(step) => scrollTo(QUIZ_QUESTIONS[step - 1].id)}
       />
 
       <div className="flex-1 overflow-y-auto">
         <div className="flex flex-col gap-2 px-6 pt-6">
-          <span className="ds-label text-gray-600">{QUIZ_INTRO.eyebrow}</span>
-          <h1 className="ds-display text-ink">{QUIZ_INTRO.title}</h1>
-          <p className="ds-body-1 text-gray-600">{QUIZ_INTRO.description}</p>
+          <span className="ds-label text-gray-600">{intro.eyebrow}</span>
+          <h1 className="ds-display text-ink">{intro.title}</h1>
+          <p className="ds-body-1 text-gray-600">{intro.description}</p>
         </div>
 
         <div className="flex flex-col gap-3 px-6 pt-8 pb-8">
@@ -97,18 +104,18 @@ export function OnboardingPage() {
               >
                 <div className="flex flex-col gap-2">
                   <span className="ds-caption text-gray-600">
-                    {question.stepLabel}
+                    {text[question.id].stepLabel}
                   </span>
                   <p id={titleId} className="ds-title-1 text-ink">
-                    {question.question}
+                    {text[question.id].question}
                   </p>
                 </div>
 
                 <RadioChipGroup
                   variant="row"
                   labelledBy={titleId}
-                  options={question.choices.map((choice) => ({
-                    value: String(choice.value),
+                  options={text[question.id].choices.map((choice, i) => ({
+                    value: String(CHOICE_VALUES[i]),
                     label: choice.label,
                     description: choice.description,
                   }))}
@@ -116,7 +123,7 @@ export function OnboardingPage() {
                   onChange={(next) =>
                     setAnswers({
                       ...answers,
-                      [question.answerKey]: Number(next) as AxisValue,
+                      [question.answerKey]: Number(next) as (typeof CHOICE_VALUES)[number],
                     })
                   }
                 />
@@ -124,14 +131,14 @@ export function OnboardingPage() {
             );
           })}
 
-          <p className="ds-caption pt-2 text-gray-600">{QUIZ_INTRO.footnote}</p>
+          <p className="ds-caption pt-2 text-gray-600">{intro.footnote}</p>
         </div>
       </div>
 
       <div className="flex shrink-0 flex-col gap-2 px-6 pt-4 pb-safe-cta">
         {!isComplete(answers) && (
           <p className="ds-caption text-center text-gray-600">
-            {QUIZ_INTRO.submitHint}
+            {intro.submitHint}
           </p>
         )}
         <button
@@ -139,7 +146,7 @@ export function OnboardingPage() {
           onClick={handleSubmit}
           className="ds-title-2 flex h-13 w-full items-center justify-center rounded-xl bg-ink text-white transition-all active:scale-[0.98]"
         >
-          {QUIZ_INTRO.submitLabel}
+          {intro.submitLabel}
         </button>
       </div>
     </div>

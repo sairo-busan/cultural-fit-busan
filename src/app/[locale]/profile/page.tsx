@@ -1,16 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useLocale } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { buildCf8Profile } from "@/lib/cfp";
 import { AppHeader } from "@/components/common/AppHeader";
 import { AxisSlider } from "@/components/profile/AxisSlider";
 import { DEFAULT_QUIZ_ANSWERS, DEFAULT_HARD_FILTER } from "@/data/quiz";
-import { AXIS_CONFIG, PROFILE_COPY } from "@/data/profile";
+import { AXIS_CONFIG, AXIS_LABELS, PROFILE_COPY } from "@/data/profile";
 import { CF8_PROFILES } from "@/data/cf8Profiles";
 import { STORAGE_KEYS, clearDiagnosis, setTripSetupMode } from "@/lib/storage";
 import type { Cf8Axes } from "@/types/cfp";
+import type { Locale } from "@/i18n/routing";
 
 const LOADING_STEPS = [
   "분위기 취향을 분석하고 있어요",
@@ -23,6 +25,9 @@ const STEP_DURATION = 450;
 
 export function ProfilePage() {
   const router = useRouter();
+  const locale = useLocale() as Locale;
+  const copy = PROFILE_COPY[locale];
+  const axisLabels = AXIS_LABELS[locale];
   const [loading, setLoading] = useState(true);
   const [loadingStep, setLoadingStep] = useState(0);
   const [answers] = useLocalStorage(STORAGE_KEYS.answers, DEFAULT_QUIZ_ANSWERS);
@@ -73,7 +78,7 @@ export function ProfilePage() {
   };
 
   // S02 표시 문구는 전부 시트(2_03A_CF8프로필) 사본에서 온다
-  const copy = CF8_PROFILES[profile.code];
+  const typeCopy = CF8_PROFILES[locale][profile.code];
 
   if (loading) {
     const progress = (loadingStep / LOADING_STEPS.length) * 100;
@@ -110,7 +115,7 @@ export function ProfilePage() {
             onClick={handleRetry}
             className="ds-caption text-gray-600"
           >
-            {PROFILE_COPY.retry}
+            {copy.retry}
           </button>
         }
       />
@@ -119,32 +124,32 @@ export function ProfilePage() {
         {/* 유형 — 상단 첫 요소 32px */}
         <div className="flex flex-col gap-2 px-6 pt-8">
           <p className="animate-reveal animate-reveal-d1 ds-caption text-gray-600">
-            {PROFILE_COPY.sectionLabel}
+            {copy.sectionLabel}
           </p>
           <p className="animate-reveal animate-reveal-d2 ds-caption text-gray-600">
-            {PROFILE_COPY.typeLabel}
+            {copy.typeLabel}
           </p>
           <h1 className="animate-reveal animate-reveal-d2 ds-headline text-ink">
-            {copy.profileName}
+            {typeCopy.profileName}
           </h1>
           <p className="animate-reveal animate-reveal-d3 ds-body-1 text-gray-600">
-            {copy.resultIntro}
+            {typeCopy.resultIntro}
           </p>
           <p className="animate-reveal animate-reveal-d3 ds-body-1 text-gray-600">
-            {copy.recommendationPromise}
+            {typeCopy.recommendationPromise}
           </p>
         </div>
 
         {/* 부산에서 이렇게 여행해요 — 섹션 간격 48px */}
         <div className="animate-reveal animate-reveal-d4 flex flex-col gap-4 px-6 pt-12 pb-8">
           <p className="ds-caption text-gray-600">
-            {PROFILE_COPY.styleHeading}
+            {copy.styleHeading}
           </p>
 
           <div className="flex flex-col gap-3">
             {AXIS_CONFIG.map((axis) => {
               const axisData = profile.axes[axis.key as keyof Cf8Axes];
-              const card = copy[axis.card];
+              const card = typeCopy[axis.card];
 
               return (
                 <div
@@ -155,8 +160,8 @@ export function ProfilePage() {
                   <p className="ds-body-2 text-gray-600">{card.body}</p>
                   <div className="pt-2">
                     <AxisSlider
-                      left={axis.left}
-                      right={axis.right}
+                      left={axisLabels[axis.key].left}
+                      right={axisLabels[axis.key].right}
                       value={axisData.value}
                     />
                   </div>
@@ -173,21 +178,21 @@ export function ProfilePage() {
       {/* CTA */}
       <div className="animate-reveal animate-reveal-d6 flex shrink-0 flex-col gap-3 px-6 pt-4 pb-8">
         <p className="ds-caption text-center text-gray-600">
-          {PROFILE_COPY.actionHint}
+          {copy.actionHint}
         </p>
         <button
           type="button"
           onClick={handleStart}
           className="ds-title-2 flex h-13 w-full items-center justify-center rounded-xl bg-ink text-white transition-all active:scale-[0.98]"
         >
-          {PROFILE_COPY.primaryCta}
+          {copy.primaryCta}
         </button>
         <button
           type="button"
           onClick={handleMoreConditions}
           className="ds-title-2 flex h-13 w-full items-center justify-center rounded-xl border border-gray-300 text-ink transition-all active:scale-[0.98]"
         >
-          {PROFILE_COPY.secondaryCta}
+          {copy.secondaryCta}
         </button>
       </div>
     </div>
