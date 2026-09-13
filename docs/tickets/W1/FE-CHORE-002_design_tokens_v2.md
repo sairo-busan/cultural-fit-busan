@@ -184,6 +184,34 @@ locale === "en" ? (place.whyEn ?? null) : place.whyKo
 
 로케일은 `localStorage` 에 둔다. 서버로 보내지 않는다.
 
+#### ⚠️ Next 16 은 `middleware` 가 아니라 `proxy`
+
+`middleware.js` 가 Next 16 에서 deprecated 되고 `proxy.js` 로 바뀌었다
+(`node_modules/next/dist/docs/.../middleware.md`). 기능은 같고 파일·export 이름만 다르다.
+**next-intl 공식 문서는 아직 `middleware.ts` 기준**이라 참고할 때 헷갈린다.
+
+#### 🔴 정적 export 에는 프록시가 없다
+
+W3 Capacitor 도입 때 걸린다. 앱에서 `/` 를 열면 **아무 일도 일어나지 않는다** —
+로케일을 판정할 코드가 없다.
+
+시작 URL 을 `/en/` 으로 박으면 화면은 뜨지만 **기기 언어를 못 읽는다.** `/ko/` 를 박아도
+마찬가지다. 어느 쪽을 골라도 절반의 사용자에게 틀린 언어로 시작한다.
+
+둘 중 하나를 W3 에서 검증해야 한다.
+
+```
+A  정적 루트 페이지에서 navigator.language 로 판정 후 이동
+   웹·앱이 같은 코드로 동작한다
+   다만 루트 레이아웃이 app/[locale]/layout.tsx 에 있어 app/layout.tsx 와
+   <html> 이 겹칠 수 있다 — 확인 필요
+
+B  @capacitor/device 의 getLanguageCode() 로 읽어 시작 URL 을 정한다
+   앱 전용. 웹은 프록시 그대로
+```
+
+`generateStaticParams` 로 `/en/*` · `/ko/*` 가 전부 정적 생성되는 것은 확인했다.
+
 ---
 
 ## Acceptance Criteria
