@@ -65,7 +65,7 @@ S00~S03 화면도 함께 변한다.
 
 - `src/app/globals.css` — `:root` 토큰 · `@theme inline` · `.ds-*` 타이포 재정의
 - `src/app/layout.tsx` — 폰트 교체
-- `public/fonts/` — Pretendard 로컬 파일
+- `src/app/fonts/` — Pretendard 서브셋 3벌
 - `next-intl` 설치 · 미들웨어 · 로케일 라우팅 · `messages/{en,ko}.json`
 - 위 4개 데이터 파일의 문구를 메시지로 이동
 
@@ -127,10 +127,18 @@ Light(200·300)를 본문에서 뺀다. 안드로이드 WebView 에서 뭉갠다
 Pretendard 는 Google Fonts 에 없다. `next/font/local` 로 넣는다 —
 CDN 을 쓰면 Capacitor 오프라인에서 깨진다.
 
+가변 폰트(`PretendardVariable.woff2`)는 **2.0MB** 라 모바일에 무겁다.
+서브셋 정적 웨이트를 쓴다 — 브라우저가 실제로 필요한 굵기만 받는다.
+
 ```
-public/fonts/PretendardVariable.woff2     가변 폰트 1개
-Instrument Serif                          next/font/google (숫자·브랜드 전용)
+src/app/fonts/Pretendard-Regular.subset.woff2    400  본문      261KB
+src/app/fonts/Pretendard-SemiBold.subset.woff2   600  제목      262KB
+src/app/fonts/Pretendard-Bold.subset.woff2       700  강조      264KB
+Instrument Serif                                 next/font/google (숫자·브랜드 전용)
 ```
+
+**굵기를 셋으로 제한한다.** 파일이 늘어나는 것도 있지만, 굵기가 적을수록
+디자인이 일관된다. 목업에서 쓰던 450·500 은 400 으로 합쳤다.
 
 한국어 줄바꿈도 여기서 잡는다.
 
@@ -184,6 +192,7 @@ locale === "en" ? (place.whyEn ?? null) : place.whyKo
 - [ ] `.ds-*` 가 6단으로 정리되고, 화면에서 쓰는 크기가 그 여섯 개뿐이다
 - [ ] 좌우 여백이 `--gutter` 한 곳에서 나온다
 - [ ] Pretendard 가 로컬 파일에서 로드된다 (네트워크 차단 상태에서 확인)
+- [ ] 본문 굵기가 400·600·700 셋뿐이다
 - [ ] S00~S03 이 깨지지 않는다
 - [ ] `/en/feed` · `/ko/feed` 가 각각 뜨고 전환이 유지된다
 - [ ] 위 4개 데이터 파일에 한국어 문자열이 남아 있지 않다
@@ -208,7 +217,26 @@ locale === "en" ? (place.whyEn ?? null) : place.whyKo
 
 ## Implementation Notes
 
-(구현 후 작성)
+### 2026-09-13: 토큰 · 폰트
+
+**옛 토큰 이름을 새 값에 매핑했다.** 화면 코드를 한 줄도 건드리지 않기 위해서다 —
+`ds-*` 와 구버전 토큰이 합쳐 96곳에서 쓰이는데, 그중 상당수가 S10·온보딩을
+다시 쓰면서 지워진다. 지금 고쳐봐야 두 번 일하게 된다.
+
+```
+--muted        #9aa0a6  2.9:1 미달   →  --sub  7.4:1
+--ds-gray-500  #9c9ea4  2.68:1 미달  →  --sub  7.4:1
+--ds-gray-600  #74767c  4.05:1 미달  →  --sub  7.4:1
+```
+
+대비 미달 3건이 값 교체만으로 풀렸다.
+
+**S00 은 토큰을 안 쓰고 있었다.** `text-[12.5px] font-light` 처럼 하드코딩돼 있어
+이 티켓의 영향을 안 받는다. Pretendard 에 300 이 없어 400 으로 대체되므로 글자가
+조금 굵어진다. `FE-FEAT-012` 에서 다시 쓴다.
+
+**`.screen` 을 추가했다.** 좌우 여백·안전영역·브레이크포인트를 한 곳이 갖는다.
+지금은 쓰는 화면이 없고 `FE-FEAT-009` 부터 쓴다.
 
 ---
 
