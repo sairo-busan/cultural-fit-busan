@@ -1,8 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { Instrument_Serif } from "next/font/google";
 import localFont from "next/font/local";
+import { notFound } from "next/navigation";
+import { hasLocale, NextIntlClientProvider } from "next-intl";
+import { setRequestLocale } from "next-intl/server";
 import { Providers } from "@/providers/Providers";
-import "./globals.css";
+import { routing } from "@/i18n/routing";
+import "../globals.css";
 
 /**
  * 본문 — Pretendard. 한글과 라틴이 한 가족이라 섞여도 크기·굵기가 어긋나지 않는다.
@@ -13,9 +17,9 @@ const pretendard = localFont({
   variable: "--font-sans",
   display: "swap",
   src: [
-    { path: "./fonts/Pretendard-Regular.subset.woff2", weight: "400", style: "normal" },
-    { path: "./fonts/Pretendard-SemiBold.subset.woff2", weight: "600", style: "normal" },
-    { path: "./fonts/Pretendard-Bold.subset.woff2", weight: "700", style: "normal" },
+    { path: "../fonts/Pretendard-Regular.subset.woff2", weight: "400", style: "normal" },
+    { path: "../fonts/Pretendard-SemiBold.subset.woff2", weight: "600", style: "normal" },
+    { path: "../fonts/Pretendard-Bold.subset.woff2", weight: "700", style: "normal" },
   ],
 });
 
@@ -43,14 +47,28 @@ export const viewport: Viewport = {
   themeColor: "#2A5A48",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+/** 두 로케일을 미리 만들어 둔다 — Capacitor 정적 빌드에 필요하다 */
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }));
+}
+
+export default async function RootLayout({
+  children,
+  params,
+}: LayoutProps<"/[locale]">) {
+  const { locale } = await params;
+  if (!hasLocale(routing.locales, locale)) notFound();
+  setRequestLocale(locale);
+
   return (
     <html
-      lang="en"
+      lang={locale}
       className={`${pretendard.variable} ${instrumentSerif.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
-        <Providers>{children}</Providers>
+        <NextIntlClientProvider>
+          <Providers>{children}</Providers>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

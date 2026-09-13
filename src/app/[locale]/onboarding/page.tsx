@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { AppHeader } from "@/components/common/AppHeader";
 import { RadioChipGroup } from "@/components/common/ChoiceChipGroup";

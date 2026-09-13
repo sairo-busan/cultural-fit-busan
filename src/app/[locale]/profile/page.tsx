@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { buildCf8Profile } from "@/lib/cfp";
 import { AppHeader } from "@/components/common/AppHeader";
