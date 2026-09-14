@@ -1,1 +1,24 @@
-{}
+{
+  "place": {
+    "save": "{name} 저장",
+    "removeFromSaved": "{name} 저장 해제",
+    "noPhoto": "사진 없음",
+    "weatherType": {
+      "indoor": "실내",
+      "outdoor": "야외",
+      "mixed": "실내외"
+    },
+    "crowd": {
+      "low": "한산한 편",
+      "high": "붐비는 편"
+    },
+    "budget": {
+      "low": "무료·저렴"
+    },
+    "stay": {
+      "minutes": "보통 {m}분",
+      "hours": "보통 {h}시간",
+      "hoursMinutes": "보통 {h}시간 {m}분"
+    }
+  }
+}

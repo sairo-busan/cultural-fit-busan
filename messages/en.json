@@ -1,1 +1,24 @@
-{}
+{
+  "place": {
+    "save": "Save {name}",
+    "removeFromSaved": "Remove {name} from saved",
+    "noPhoto": "no photo",
+    "weatherType": {
+      "indoor": "Indoor",
+      "outdoor": "Outdoor",
+      "mixed": "Indoor & outdoor"
+    },
+    "crowd": {
+      "low": "Rarely busy",
+      "high": "Often busy"
+    },
+    "budget": {
+      "low": "Free or low"
+    },
+    "stay": {
+      "minutes": "About {m}m",
+      "hours": "About {h}h",
+      "hoursMinutes": "About {h}h {m}m"
+    }
+  }
+}
