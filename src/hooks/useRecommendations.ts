@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { STORAGE_KEYS, readCf8Code } from "@/lib/storage";
 import { rankPlaces, type EnginePlaceInput, type RankedPlace } from "@/lib/recommendEngine";
 import {
+  currentForecastSlot,
   currentWeatherFromForecast,
   currentTemperatureFromForecast,
   type KmaForecastItem,
@@ -33,6 +34,8 @@ export type UseRecommendationsResult = {
   /** 화면에도 날씨를 보여줘야 해서 점수 보정에 쓴 값을 그대로 내준다 */
   weather: WeatherBucket | null;
   temperature: number | null;
+  /** 위 두 값이 몇 시 예보인지. `{ date: "20260914", time: "1000" }` */
+  forecastSlot: { date: string; time: string } | null;
 };
 
 /**
@@ -48,6 +51,9 @@ export function useRecommendations(): UseRecommendationsResult {
   const [error, setError] = useState<string | null>(null);
   const [weatherState, setWeatherState] = useState<WeatherBucket | null>(null);
   const [temperature, setTemperature] = useState<number | null>(null);
+  const [forecastSlot, setForecastSlot] = useState<
+    { date: string; time: string } | null
+  >(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -95,6 +101,7 @@ export function useRecommendations(): UseRecommendationsResult {
           if (!cancelled) {
             setWeatherState(resolved);
             setTemperature(currentTemperatureFromForecast(items));
+            setForecastSlot(currentForecastSlot(items));
           }
         }
 
@@ -124,5 +131,6 @@ export function useRecommendations(): UseRecommendationsResult {
     error,
     weather: weatherState,
     temperature,
+    forecastSlot,
   };
 }
