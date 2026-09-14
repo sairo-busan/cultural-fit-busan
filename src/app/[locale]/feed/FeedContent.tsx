@@ -32,7 +32,7 @@ export function FeedContent() {
   const { places, loading, error, weather, temperature, forecastSlot } =
     useRecommendations();
   const cf8Code = useStoredSnapshot(readCf8Code, null);
-  const { ids: savedIds, toggle: handleToggleSave } = useSavedPlaces();
+  const { ids: savedIds, toggle } = useSavedPlaces();
 
   if (loading) return <FeedSkeleton />;
 
@@ -98,7 +98,7 @@ export function FeedContent() {
               key={place.contentId}
               place={place}
               saved={savedIds.has(place.contentId)}
-              onToggleSave={handleToggleSave}
+              onToggleSave={toggle}
             />
           ))}
         </div>

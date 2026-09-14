@@ -46,7 +46,7 @@ export function SavedContent() {
   const tPlace = useTranslations("place");
 
   const cf8Code = useStoredSnapshot(readCf8Code, null);
-  const { places: saved, toggle: handleToggleSave } = useSavedPlaces();
+  const { places: saved, toggle } = useSavedPlaces();
 
   /**
    * 장소 상세는 한 번만 받아 둔다. 저장을 해제해도 다시 부르지 않는다 —
@@ -232,7 +232,7 @@ export function SavedContent() {
                     : formatSavedAt(entry.savedAt, now, (k, v) => t(k, v))
                 }
                 saved
-                onToggleSave={handleToggleSave}
+                onToggleSave={toggle}
               />
             );
           })}

@@ -1,6 +1,9 @@
 "use client";
 
 import { useCallback, useMemo, useSyncExternalStore } from "react";
+import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
+import { useToast } from "@/contexts/ToastContext";
 import { readSavedPlaces, toggleSaved, type SavedPlace } from "@/lib/storage";
 
 /**
@@ -12,6 +15,9 @@ import { readSavedPlaces, toggleSaved, type SavedPlace } from "@/lib/storage";
  *
  * localStorage 는 스스로 변경을 알려주지 않으므로(`storage` 이벤트는 **다른 탭**
  * 에서만 뜬다) 이 모듈이 구독자 목록을 들고 직접 알린다.
+ *
+ * 토스트도 여기서 띄운다. 저장은 어느 화면에서 하든 같은 일이라, 화면마다
+ * 문구와 조건을 다시 쓰면 갈린다.
  */
 
 const listeners = new Set<() => void>();
@@ -42,24 +48,60 @@ function getServerSnapshot(): SavedPlace[] {
   return EMPTY;
 }
 
+function invalidate(): void {
+  cache = null;
+  for (const listener of listeners) listener();
+}
+
 export type UseSavedPlacesResult = {
   /** 최근 저장순 */
   places: SavedPlace[];
   /** 행마다 저장 여부를 묻기 좋게 */
   ids: Set<string>;
+  /** 뒤집고, 무슨 일이 일어났는지 토스트로 알린다 */
   toggle: (contentId: string) => void;
 };
 
 export function useSavedPlaces(): UseSavedPlacesResult {
   const places = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const t = useTranslations("place");
+  const toast = useToast();
+  const router = useRouter();
 
   const ids = useMemo(() => new Set(places.map((p) => p.id)), [places]);
 
-  const toggle = useCallback((contentId: string) => {
-    toggleSaved(contentId);
-    cache = null;
-    for (const listener of listeners) listener();
-  }, []);
+  const toggle = useCallback(
+    (contentId: string) => {
+      const before = readSavedPlaces();
+      const removed = before.find((p) => p.id === contentId);
+
+      toggleSaved(contentId);
+      invalidate();
+
+      if (removed) {
+        toast.show(t("removedToast"), {
+          action: {
+            label: t("undo"),
+            /**
+             * 저장 시각까지 되돌린다. 그냥 다시 담으면 지금 시각이 찍혀
+             * 최근 저장순 맨 위로 올라오는데, 그건 되돌리기가 아니다.
+             */
+            onAct: () => {
+              if (readSavedPlaces().some((p) => p.id === contentId)) return;
+              toggleSaved(contentId, new Date(removed.savedAt));
+              invalidate();
+            },
+          },
+        });
+        return;
+      }
+
+      toast.show(t("savedToast"), {
+        action: { label: t("savedToastAction"), onAct: () => router.push("/saved") },
+      });
+    },
+    [t, toast, router],
+  );
 
   return { places, ids, toggle };
 }

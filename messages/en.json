@@ -30,7 +30,11 @@
       "시장형": "Market",
       "해양야경형": "Coast & night",
       "문화역사형": "Culture"
-    }
+    },
+    "savedToast": "Added to Saved",
+    "savedToastAction": "View",
+    "removedToast": "Removed from Saved",
+    "undo": "Undo"
   },
   "nav": {
     "forYou": "For you",
