@@ -9,7 +9,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "build:app": "bash scripts/build-app.sh"
   },
   "dependencies": {
     "@radix-ui/react-radio-group": "^1.4.7",
