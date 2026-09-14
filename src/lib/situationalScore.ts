@@ -1,62 +1,71 @@
 /**
- * 상황보정 점수 추출 (FE-FEAT-005 Step 7).
- * 예시_CF8추천구조(gid=1126787505)의 동행/날씨/계절/시간대 점수 중 현재 상황에
- * 해당하는 값을 골라낸다. 이 탭이 아직 13건(해운대·센텀만) 샘플이라 실데이터는
- * 대부분 null — 로직만 미리 구현해두고 62건 채워지면 바로 동작한다.
+ * 상황보정 점수 추출 — Model B (9/10 회의 확정, DB_01 점수판 기준).
+ *
+ * 동행은 "선택한 컬럼들을 합산"이다 — 주 동행(혼자/친구·연인/부모님 중 최대 1) +
+ * 아이 동반 시 아이 컬럼 + 반려동물 동반 시 반려동물 컬럼. 평균이 아니라 합산이고,
+ * 소피의 `TripSetup`이 이미 `primaryCompanion`(단일) + `childWith`/`petWith`(불리언)로
+ * 나뉘어 있어서 "친구/연인을 둘로 갈라 평균" 같은 변환이 필요 없다 — 값을 그대로 받는다.
+ *
+ * 날씨·계절·시간대는 접속 시점 자동 산출이라 늘 단일 선택 — 컬럼 하나를 그대로 읽는다.
  */
 
-export type Companion = "solo" | "couple" | "friends" | "parents" | "kid" | "pet";
+export type PrimaryCompanion = "solo" | "friend_couple" | "parents";
 export type Weather = "sunny" | "rainy" | "cloudy";
-export type Season = "spring" | "summer" | "fall" | "winter";
+export type Season = "spring" | "summer" | "autumn" | "winter";
 export type TimeOfDay = "morning" | "afternoon" | "evening";
 
-export type PlaceSituationalScores = {
-  companionScoreSolo: number | null;
-  companionScoreCouple: number | null;
-  companionScoreFriends: number | null;
-  companionScoreParents: number | null;
-  companionScoreKid: number | null;
-  companionScorePet: number | null;
-  weatherScoreSunny: number | null;
-  weatherScoreRainy: number | null;
-  weatherScoreCloudy: number | null;
-  seasonScoreSpring: number | null;
-  seasonScoreSummer: number | null;
-  seasonScoreFall: number | null;
-  seasonScoreWinter: number | null;
-  timeScoreMorning: number | null;
-  timeScoreAfternoon: number | null;
-  timeScoreEvening: number | null;
+export type CompanionSelection = {
+  primary: PrimaryCompanion | null;
+  childWith: boolean;
+  petWith: boolean;
 };
 
-const COMPANION_FIELD: Record<Companion, keyof PlaceSituationalScores> = {
-  solo: "companionScoreSolo",
-  couple: "companionScoreCouple",
-  friends: "companionScoreFriends",
-  parents: "companionScoreParents",
-  kid: "companionScoreKid",
-  pet: "companionScorePet",
+export type PlaceSituationalScores = {
+  soloScore: number | null;
+  coupleFriendScore: number | null;
+  parentsScore: number | null;
+  kidsScore: number | null;
+  petScore: number | null;
+  sunnyScore: number | null;
+  rainyScore: number | null;
+  cloudyScore: number | null;
+  springScore: number | null;
+  summerScore: number | null;
+  autumnScore: number | null;
+  winterScore: number | null;
+  morningScore: number | null;
+  afternoonScore: number | null;
+  eveningScore: number | null;
+};
+
+const PRIMARY_FIELD: Record<PrimaryCompanion, keyof PlaceSituationalScores> = {
+  solo: "soloScore",
+  friend_couple: "coupleFriendScore",
+  parents: "parentsScore",
 };
 
 /**
- * travelWith는 소피 쪽 타입상 복수선택 배열(single-select 전환 논의 중, PR#10).
- * 여러 개 선택된 경우 임시로 평균 처리 — 단일 선택으로 확정되면 이 분기 제거.
+ * 선택한 동행 컬럼들을 합산한다. 아무것도 선택 안 했으면(선택 화면 QUICK/건너뛰기)
+ * null — finalScore.ts의 R031 재정규화가 이 축을 최종점수 계산에서 뺀다.
  */
 export function selectCompanionScore(
   place: PlaceSituationalScores,
-  companions: Companion[]
+  selection: CompanionSelection
 ): number | null {
-  const scores = companions
-    .map((c) => place[COMPANION_FIELD[c]] ?? null)
-    .filter((s): s is number => s !== null);
-  if (scores.length === 0) return null;
-  return scores.reduce((sum, s) => sum + s, 0) / scores.length;
+  const fields: (keyof PlaceSituationalScores)[] = [];
+  if (selection.primary) fields.push(PRIMARY_FIELD[selection.primary]);
+  if (selection.childWith) fields.push("kidsScore");
+  if (selection.petWith) fields.push("petScore");
+
+  const known = fields.map((f) => place[f]).filter((v): v is number => v !== null);
+  if (fields.length === 0 || known.length === 0) return null;
+  return known.reduce((sum, v) => sum + v, 0);
 }
 
 const WEATHER_FIELD: Record<Weather, keyof PlaceSituationalScores> = {
-  sunny: "weatherScoreSunny",
-  rainy: "weatherScoreRainy",
-  cloudy: "weatherScoreCloudy",
+  sunny: "sunnyScore",
+  rainy: "rainyScore",
+  cloudy: "cloudyScore",
 };
 
 export function selectWeatherScore(place: PlaceSituationalScores, weather: Weather): number | null {
@@ -64,10 +73,10 @@ export function selectWeatherScore(place: PlaceSituationalScores, weather: Weath
 }
 
 const SEASON_FIELD: Record<Season, keyof PlaceSituationalScores> = {
-  spring: "seasonScoreSpring",
-  summer: "seasonScoreSummer",
-  fall: "seasonScoreFall",
-  winter: "seasonScoreWinter",
+  spring: "springScore",
+  summer: "summerScore",
+  autumn: "autumnScore",
+  winter: "winterScore",
 };
 
 export function selectSeasonScore(place: PlaceSituationalScores, season: Season): number | null {
@@ -75,30 +84,27 @@ export function selectSeasonScore(place: PlaceSituationalScores, season: Season)
 }
 
 const TIME_FIELD: Record<TimeOfDay, keyof PlaceSituationalScores> = {
-  morning: "timeScoreMorning",
-  afternoon: "timeScoreAfternoon",
-  evening: "timeScoreEvening",
+  morning: "morningScore",
+  afternoon: "afternoonScore",
+  evening: "eveningScore",
 };
 
-export function selectTimeScore(place: PlaceSituationalScores, timeOfDay: TimeOfDay): number | null {
-  return place[TIME_FIELD[timeOfDay]] ?? null;
+export function selectTimeScore(place: PlaceSituationalScores, time: TimeOfDay): number | null {
+  return place[TIME_FIELD[time]] ?? null;
 }
 
-/** 현재 날짜로 계절 자동 판단(서버 응답 대기 없이 클라이언트에서 바로 계산 가능) */
-export function currentSeason(date: Date = new Date()): Season {
-  const month = date.getMonth() + 1;
+/** 계절 경계는 임시(에린 재량, 9/11 확정 문서 참고) — 3~5월 봄, 6~8월 여름, 9~11월 가을, 12~2월 겨울 */
+export function currentSeason(now: Date = new Date()): Season {
+  const month = now.getMonth() + 1;
   if (month >= 3 && month <= 5) return "spring";
   if (month >= 6 && month <= 8) return "summer";
-  if (month >= 9 && month <= 11) return "fall";
+  if (month >= 9 && month <= 11) return "autumn";
   return "winter";
 }
 
-/**
- * ⚠️ 시간대 경계값은 시트에 명시된 근거 없음(CTX_NIGHT의 "18시부터"만 참고).
- * 통상적 3분할(06~12/12~18/18~24)로 임시 구현 — 확인되면 교체 필요.
- */
-export function currentTimeOfDay(date: Date = new Date()): TimeOfDay {
-  const hour = date.getHours();
+/** 시간대 경계도 임시 — 6~12시 오전, 12~18시 오후, 18~24시(+0~6시) 저녁 */
+export function currentTimeOfDay(now: Date = new Date()): TimeOfDay {
+  const hour = now.getHours();
   if (hour >= 6 && hour < 12) return "morning";
   if (hour >= 12 && hour < 18) return "afternoon";
   return "evening";
