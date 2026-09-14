@@ -9,7 +9,8 @@
 #                   정적 export 가 지원하지 않는다. API 는 Vercel 에 그대로 남고
 #                   앱은 절대 주소로 부른다(`src/lib/apiBase.ts`).
 #
-#   src/app/place   `/place/[id]` 가 `generateStaticParams()` 없는 동적 라우트다.
+#   src/app/[locale]/place
+#                   `/place/[id]` 가 `generateStaticParams()` 없는 동적 라우트다.
 #                   S20 은 아직 목업 값이라 이번 빌드에서는 화면 자체를 넣지 않는다.
 #                   실데이터가 붙으면(FE-FEAT-010) 이 줄을 지운다.
 #
@@ -18,7 +19,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-EXCLUDE=(src/app/api src/app/place)
+EXCLUDE=(src/app/api "src/app/[locale]/place")
 PARK="$(mktemp -d)"
 
 restore() {
@@ -36,8 +37,14 @@ if [ -z "${NEXT_PUBLIC_API_BASE:-}" ]; then
   exit 1
 fi
 
+# 경로가 없으면 멈춘다. 조용히 넘기면 라우트가 그대로 남은 채 빌드가
+# 엉뚱한 곳에서 깨진다 — 라우트를 옮기면 이 목록도 같이 고쳐야 한다.
 for path in "${EXCLUDE[@]}"; do
-  [ -d "$path" ] && mv "$path" "$PARK/$(basename "$path")"
+  if [ ! -d "$path" ]; then
+    echo "제외 대상이 없습니다: $path" >&2
+    exit 1
+  fi
+  mv "$path" "$PARK/$(basename "$path")"
 done
 
 rm -rf .next out

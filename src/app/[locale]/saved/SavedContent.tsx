@@ -7,6 +7,7 @@ import { ScreenTitle } from "@/components/common/TabScreen";
 import { PlaceRow } from "@/components/place/PlaceRow";
 import { useSavedPlaces } from "@/hooks/useSavedPlaces";
 import { useStoredSnapshot } from "@/hooks/useStoredSnapshot";
+import { apiUrl } from "@/lib/apiBase";
 import { cf8FitScoreFromCode } from "@/lib/cf8Match";
 import { districtLabel, fitBand, formatSavedAt } from "@/lib/placeDisplay";
 import { readCf8Code } from "@/lib/storage";
@@ -62,7 +63,7 @@ export function SavedContent() {
 
     async function run() {
       try {
-        const res = await fetch("/api/recommend?limit=120");
+        const res = await fetch(apiUrl("/api/recommend?limit=120"));
         const all = res.ok ? ((await res.json()) as RecommendedPlace[]) : [];
         if (!cancelled) setCatalog(new Map(all.map((p) => [p.contentId, p])));
       } catch {
