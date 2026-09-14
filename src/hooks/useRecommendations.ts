@@ -1,14 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { STORAGE_KEYS, readCf8Code } from "@/lib/storage";
+import { readCf8Code, STORAGE_KEYS } from "@/lib/storage";
 import { rankPlaces, type EnginePlaceInput, type RankedPlace } from "@/lib/recommendEngine";
 import { currentWeatherFromForecast, type KmaForecastItem } from "@/lib/kma";
 import type { TripSetupLike, TripSetupMode } from "@/lib/tripSetupMode";
 import type { RecommendedPlace } from "@/types/place";
-
-/** 부산시청 좌표 — geolocation 실패 시 폴백(날씨 조회용, 거리 표시는 안 함) */
-const BUSAN_CITY_HALL = { lat: 35.1796, lng: 129.0756 };
 
 type EngineOutput = RankedPlace<RecommendedPlace & EnginePlaceInput>;
 
@@ -19,11 +16,12 @@ export type UseRecommendationsResult = {
 };
 
 /**
- * 클라이언트 추천엔진 훅(FE-FEAT-005 Step 10 — 브라우저 I/O 담당).
- * localStorage(cf8_code·trip_setup·trip_setup_mode) + geolocation + /api/recommend
- * + /api/weather를 모아서 rankPlaces(순수 로직)에 넘긴다.
+ * 클라이언트 추천엔진 훅 — Model B.
+ * localStorage(cf8_code·trip_setup·trip_setup_mode) + /api/recommend + /api/weather를
+ * 모아서 rankPlaces(순수 로직)에 넘긴다.
  *
- * S10 화면 연결은 이 훅을 호출하는 쪽(소피)에서 처리 — 이 파일은 훅만 제공한다.
+ * GPS는 안 쓴다(9/10 회의 — 앱 승인 지연 리스크). 날씨는 부산 고정 좌표로 서버가
+ * 조회하므로 여기서 위치 파라미터를 안 보낸다.
  */
 export function useRecommendations(): UseRecommendationsResult {
   const [places, setPlaces] = useState<EngineOutput[]>([]);
@@ -57,14 +55,9 @@ export function useRecommendations(): UseRecommendationsResult {
           tripSetup = null;
         }
 
-        // 실제 GPS 확보 여부를 구분한다 — 거리 표시는 폴백 좌표로 계산하면
-        // 실제와 다른 값을 사실처럼 보여주게 되므로, 진짜 위치를 얻었을 때만 계산한다.
-        const position = await getCurrentPosition().catch(() => null);
-        const { lat, lng } = position ?? BUSAN_CITY_HALL;
-
         const [recommendRes, weatherRes] = await Promise.all([
-          fetch("/api/recommend?limit=100"),
-          fetch(`/api/weather?lat=${lat}&lng=${lng}&op=forecast`),
+          fetch("/api/recommend?limit=120"),
+          fetch("/api/weather?op=forecast"),
         ]);
 
         if (!recommendRes.ok) throw new Error("추천 목록을 불러오지 못했습니다");
@@ -77,13 +70,7 @@ export function useRecommendations(): UseRecommendationsResult {
           if (resolved) weather = resolved;
         }
 
-        const ranked = rankPlaces(candidates, {
-          cf8Code,
-          mode,
-          tripSetup,
-          weather,
-          userLocation: position ?? undefined,
-        });
+        const ranked = rankPlaces(candidates, { cf8Code, mode, tripSetup, weather });
         if (!cancelled) setPlaces(ranked);
       } catch (e) {
         if (!cancelled) setError((e as Error).message);
@@ -99,18 +86,4 @@ export function useRecommendations(): UseRecommendationsResult {
   }, []);
 
   return { places, loading, error };
-}
-
-function getCurrentPosition(): Promise<{ lat: number; lng: number }> {
-  return new Promise((resolve, reject) => {
-    if (typeof navigator === "undefined" || !navigator.geolocation) {
-      reject(new Error("Geolocation 미지원"));
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => reject(new Error("위치 권한 거부")),
-      { timeout: 5000 }
-    );
-  });
 }
