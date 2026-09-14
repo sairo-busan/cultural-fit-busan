@@ -20,5 +20,10 @@
       "hours": "보통 {h}시간",
       "hoursMinutes": "보통 {h}시간 {m}분"
     }
+  },
+  "nav": {
+    "forYou": "추천",
+    "saved": "저장",
+    "me": "내 정보"
   }
 }

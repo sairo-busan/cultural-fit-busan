@@ -20,5 +20,10 @@
       "hours": "About {h}h",
       "hoursMinutes": "About {h}h {m}m"
     }
+  },
+  "nav": {
+    "forYou": "For you",
+    "saved": "Saved",
+    "me": "Me"
   }
 }
