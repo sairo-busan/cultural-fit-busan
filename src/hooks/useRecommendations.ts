@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { STORAGE_KEYS } from "@/lib/storage";
+import { STORAGE_KEYS, readCf8Code } from "@/lib/storage";
 import { rankPlaces, type EnginePlaceInput, type RankedPlace } from "@/lib/recommendEngine";
 import { currentWeatherFromForecast, type KmaForecastItem } from "@/lib/kma";
 import type { TripSetupLike, TripSetupMode } from "@/lib/tripSetupMode";
@@ -38,7 +38,7 @@ export function useRecommendations(): UseRecommendationsResult {
       setError(null);
 
       try {
-        const cf8Code = localStorage.getItem(STORAGE_KEYS.cf8Code);
+        const cf8Code = readCf8Code();
         if (!cf8Code) {
           if (!cancelled) {
             setError("CF8 진단이 필요합니다");
