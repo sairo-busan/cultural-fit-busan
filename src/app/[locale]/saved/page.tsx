@@ -1,10 +1,10 @@
 import { TabScreen } from "@/components/common/TabScreen";
-import { FeedContent } from "./FeedContent";
+import { SavedContent } from "./SavedContent";
 
-export default function FeedPage() {
+export default function SavedPage() {
   return (
     <TabScreen>
-      <FeedContent />
+      <SavedContent />
     </TabScreen>
   );
 }

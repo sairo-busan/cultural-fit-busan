@@ -18,6 +18,8 @@ export const STORAGE_KEYS = {
   tripSetupMode: "trip_setup_mode",
   /** 구버전 진단의 음식 Hard Filter. S03로 대체됨 */
   hardFilter: "cfb-hard-filter",
+  /** 저장한 장소 */
+  saved: "cfb_saved",
 } as const;
 
 /**
@@ -70,4 +72,61 @@ export function clearDiagnosis() {
     STORAGE_KEYS.hardFilter,
     ...LEGACY_KEYS,
   ].forEach((key) => localStorage.removeItem(key));
+}
+
+// === 저장한 장소 ===
+
+/**
+ * 저장 시각을 함께 둔다.
+ *
+ * 예전에는 `string[]` 에 뒤로 붙이는 방식이라 배열 순서가 곧 저장순이었는데,
+ * 그건 계약이 아니라 우연이다 — 중복 제거나 마이그레이션을 한 번이라도 하면
+ * 순서가 조용히 뒤섞인다. 정렬 기준을 값 안에 둔다.
+ *
+ * 배포 전이라 마이그레이션은 넣지 않는다. 옛 값이 남은 브라우저는 저장 목록이
+ * 비고, `Application` 탭에서 `cfb_saved` 를 지우면 된다.
+ */
+export type SavedPlace = { id: string; savedAt: string };
+
+function isSavedPlace(v: unknown): v is SavedPlace {
+  return (
+    typeof v === "object" && v !== null &&
+    typeof (v as SavedPlace).id === "string" &&
+    typeof (v as SavedPlace).savedAt === "string"
+  );
+}
+
+/** 최근 저장순. 옛 스키마(string[])가 남아 있으면 빈 배열로 떨어진다 */
+export function readSavedPlaces(): SavedPlace[] {
+  if (typeof window === "undefined") return [];
+
+  try {
+    const parsed: unknown = JSON.parse(localStorage.getItem(STORAGE_KEYS.saved) ?? "[]");
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(isSavedPlace)
+      .sort((a, b) => b.savedAt.localeCompare(a.savedAt));
+  } catch {
+    return [];
+  }
+}
+
+/** 저장 목록을 화면이 비교할 수 있게 문자열로. `useStoredSnapshot` 은 원시값만 받는다 */
+export function readSavedIdsKey(): string {
+  return readSavedPlaces().map((p) => p.id).join(",");
+}
+
+export function isSaved(id: string): boolean {
+  return readSavedPlaces().some((p) => p.id === id);
+}
+
+/** 저장/해제를 뒤집고 바뀐 목록을 돌려준다 */
+export function toggleSaved(id: string, now = new Date()): SavedPlace[] {
+  const current = readSavedPlaces();
+  const next = current.some((p) => p.id === id)
+    ? current.filter((p) => p.id !== id)
+    : [...current, { id, savedAt: now.toISOString() }];
+
+  localStorage.setItem(STORAGE_KEYS.saved, JSON.stringify(next));
+  return next;
 }

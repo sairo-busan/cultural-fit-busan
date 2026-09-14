@@ -7,16 +7,21 @@ import {
   useCallback,
   useMemo,
 } from "react";
-import { Toast } from "@/components/ui/Toast";
+import { Toast, type ToastAction } from "@/components/ui/Toast";
 
-type ToastItem = {
+export type ToastOptions = {
+  duration?: number;
+  /** 갈 곳이 있을 때. 누르면 토스트가 바로 닫힌다 */
+  action?: ToastAction;
+};
+
+type ToastItem = ToastOptions & {
   id: string;
   message: string;
-  duration?: number;
 };
 
 type ToastContextValue = {
-  show: (message: string, duration?: number) => void;
+  show: (message: string, options?: ToastOptions) => void;
 };
 
 const ToastContext = createContext<ToastContextValue | null>(null);
@@ -28,9 +33,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
   }, []);
 
-  const show = useCallback((message: string, duration?: number) => {
+  const show = useCallback((message: string, options?: ToastOptions) => {
     const id = `toast-${Date.now()}`;
-    setToasts((prev) => [...prev, { id, message, duration }]);
+    // 한 번에 하나만 띄운다 — 목록을 훑으며 연달아 저장하면 쌓여서 화면을 덮는다
+    setToasts([{ id, message, ...options }]);
   }, []);
 
   const value = useMemo(() => ({ show }), [show]);
@@ -38,12 +44,14 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div className="pointer-events-none fixed bottom-[100px] left-0 right-0 z-50 flex flex-col items-center gap-[8px] px-[24px]">
+      {/* 하단 탭(56px) 위로 띄운다. 기기 제스처 바 높이는 따로 더한다 */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-[calc(68px+env(safe-area-inset-bottom,0px))] z-50 flex flex-col items-center gap-2 px-6">
         {toasts.map((toast) => (
           <Toast
             key={toast.id}
             id={toast.id}
             message={toast.message}
+            action={toast.action}
             duration={toast.duration}
             onClose={removeToast}
           />

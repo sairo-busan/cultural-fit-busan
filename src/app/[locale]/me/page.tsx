@@ -1,10 +1,10 @@
 import { TabScreen } from "@/components/common/TabScreen";
-import { FeedContent } from "./FeedContent";
+import { MeContent } from "./MeContent";
 
-export default function FeedPage() {
+export default function MePage() {
   return (
     <TabScreen>
-      <FeedContent />
+      <MeContent />
     </TabScreen>
   );
 }

@@ -1,1 +1,112 @@
-{}
+{
+  "place": {
+    "save": "{name} 저장",
+    "removeFromSaved": "{name} 저장 해제",
+    "noPhoto": "사진 없음",
+    "weatherType": {
+      "indoor": "실내",
+      "outdoor": "야외",
+      "mixed": "실내외"
+    },
+    "crowd": {
+      "low": "한산한 편",
+      "high": "붐비는 편"
+    },
+    "budget": {
+      "low": "무료·저렴"
+    },
+    "stay": {
+      "minutes": "보통 {m}분",
+      "hours": "보통 {h}시간",
+      "hoursMinutes": "보통 {h}시간 {m}분"
+    },
+    "fit": {
+      "great": "아주 잘 맞음",
+      "good": "잘 맞음",
+      "fair": "무난함"
+    },
+    "placeType": {
+      "식음형": "먹거리",
+      "시장형": "시장",
+      "해양야경형": "바다·야경",
+      "문화역사형": "문화·역사"
+    },
+    "savedToast": "저장한 곳에 담았어요",
+    "savedToastAction": "보기",
+    "removedToast": "저장을 해제했어요",
+    "undo": "되돌리기"
+  },
+  "nav": {
+    "forYou": "추천",
+    "saved": "저장",
+    "me": "내 정보"
+  },
+  "feed": {
+    "title": "지금 갈 만한 곳",
+    "yourType": "내 여행 유형",
+    "nowIn": "부산 · {weather} · {time} 기준",
+    "weather": {
+      "sunny": "맑음",
+      "cloudy": "흐림",
+      "rainy": "비"
+    },
+    "sectionTitle": "지금, 이런 곳이 맞아요",
+    "sortByMatch": "추천순",
+    "needQuiz": {
+      "title": "먼저 취향을 알려주세요",
+      "body": "세 가지만 고르면 나에게 맞는 순서로 골라드려요.",
+      "action": "취향 진단하기"
+    },
+    "noResults": {
+      "title": "조건에 맞는 곳을 찾지 못했어요",
+      "body": "고르신 조건을 모두 만족하는 곳이 없어요. 조건을 하나만 줄여도 결과가 크게 늘어납니다.",
+      "action": "조건 다시 고르기"
+    },
+    "nowInNoTime": "부산 · {weather}",
+    "loadFailed": {
+      "title": "목록을 불러오지 못했어요",
+      "body": "연결을 확인한 뒤 다시 시도해주세요.",
+      "action": "다시 시도"
+    }
+  },
+  "saved": {
+    "title": "저장한 곳",
+    "count": "{count}곳",
+    "empty": {
+      "title": "아직 저장한 곳이 없어요",
+      "body": "마음에 드는 곳의 북마크를 누르면 여기에 모입니다. 이 기기에만 저장돼요.",
+      "action": "추천 보러 가기"
+    },
+    "sortLabel": "정렬 기준",
+    "sort": {
+      "recent": "최근 저장순",
+      "fit": "적합도순"
+    },
+    "filterLabel": "지역으로 거르기",
+    "filterAll": "전체",
+    "noneInDistrict": "이 지역에 저장한 곳이 없어요.",
+    "savedAt": {
+      "today": "오늘 저장",
+      "yesterday": "어제 저장",
+      "daysAgo": "{d}일 전 저장",
+      "date": "{m}월 {d}일 저장"
+    }
+  },
+  "me": {
+    "title": "내 정보",
+    "travelStyle": "여행 스타일",
+    "notDiagnosed": "진단 전",
+    "tripConditions": "여행 조건",
+    "conditionsSet": "설정함",
+    "conditionsNone": "설정 안 함",
+    "language": "언어",
+    "locale": {
+      "ko": "한국어",
+      "en": "English"
+    },
+    "about": "이 앱에 대해",
+    "noAccount": "계정이 없습니다. 진단 결과와 저장한 곳은 이 기기에만 남습니다.",
+    "retakeQuiz": "취향 진단 다시 하기",
+    "takeQuiz": "진단하기"
+  }
+}

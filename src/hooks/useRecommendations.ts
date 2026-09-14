@@ -1,21 +1,49 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { STORAGE_KEYS, readCf8Code } from "@/lib/storage";
 import { rankPlaces, type EnginePlaceInput, type RankedPlace } from "@/lib/recommendEngine";
-import { currentWeatherFromForecast, type KmaForecastItem } from "@/lib/kma";
+import {
+  currentForecastSlot,
+  currentWeatherFromForecast,
+  currentTemperatureFromForecast,
+  type KmaForecastItem,
+  type WeatherBucket,
+} from "@/lib/kma";
 import type { TripSetupLike, TripSetupMode } from "@/lib/tripSetupMode";
 import type { RecommendedPlace } from "@/types/place";
 
-/** 부산시청 좌표 — geolocation 실패 시 폴백(날씨 조회용, 거리 표시는 안 함) */
+/**
+ * 날씨 조회 기준점 — 부산시청.
+ *
+ * 추천 대상이 전부 부산이라 기상 격자가 사실상 하나다. 위치 권한을 물어 얻는
+ * 정확도가 날씨 한 줄을 바꾸지 못하는데, 앱을 열자마자 뜨는 권한 팝업은
+ * 그대로 비용이다. 그래서 묻지 않는다.
+ *
+ * 거리 표시는 이 좌표로 계산하지 않는다 — 사용자가 어디 있든 시청 기준 거리가
+ * 나와 실제와 다른 값을 사실처럼 보여주게 된다.
+ */
 const BUSAN_CITY_HALL = { lat: 35.1796, lng: 129.0756 };
 
 type EngineOutput = RankedPlace<RecommendedPlace & EnginePlaceInput>;
 
+/**
+ * 실패의 종류. 문구를 섞으면 화면이 구분하지 못한다 — 오프라인인 사람에게
+ * "진단이 필요해요" 를 띄우면 이미 답한 3문항을 다시 풀게 만든다.
+ */
+export type FeedError = "NEED_QUIZ" | "LOAD_FAILED";
+
 export type UseRecommendationsResult = {
   places: EngineOutput[];
   loading: boolean;
-  error: string | null;
+  error: FeedError | null;
+  /** 네트워크 실패에서 다시 불러온다. 진단이 없는 경우에는 눌러도 달라지지 않는다 */
+  retry: () => void;
+  /** 화면에도 날씨를 보여줘야 해서 점수 보정에 쓴 값을 그대로 내준다 */
+  weather: WeatherBucket | null;
+  temperature: number | null;
+  /** 위 두 값이 몇 시 예보인지. `{ date: "20260914", time: "1000" }` */
+  forecastSlot: { date: string; time: string } | null;
 };
 
 /**
@@ -28,7 +56,13 @@ export type UseRecommendationsResult = {
 export function useRecommendations(): UseRecommendationsResult {
   const [places, setPlaces] = useState<EngineOutput[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<FeedError | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  const [weatherState, setWeatherState] = useState<WeatherBucket | null>(null);
+  const [temperature, setTemperature] = useState<number | null>(null);
+  const [forecastSlot, setForecastSlot] = useState<
+    { date: string; time: string } | null
+  >(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -41,7 +75,7 @@ export function useRecommendations(): UseRecommendationsResult {
         const cf8Code = readCf8Code();
         if (!cf8Code) {
           if (!cancelled) {
-            setError("CF8 진단이 필요합니다");
+            setError("NEED_QUIZ");
             setLoading(false);
           }
           return;
@@ -57,10 +91,7 @@ export function useRecommendations(): UseRecommendationsResult {
           tripSetup = null;
         }
 
-        // 실제 GPS 확보 여부를 구분한다 — 거리 표시는 폴백 좌표로 계산하면
-        // 실제와 다른 값을 사실처럼 보여주게 되므로, 진짜 위치를 얻었을 때만 계산한다.
-        const position = await getCurrentPosition().catch(() => null);
-        const { lat, lng } = position ?? BUSAN_CITY_HALL;
+        const { lat, lng } = BUSAN_CITY_HALL;
 
         const [recommendRes, weatherRes] = await Promise.all([
           fetch("/api/recommend?limit=100"),
@@ -70,11 +101,17 @@ export function useRecommendations(): UseRecommendationsResult {
         if (!recommendRes.ok) throw new Error("추천 목록을 불러오지 못했습니다");
         const candidates = (await recommendRes.json()) as (RecommendedPlace & EnginePlaceInput)[];
 
-        let weather: "sunny" | "rainy" | "cloudy" = "sunny";
+        let weather: WeatherBucket = "sunny";
         if (weatherRes.ok) {
           const weatherBody = await weatherRes.json();
-          const resolved = currentWeatherFromForecast(weatherBody.items as KmaForecastItem[]);
+          const items = weatherBody.items as KmaForecastItem[];
+          const resolved = currentWeatherFromForecast(items);
           if (resolved) weather = resolved;
+          if (!cancelled) {
+            setWeatherState(resolved);
+            setTemperature(currentTemperatureFromForecast(items));
+            setForecastSlot(currentForecastSlot(items));
+          }
         }
 
         const ranked = rankPlaces(candidates, {
@@ -82,11 +119,10 @@ export function useRecommendations(): UseRecommendationsResult {
           mode,
           tripSetup,
           weather,
-          userLocation: position ?? undefined,
         });
         if (!cancelled) setPlaces(ranked);
-      } catch (e) {
-        if (!cancelled) setError((e as Error).message);
+      } catch {
+        if (!cancelled) setError("LOAD_FAILED");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -96,21 +132,17 @@ export function useRecommendations(): UseRecommendationsResult {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [attempt]);
 
-  return { places, loading, error };
-}
+  const retry = useCallback(() => setAttempt((n) => n + 1), []);
 
-function getCurrentPosition(): Promise<{ lat: number; lng: number }> {
-  return new Promise((resolve, reject) => {
-    if (typeof navigator === "undefined" || !navigator.geolocation) {
-      reject(new Error("Geolocation 미지원"));
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => reject(new Error("위치 권한 거부")),
-      { timeout: 5000 }
-    );
-  });
+  return {
+    places,
+    loading,
+    error,
+    retry,
+    weather: weatherState,
+    temperature,
+    forecastSlot,
+  };
 }
