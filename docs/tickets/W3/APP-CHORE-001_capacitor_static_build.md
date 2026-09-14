@@ -138,15 +138,31 @@ const isApp = process.env.BUILD_TARGET === "app";
 
 ---
 
-## 🔴 아직 모르는 것
+## 제외 방식 — 실측으로 정함 (2026-09-14)
 
-**정적 export 에서 `src/app/api/` 를 어떻게 제외할지 모른다.**
+`BUILD_TARGET=app npm run build` 를 그냥 돌려 에러를 봤다. **둘이 막고 있었다.**
 
-문서상 "Request 에 의존하는 Route Handler" 는 지원되지 않으므로 빌드가 실패할 것으로
-보이지만, **실제 에러 메시지를 보고 결정한다.** `docs/MEMORY.md`(2026-09-10)에
-*"API Route 를 `.cap_bak/` 으로 옮기고 빌드하는 방식을 쓸 수 없다"* 고 적혀 있는데,
-근거가 *"시크릿을 클라이언트로 옮기면 안 된다"* 여서 **빌드에서 잠시 빼는 것과는 다른
-이야기**로 읽힌다. 추측으로 구조를 정하지 않는다.
+```
+Page "/place/[id]" is missing "generateStaticParams()" so it cannot be used with "output: export"
+export const dynamic = "force-static" … not configured on route "/api/tour" with "output: export"
+```
+
+빌드 순서가 **페이지 → API** 라 처음엔 `/place/[id]` 만 보였다. 그것만 빼고 다시 돌려서야
+API 에러가 드러났다. 하나씩 고치면 두 번 헛짚는다.
+
+`scripts/build-app.sh` 가 빌드 동안만 두 디렉터리를 옮긴다. `trap` 으로 빌드가 죽어도
+원위치시킨다 — 작업 트리에 남으면 그다음 웹 빌드가 깨진다.
+
+| 옮기는 것 | 왜 |
+|---|---|
+| `src/app/api` | 요청 파라미터를 읽는 Route Handler 는 정적 export 가 지원하지 않는다. API 는 Vercel 에 남고 앱은 절대 주소로 부른다 |
+| `src/app/place` | `/place/[id]` 가 `generateStaticParams()` 없는 동적 라우트. S20 이 목업 값이라 이번엔 화면을 넣지 않는다. 실데이터가 붙으면(FE-FEAT-010) 이 줄을 지운다 |
+
+`pageExtensions` 로 거르는 방법도 있었으나 에린 소유 파일 4개를 개명해야 해서 택하지 않았다.
+
+> `docs/MEMORY.md`(2026-09-10)의 *"`.cap_bak/` 으로 옮기고 빌드하는 방식을 쓸 수 없다"* 는
+> **빌드에서 잠시 빼는 것을 막는 말이 아니었다.** 근거가 *"시크릿을 클라이언트로 옮기면
+> 안 된다"* 인데, 우리는 API 를 앱에 넣지 않고 Vercel 에 그대로 둔다. 메모를 명확히 고쳤다.
 
 ---
 
@@ -175,15 +191,17 @@ const isApp = process.env.BUILD_TARGET === "app";
 
 ## Acceptance Criteria
 
-- [ ] 웹 빌드(`npm run build`)가 이전과 동일하게 통과한다
-- [ ] `/api/recommend` · `/api/weather` 응답에 `Access-Control-Allow-Origin` 이 있다
-- [ ] `/api/tour` · `/api/health` 에는 없다 (호출처가 없어 열지 않는다)
-- [ ] `NEXT_PUBLIC_API_BASE` 가 비면 웹이 상대 경로로 그대로 동작한다
-- [ ] 앱 빌드(`BUILD_TARGET=app`)가 정적 파일을 만든다
+- [x] 웹 빌드(`npm run build`)가 이전과 동일하게 통과한다 — API 4개·`/place/[id]` 동적 유지
+- [x] `/api/recommend` · `/api/weather` 응답에 `Access-Control-Allow-Origin` 이 있다
+- [x] `/api/tour` · `/api/health` 에는 없다 (호출처가 없어 열지 않는다)
+- [x] `NEXT_PUBLIC_API_BASE` 가 비면 웹이 상대 경로로 그대로 동작한다
+- [x] 앱 빌드(`npm run build:app`)가 `out/` 에 정적 파일을 만든다 — 8페이지
 - [ ] 앱에서 `/` 를 열면 기기 언어에 따라 `/en` 또는 `/ko` 로 간다
 - [ ] 실기기에서 추천 목록이 뜨고, 저장·해제가 유지되고, 언어 전환이 된다
 - [ ] S20 상세로 들어갈 수 없다
-- [ ] `tsc --noEmit` · `lint` 통과
+- [x] `tsc --noEmit` 통과
+- [x] `lint` — 이번 브랜치가 만든 문제 없음. 남은 에러 1건(`feed/page.tsx` set-state-in-effect)은
+      `main` 에서 넘어온 것이고 PR #18 이 그 파일을 다시 쓰며 해소한다 (PR #17 이 예고)
 
 ---
 
@@ -192,7 +210,7 @@ const isApp = process.env.BUILD_TARGET === "app";
 1. `npm run build` — 웹 빌드가 깨지지 않는지
 2. `curl -D - .../api/recommend?limit=1` — CORS 헤더
 3. `curl -D - .../api/health` — 헤더가 **없는지**
-4. `BUILD_TARGET=app npm run build` — 에러 메시지 확인 후 3번(모르는 것) 결정
+4. `npm run build:app` — `out/` 에 정적 파일. 환경변수가 비면 중단하는지도 확인
 5. 실기기 — 목록 · 저장 후 앱 재시작 · 언어 전환 · 상세 진입 차단
 6. 비행기 모드 — "목록을 불러오지 못했어요" + 다시 시도
 
