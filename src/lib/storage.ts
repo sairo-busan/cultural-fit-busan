@@ -35,6 +35,25 @@ export function setTripSetupMode(mode: TripSetupMode) {
   localStorage.setItem(STORAGE_KEYS.tripSetupMode, mode);
 }
 
+/**
+ * `cf8_code` 는 S02가 `useLocalStorage` 로 저장해 `"CLD"` 처럼 따옴표가 붙는다.
+ * 엔진(`cf8FitScoreFromCode`)과 화면은 3글자 코드를 그대로 쓰므로 읽을 때 벗겨낸다.
+ * 따옴표 없이 저장된 값도 그대로 통과시킨다.
+ */
+export function readCf8Code(): string | null {
+  if (typeof window === "undefined") return null;
+
+  const raw = localStorage.getItem(STORAGE_KEYS.cf8Code);
+  if (!raw) return null;
+
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return typeof parsed === "string" ? parsed : null;
+  } catch {
+    return raw;
+  }
+}
+
 /** CFP16 시절 키. 남아 있으면 진단 초기화 시 함께 지운다. */
 const LEGACY_KEYS = ["cfb-quiz-answers", "cfb-quiz-step"] as const;
 
