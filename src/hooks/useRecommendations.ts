@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { STORAGE_KEYS, readCf8Code } from "@/lib/storage";
 import { rankPlaces, type EnginePlaceInput, type RankedPlace } from "@/lib/recommendEngine";
 import {
@@ -27,10 +27,18 @@ const BUSAN_CITY_HALL = { lat: 35.1796, lng: 129.0756 };
 
 type EngineOutput = RankedPlace<RecommendedPlace & EnginePlaceInput>;
 
+/**
+ * 실패의 종류. 문구를 섞으면 화면이 구분하지 못한다 — 오프라인인 사람에게
+ * "진단이 필요해요" 를 띄우면 이미 답한 3문항을 다시 풀게 만든다.
+ */
+export type FeedError = "NEED_QUIZ" | "LOAD_FAILED";
+
 export type UseRecommendationsResult = {
   places: EngineOutput[];
   loading: boolean;
-  error: string | null;
+  error: FeedError | null;
+  /** 네트워크 실패에서 다시 불러온다. 진단이 없는 경우에는 눌러도 달라지지 않는다 */
+  retry: () => void;
   /** 화면에도 날씨를 보여줘야 해서 점수 보정에 쓴 값을 그대로 내준다 */
   weather: WeatherBucket | null;
   temperature: number | null;
@@ -48,7 +56,8 @@ export type UseRecommendationsResult = {
 export function useRecommendations(): UseRecommendationsResult {
   const [places, setPlaces] = useState<EngineOutput[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<FeedError | null>(null);
+  const [attempt, setAttempt] = useState(0);
   const [weatherState, setWeatherState] = useState<WeatherBucket | null>(null);
   const [temperature, setTemperature] = useState<number | null>(null);
   const [forecastSlot, setForecastSlot] = useState<
@@ -66,7 +75,7 @@ export function useRecommendations(): UseRecommendationsResult {
         const cf8Code = readCf8Code();
         if (!cf8Code) {
           if (!cancelled) {
-            setError("CF8 진단이 필요합니다");
+            setError("NEED_QUIZ");
             setLoading(false);
           }
           return;
@@ -112,8 +121,8 @@ export function useRecommendations(): UseRecommendationsResult {
           weather,
         });
         if (!cancelled) setPlaces(ranked);
-      } catch (e) {
-        if (!cancelled) setError((e as Error).message);
+      } catch {
+        if (!cancelled) setError("LOAD_FAILED");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -123,12 +132,15 @@ export function useRecommendations(): UseRecommendationsResult {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [attempt]);
+
+  const retry = useCallback(() => setAttempt((n) => n + 1), []);
 
   return {
     places,
     loading,
     error,
+    retry,
     weather: weatherState,
     temperature,
     forecastSlot,

@@ -29,7 +29,7 @@ export function FeedContent() {
   const locale = useLocale() as Locale;
   const t = useTranslations("feed");
 
-  const { places, loading, error, weather, temperature, forecastSlot } =
+  const { places, loading, error, retry, weather, temperature, forecastSlot } =
     useRecommendations();
   const cf8Code = useStoredSnapshot(readCf8Code, null);
   const { ids: savedIds, toggle } = useSavedPlaces();
@@ -73,7 +73,7 @@ export function FeedContent() {
       <SectionHeader aside={t("sortByMatch")}>{t("sectionTitle")}</SectionHeader>
 
       {/* 진단 전이면 추천을 만들 수 없다 — S01 로 보낸다 */}
-      {error && (
+      {error === "NEED_QUIZ" && (
         <EmptyState
           title={t("needQuiz.title")}
           body={t("needQuiz.body")}
@@ -82,7 +82,20 @@ export function FeedContent() {
         />
       )}
 
-      {!error && places.length === 0 && (
+      {/*
+        네트워크 실패를 진단 안내로 덮으면 안 된다 — 진단은 이미 마친 사람이라
+        S01 로 보내면 답한 문항을 다시 풀게 된다. 여기서 필요한 건 재시도다.
+      */}
+      {error === "LOAD_FAILED" && (
+        <EmptyState
+          title={t("loadFailed.title")}
+          body={t("loadFailed.body")}
+          onAction={retry}
+          actionLabel={t("loadFailed.action")}
+        />
+      )}
+
+      {error === null && places.length === 0 && (
         <EmptyState
           title={t("noResults.title")}
           body={t("noResults.body")}
@@ -91,7 +104,7 @@ export function FeedContent() {
         />
       )}
 
-      {!error && (
+      {error === null && (
         <div className="mt-2">
           {places.map((place) => (
             <PlaceRow
@@ -107,27 +120,36 @@ export function FeedContent() {
   );
 }
 
+/** 액션은 다른 화면으로 가거나(`actionHref`) 이 자리에서 다시 시도한다(`onAction`) */
 function EmptyState({
   title,
   body,
   actionHref,
+  onAction,
   actionLabel,
 }: {
   title: string;
   body: string;
-  actionHref: string;
+  actionHref?: string;
+  onAction?: () => void;
   actionLabel: string;
 }) {
+  const style =
+    "ds-title-2 mt-2 inline-flex min-h-12 items-center justify-center rounded-xl bg-primary px-6 text-white transition-colors active:bg-primary-press";
+
   return (
     <div className="flex flex-col items-center gap-4 px-[--gutter] py-12 text-center">
       <p className="ds-title-1">{title}</p>
       <p className="ds-body-2 max-w-[30ch] text-sub">{body}</p>
-      <Link
-        href={actionHref}
-        className="ds-title-2 mt-2 inline-flex min-h-12 items-center justify-center rounded-xl bg-primary px-6 text-white transition-colors active:bg-primary-press"
-      >
-        {actionLabel}
-      </Link>
+      {actionHref ? (
+        <Link href={actionHref} className={style}>
+          {actionLabel}
+        </Link>
+      ) : (
+        <button type="button" onClick={onAction} className={style}>
+          {actionLabel}
+        </button>
+      )}
     </div>
   );
 }

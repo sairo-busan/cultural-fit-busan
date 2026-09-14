@@ -62,7 +62,12 @@
       "body": "No place meets all of them. Dropping just one usually opens up a lot.",
       "action": "Change conditions"
     },
-    "nowInNoTime": "Busan · {weather}"
+    "nowInNoTime": "Busan · {weather}",
+    "loadFailed": {
+      "title": "Couldn't load places",
+      "body": "Check your connection and try again.",
+      "action": "Try again"
+    }
   },
   "saved": {
     "title": "Saved",
