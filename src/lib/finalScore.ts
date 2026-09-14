@@ -1,12 +1,31 @@
 /**
- * 최종점수(AD) 계산 (FE-FEAT-005 Step 8).
- * 03A-2_CF점수기준 CALC_04: CF8 35% + 동행 25% + 날씨 15% + 계절 10% + 시간대 15%
- * (DRAFT 상태 — 최종 확정 여부 확인 필요, docs/구글시트_데이터_감사.md §8 참고).
+ * 최종점수(AD) 계산 — Model B (엑셀 점수판 CALC_04, 9/10 회의 확정).
  *
- * 04_추천로직 R031: UNKNOWN(null)인 축은 제외하고 나머지 가중치로 재정규화한다.
- * 지금은 예시_CF8추천구조가 13건뿐이라 companion/weather/season/time이 대부분
- * null — CF8 매칭(Y) 100%로 계산되는 게 정상 동작이다.
+ * 엑셀 원 공식: `70×CF + 90×동행 + 54×날씨 + 36×계절 + 54×시간`, ÷18, ROUND.
+ * 비중은 CF35% · 동행25% · 날씨15% · 계절10% · 시간15% (가중치 자체는 안 바뀜).
+ *
+ * 원 공식은 "점수 그대로 더해서 나누기"라 축이 하나라도 없으면(R031) 재정규화가
+ * 안 된다. 그래서 축마다 0~100으로 먼저 정규화한 뒤(`값 / 그 축 만점 × 100`)
+ * CALC_04 비중으로 가중평균한다 — 결과는 전부 있을 때 원 공식과 동일하고, 축이
+ * 없을 때만 R031대로 남은 비중으로 재정규화된다(기존 `weightedAverageWithReweight`
+ * 그대로 재사용).
+ *
+ * 축별 만점(DB_01 실데이터 기준):
+ *   CF8    = 9   (0~3인 컬럼 3개 합산, 컬럼 만점이 항상 3이라 구조적으로 고정)
+ *   날씨·계절·시간 = 5 (각 컬럼 만점이 5)
+ *   동행   = 8   (주 동행 최대 3 + 아이 최대 3 + 반려동물 최대 2, 셋 다 겹치는 최악 케이스)
+ *              ⚠️ 실제로는 대부분 주 동행 하나만 선택돼 만점 3에 그침 — 90×동행 항이
+ *              날씨/계절/시간(만점 5)과 같은 급으로 설계된 원 공식과 안 맞는 지점.
+ *              유나·태무 확인 대기(Sophie PR#15 "동행 점수 25%" 후속 제안과 동일 이슈).
  */
+
+const AXIS_MAX = {
+  cf8: 9,
+  companion: 8,
+  weather: 5,
+  season: 5,
+  time: 5,
+} as const;
 
 export const CALC_04_WEIGHTS = {
   cf8: 0.35,
@@ -30,20 +49,24 @@ export function weightedAverageWithReweight(components: ScoreComponent[]): numbe
 }
 
 export type FinalScoreInput = {
-  cf8FitScore: number | null; // Y
-  companionScore: number | null; // Z
-  weatherScore: number | null; // AA
-  seasonScore: number | null; // AB
-  timeScore: number | null; // AC
+  cf8FitScore: number | null; // 0~9
+  companionScore: number | null; // 0~8
+  weatherScore: number | null; // 0~5
+  seasonScore: number | null; // 0~5
+  timeScore: number | null; // 0~5
 };
 
-/** CALC_04 가중치 + R031 재정규화를 적용한 최종점수(AD, 0~100) */
+function normalize(value: number | null, max: number): number | null {
+  return value == null ? null : (value / max) * 100;
+}
+
+/** CALC_04 비중 + R031 재정규화를 적용한 최종점수(0~100, 반올림 안 함 — 화면에서 처리) */
 export function calculateFinalScore(input: FinalScoreInput): number | null {
   return weightedAverageWithReweight([
-    { weight: CALC_04_WEIGHTS.cf8, value: input.cf8FitScore },
-    { weight: CALC_04_WEIGHTS.companion, value: input.companionScore },
-    { weight: CALC_04_WEIGHTS.weather, value: input.weatherScore },
-    { weight: CALC_04_WEIGHTS.season, value: input.seasonScore },
-    { weight: CALC_04_WEIGHTS.time, value: input.timeScore },
+    { weight: CALC_04_WEIGHTS.cf8, value: normalize(input.cf8FitScore, AXIS_MAX.cf8) },
+    { weight: CALC_04_WEIGHTS.companion, value: normalize(input.companionScore, AXIS_MAX.companion) },
+    { weight: CALC_04_WEIGHTS.weather, value: normalize(input.weatherScore, AXIS_MAX.weather) },
+    { weight: CALC_04_WEIGHTS.season, value: normalize(input.seasonScore, AXIS_MAX.season) },
+    { weight: CALC_04_WEIGHTS.time, value: normalize(input.timeScore, AXIS_MAX.time) },
   ]);
 }
