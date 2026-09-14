@@ -19,6 +19,17 @@
       "minutes": "About {m}m",
       "hours": "About {h}h",
       "hoursMinutes": "About {h}h {m}m"
+    },
+    "fit": {
+      "great": "Great fit",
+      "good": "Good fit",
+      "fair": "Fair fit"
+    },
+    "placeType": {
+      "식음형": "Food",
+      "시장형": "Market",
+      "해양야경형": "Coast & night",
+      "문화역사형": "Culture"
     }
   },
   "nav": {

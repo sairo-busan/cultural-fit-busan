@@ -4,14 +4,14 @@
  *
  * `prefers-reduced-motion` 은 `globals.css` 가 전역으로 처리한다.
  */
-export function PlaceRowSkeleton() {
+export function PlaceRowSkeleton({ withNote = false }: { withNote?: boolean }) {
   return (
     <div
       className="flex items-start gap-4 border-b border-hair px-[--gutter] py-6"
       aria-hidden
     >
       <div className="min-w-0 flex-1">
-        <div className="h-3 w-6 animate-pulse rounded bg-surface" />
+        {withNote && <div className="h-3 w-14 animate-pulse rounded bg-surface" />}
         <div className="mt-3 h-3.5 w-[90%] animate-pulse rounded bg-surface" />
         <div className="mt-2 h-3.5 w-[55%] animate-pulse rounded bg-surface" />
         <div className="mt-4 h-2.5 w-[40%] animate-pulse rounded bg-surface" />
