@@ -118,12 +118,14 @@ export type KmaForecastItem = {
 
 /**
  * getUltraSrtNcst(초단기실황)엔 SKY 카테고리가 없다(PTY만 있음) — 실측으로 확인함.
- * SKY는 getVilageFcst(단기예보) 응답에만 있으므로, forecast op 결과에서 가장 이른
- * fcstTime(=지금과 가장 가까운 예보 슬롯) 하나를 골라 SKY/PTY를 함께 뽑는다.
+ * SKY는 getVilageFcst(단기예보) 응답에만 있으므로, forecast op 결과에서 지금이
+ * 속한 슬롯(`nearestSlotKey`) 하나를 골라 SKY/PTY를 함께 뽑는다.
  */
-export function currentWeatherFromForecast(items: KmaForecastItem[]): WeatherBucket | null {
-  const times = [...new Set(items.map((i) => `${i.fcstDate}${i.fcstTime}`))].sort();
-  const nearest = times[0];
+export function currentWeatherFromForecast(
+  items: KmaForecastItem[],
+  now: Date = new Date(),
+): WeatherBucket | null {
+  const nearest = nearestSlotKey(items, now);
   if (!nearest) return null;
 
   const sky = items.find((i) => `${i.fcstDate}${i.fcstTime}` === nearest && i.category === "SKY")
@@ -135,12 +137,58 @@ export function currentWeatherFromForecast(items: KmaForecastItem[]): WeatherBuc
   return classifyWeather(sky, pty);
 }
 
+/**
+ * 지금이 속한 예보 슬롯 하나를 고른다.
+ *
+ * 응답의 첫 슬롯을 쓰면 안 된다. 단기예보는 3 시간마다 발표하고(02/05/08/…)
+ * 첫 슬롯이 발표 시각 다음 시간이라, 10:18 에 불러도 응답은 09:00 부터
+ * 시작한다. 첫 슬롯을 집으면 화면이 최대 세 시간 묵은 값을 지금이라고 적는다.
+ *
+ * 그래서 **지금 시각 이하인 슬롯 중 가장 늦은 것**을 고른다. 10:18 이면 10:00
+ * 슬롯이 지금을 설명하는 값이다. 응답이 전부 미래면(첫 발표 직후) 첫 슬롯을 쓴다.
+ *
+ * `now` 는 KST 로 환산해서 비교한다 — `fcstDate`·`fcstTime` 이 KST 인데,
+ * 외국인 사용자의 기기는 본국 시간대로 맞춰져 있을 수 있다.
+ */
+function nearestSlotKey(items: KmaForecastItem[], now: Date): string | null {
+  const times = [...new Set(items.map((i) => `${i.fcstDate}${i.fcstTime}`))].sort();
+  if (times.length === 0) return null;
+
+  const kst = toKstShifted(now);
+  const nowKey = `${formatBaseDate(kst)}${pad2(kst.getUTCHours())}00`;
+
+  let chosen = times[0];
+  for (const t of times) {
+    if (t > nowKey) break;
+    chosen = t;
+  }
+  return chosen;
+}
+
+/**
+ * 화면이 쓴 값이 몇 시 예보인지.
+ *
+ * 조회한 시각이 아니라 예보 슬롯 시각이다 — 10:18 에 불러도 값은 10 시 예보라,
+ * 조회 시각을 적으면 그 분 단위로 관측한 것처럼 읽힌다.
+ *
+ * `HHmm` 24 시간 표기 그대로 돌려준다. 날짜 넘김·로케일 표기는 화면이 정한다.
+ */
+export function currentForecastSlot(
+  items: KmaForecastItem[],
+  now: Date = new Date(),
+): { date: string; time: string } | null {
+  const nearest = nearestSlotKey(items, now);
+  if (!nearest) return null;
+
+  return { date: nearest.slice(0, 8), time: nearest.slice(8) };
+}
+
 /** 지금과 가장 가까운 예보 슬롯의 기온(TMP, 섭씨). 없으면 null */
 export function currentTemperatureFromForecast(
   items: KmaForecastItem[],
+  now: Date = new Date(),
 ): number | null {
-  const times = [...new Set(items.map((i) => `${i.fcstDate}${i.fcstTime}`))].sort();
-  const nearest = times[0];
+  const nearest = nearestSlotKey(items, now);
   if (!nearest) return null;
 
   const tmp = items.find(
