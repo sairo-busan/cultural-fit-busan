@@ -17,3 +17,17 @@ const NO_SUBSCRIBE = () => () => {};
 export function useStoredSnapshot<T>(read: () => T, serverValue: T): T {
   return useSyncExternalStore(NO_SUBSCRIBE, read, () => serverValue);
 }
+
+/**
+ * 서버 HTML 인지, 클라이언트 값이 확정된 뒤인지.
+ *
+ * `useStoredSnapshot` 은 "값이 없다" 와 "아직 못 읽었다" 를 똑같이 `null` 로
+ * 돌려준다. 화면에서 둘은 정반대 결과여야 한다 — 앞은 스켈레톤, 뒤는 빈 상태다.
+ */
+export function useHydrated(): boolean {
+  return useSyncExternalStore(
+    NO_SUBSCRIBE,
+    () => true,
+    () => false,
+  );
+}
