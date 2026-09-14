@@ -134,3 +134,19 @@ export function currentWeatherFromForecast(items: KmaForecastItem[]): WeatherBuc
 
   return classifyWeather(sky, pty);
 }
+
+/** 지금과 가장 가까운 예보 슬롯의 기온(TMP, 섭씨). 없으면 null */
+export function currentTemperatureFromForecast(
+  items: KmaForecastItem[],
+): number | null {
+  const times = [...new Set(items.map((i) => `${i.fcstDate}${i.fcstTime}`))].sort();
+  const nearest = times[0];
+  if (!nearest) return null;
+
+  const tmp = items.find(
+    (i) => `${i.fcstDate}${i.fcstTime}` === nearest && i.category === "TMP",
+  )?.fcstValue;
+
+  const parsed = tmp ? Number(tmp) : NaN;
+  return Number.isFinite(parsed) ? parsed : null;
+}

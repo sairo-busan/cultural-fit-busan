@@ -3,7 +3,12 @@
 import { useEffect, useState } from "react";
 import { STORAGE_KEYS, readCf8Code } from "@/lib/storage";
 import { rankPlaces, type EnginePlaceInput, type RankedPlace } from "@/lib/recommendEngine";
-import { currentWeatherFromForecast, type KmaForecastItem } from "@/lib/kma";
+import {
+  currentWeatherFromForecast,
+  currentTemperatureFromForecast,
+  type KmaForecastItem,
+  type WeatherBucket,
+} from "@/lib/kma";
 import type { TripSetupLike, TripSetupMode } from "@/lib/tripSetupMode";
 import type { RecommendedPlace } from "@/types/place";
 
@@ -16,6 +21,9 @@ export type UseRecommendationsResult = {
   places: EngineOutput[];
   loading: boolean;
   error: string | null;
+  /** 화면에도 날씨를 보여줘야 해서 점수 보정에 쓴 값을 그대로 내준다 */
+  weather: WeatherBucket | null;
+  temperature: number | null;
 };
 
 /**
@@ -29,6 +37,8 @@ export function useRecommendations(): UseRecommendationsResult {
   const [places, setPlaces] = useState<EngineOutput[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [weatherState, setWeatherState] = useState<WeatherBucket | null>(null);
+  const [temperature, setTemperature] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -70,11 +80,16 @@ export function useRecommendations(): UseRecommendationsResult {
         if (!recommendRes.ok) throw new Error("추천 목록을 불러오지 못했습니다");
         const candidates = (await recommendRes.json()) as (RecommendedPlace & EnginePlaceInput)[];
 
-        let weather: "sunny" | "rainy" | "cloudy" = "sunny";
+        let weather: WeatherBucket = "sunny";
         if (weatherRes.ok) {
           const weatherBody = await weatherRes.json();
-          const resolved = currentWeatherFromForecast(weatherBody.items as KmaForecastItem[]);
+          const items = weatherBody.items as KmaForecastItem[];
+          const resolved = currentWeatherFromForecast(items);
           if (resolved) weather = resolved;
+          if (!cancelled) {
+            setWeatherState(resolved);
+            setTemperature(currentTemperatureFromForecast(items));
+          }
         }
 
         const ranked = rankPlaces(candidates, {
@@ -98,7 +113,7 @@ export function useRecommendations(): UseRecommendationsResult {
     };
   }, []);
 
-  return { places, loading, error };
+  return { places, loading, error, weather: weatherState, temperature };
 }
 
 function getCurrentPosition(): Promise<{ lat: number; lng: number }> {
