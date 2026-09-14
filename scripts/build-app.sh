@@ -50,5 +50,34 @@ done
 rm -rf .next out
 BUILD_TARGET=app npx next build
 
+# ── 루트 진입점 ─────────────────────────────────────────────────
+#
+# 앱에는 미들웨어가 없다. 웹에서는 `proxy.ts` 가 `/` 를 받아 기기 언어에 맞는
+# 로케일로 보내주는데, 정적 빌드에는 그 층이 통째로 없어 `/` 가 404 가 된다.
+#
+# Next 라우트(`src/app/page.tsx`)로 만들지 않은 이유 — 루트 레이아웃이 없어서
+# 새로 만들어야 하고, 그러면 웹에서도 `/` 라우트가 생겨 `proxy.ts` 와 경합한다.
+# 앱 산출물에만 파일 하나를 얹는 쪽이 웹을 건드리지 않는다.
+#
+# 기본은 `en` 이다. 타겟이 부산에 도착한 외국인이라, 한국어 기기만 `ko` 로 보낸다.
+cat > out/index.html <<'HTML'
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cultural Fit Busan</title>
+</head>
+<body>
+<script>
+  var lang = (navigator.language || "en").toLowerCase();
+  location.replace(lang.indexOf("ko") === 0 ? "./ko/" : "./en/");
+</script>
+<noscript><a href="./en/">Continue</a></noscript>
+</body>
+</html>
+HTML
+
 echo
 echo "정적 파일: out/  (API 기준 주소: $NEXT_PUBLIC_API_BASE)"
+echo "루트 진입점: out/index.html — navigator.language 로 en · ko 판정"

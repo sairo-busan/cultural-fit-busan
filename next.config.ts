@@ -16,7 +16,15 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 const isApp = process.env.BUILD_TARGET === "app";
 
 const nextConfig: NextConfig = {
-  ...(isApp && { output: "export" }),
+  ...(isApp && {
+    output: "export",
+    /**
+     * 앱은 파일을 경로로 연다. 이게 없으면 `out/en.html` 로 나와서
+     * `/en/feed` 같은 내부 링크가 파일을 못 찾는다. 켜면 `out/en/index.html`
+     * 이 되어 디렉터리 경로가 그대로 열린다.
+     */
+    trailingSlash: true,
+  }),
   images: {
     // 앱에는 이미지 최적화 서버가 없다. TourAPI 원본을 그대로 받는다
     unoptimized: isApp,
