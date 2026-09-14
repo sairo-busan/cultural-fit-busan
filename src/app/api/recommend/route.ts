@@ -7,11 +7,12 @@ export async function GET(request: NextRequest) {
   const contentTypeId = searchParams.get("contentTypeId") ?? undefined;
   const limitParam = searchParams.get("limit");
   const parsedLimit = limitParam ? parseInt(limitParam, 10) : undefined;
-  // 1~100으로 고정 — 비정상값(NaN·음수·상한초과)은 전부 기본값(20)이나 상한(100)으로 흡수
+  // 1~120으로 고정(DB_01 전체 120건 — BE-FEAT-011). 비정상값(NaN·음수·상한초과)은
+  // 전부 기본값이나 상한(120)으로 흡수.
   const limit =
     parsedLimit === undefined || Number.isNaN(parsedLimit) || parsedLimit < 1
       ? undefined
-      : Math.min(parsedLimit, 100);
+      : Math.min(parsedLimit, 120);
 
   try {
     const results = await getRecommendations({ contentTypeId, limit });
