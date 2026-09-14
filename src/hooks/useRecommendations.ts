@@ -12,7 +12,16 @@ import {
 import type { TripSetupLike, TripSetupMode } from "@/lib/tripSetupMode";
 import type { RecommendedPlace } from "@/types/place";
 
-/** 부산시청 좌표 — geolocation 실패 시 폴백(날씨 조회용, 거리 표시는 안 함) */
+/**
+ * 날씨 조회 기준점 — 부산시청.
+ *
+ * 추천 대상이 전부 부산이라 기상 격자가 사실상 하나다. 위치 권한을 물어 얻는
+ * 정확도가 날씨 한 줄을 바꾸지 못하는데, 앱을 열자마자 뜨는 권한 팝업은
+ * 그대로 비용이다. 그래서 묻지 않는다.
+ *
+ * 거리 표시는 이 좌표로 계산하지 않는다 — 사용자가 어디 있든 시청 기준 거리가
+ * 나와 실제와 다른 값을 사실처럼 보여주게 된다.
+ */
 const BUSAN_CITY_HALL = { lat: 35.1796, lng: 129.0756 };
 
 type EngineOutput = RankedPlace<RecommendedPlace & EnginePlaceInput>;
@@ -67,10 +76,7 @@ export function useRecommendations(): UseRecommendationsResult {
           tripSetup = null;
         }
 
-        // 실제 GPS 확보 여부를 구분한다 — 거리 표시는 폴백 좌표로 계산하면
-        // 실제와 다른 값을 사실처럼 보여주게 되므로, 진짜 위치를 얻었을 때만 계산한다.
-        const position = await getCurrentPosition().catch(() => null);
-        const { lat, lng } = position ?? BUSAN_CITY_HALL;
+        const { lat, lng } = BUSAN_CITY_HALL;
 
         const [recommendRes, weatherRes] = await Promise.all([
           fetch("/api/recommend?limit=100"),
@@ -97,7 +103,6 @@ export function useRecommendations(): UseRecommendationsResult {
           mode,
           tripSetup,
           weather,
-          userLocation: position ?? undefined,
         });
         if (!cancelled) setPlaces(ranked);
       } catch (e) {
@@ -113,19 +118,11 @@ export function useRecommendations(): UseRecommendationsResult {
     };
   }, []);
 
-  return { places, loading, error, weather: weatherState, temperature };
-}
-
-function getCurrentPosition(): Promise<{ lat: number; lng: number }> {
-  return new Promise((resolve, reject) => {
-    if (typeof navigator === "undefined" || !navigator.geolocation) {
-      reject(new Error("Geolocation 미지원"));
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => reject(new Error("위치 권한 거부")),
-      { timeout: 5000 }
-    );
-  });
+  return {
+    places,
+    loading,
+    error,
+    weather: weatherState,
+    temperature,
+  };
 }
