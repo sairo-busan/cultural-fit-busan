@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { AppHeader } from "@/components/common/AppHeader";
 import { BottomTabBar } from "@/components/common/BottomTabBar";
 import { LiveStatusBar } from "@/components/feed/LiveStatusBar";
