@@ -44,7 +44,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#2A5A48",
+  // 상태 표시줄은 페이지 배경과 같은 흰색이다 — 별도 브랜드색을 두지 않는다
+  themeColor: "#FFFFFF",
 };
 
 /** 두 로케일을 미리 만들어 둔다 — Capacitor 정적 빌드에 필요하다 */

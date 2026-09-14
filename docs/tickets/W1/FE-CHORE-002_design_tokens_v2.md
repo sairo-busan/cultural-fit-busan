@@ -1,7 +1,7 @@
 # FE-CHORE-002: 기반 정비 — 디자인 토큰 · 폰트 · i18n
 
 ```
-색      무채색 → 브랜드(딥그린) + 의미색(danger·caution) + 중립 5단
+색      무채색 → 잉크 위계 + 의미색(danger·caution) + 중립 5단
 타이포   임의 값 → 6단 스케일 (12·14·17·19·24·30)
 여백    산발 → 4/8 리듬 + --gutter 한 곳
 폰트    Noto Sans KR + Cormorant → Pretendard + Instrument Serif
@@ -84,9 +84,10 @@ S00~S03 화면도 함께 변한다.
 ### Step 1: 색
 
 ```
---primary      #2A5A48  딥그린   흰 배경 7.9:1   주요 버튼 · 활성 탭 · 강조
---primary-tint #EEF3F1           "내 유형" 과 이어지는 영역 배경
---secondary    #A06A48  클레이   4.5:1          보조 강조. 본문에는 쓰지 않는다
+--primary      #111213  잉크     흰 배경 18.8:1  주요 버튼 · 활성 탭 · 강조
+--primary-press #3A3C42          11.0:1         눌림
+--primary-tint #F4F4F3           "내 유형" 과 이어지는 영역 배경
+--secondary    #A06A48  클레이   4.5:1          쓰는 곳 없음. 존치 여부 확인 대기
 --danger       #A33A2A           6.6:1          입력 오류
 --caution      #8A6320           5.6:1          정보 없음 · 확인 중
 --ink          #111213           18.8:1
@@ -265,6 +266,24 @@ B  @capacitor/device 의 getLanguageCode() 로 읽어 시작 URL 을 정한다
 
 **`.screen` 을 추가했다.** 좌우 여백·안전영역·브레이크포인트를 한 곳이 갖는다.
 지금은 쓰는 화면이 없고 `FE-FEAT-009` 부터 쓴다.
+
+### 2026-09-14: primary 를 잉크로 (유나 확정)
+
+딥그린 `#2A5A48` 은 피그마에 색 변수·색 스타일로 등록된 적이 없고, 쓰인 곳도
+FLOW 04 코스 화면(S32·S33·S34·S36)의 토글·상태 칩과 비교용 시안 프레임
+`S20 · 장소 상세 [green]` 뿐이었다. 둘 다 이번 공모전 범위 밖이다.
+DS v1 의 Primary 는 `#111213`, Accent 는 배경 틴트 `#EFF5F0` 이고 초록은
+사진 위 스크림 `#06422F` 가 유일한 예외다.
+
+```
+--primary       #2A5A48 → #111213   18.8:1
+--primary-press #1E4436 → #3A3C42   11.0:1
+--primary-tint  #EEF3F1 → #F4F4F3
+viewport.themeColor  #2A5A48 → #FFFFFF
+```
+
+초록 도입 여부는 유나가 따로 정한다. 그때 위 세 줄만 바꾸면 된다.
+`--secondary`(클레이)는 색으로 칠하는 곳이 하나도 없어 값만 남겨뒀다.
 
 ---
 
