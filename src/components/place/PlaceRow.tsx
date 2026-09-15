@@ -9,6 +9,9 @@ import { districtLabel, secureImageUrl } from "@/lib/placeDisplay";
 import type { RecommendedPlace } from "@/types/place";
 import type { Locale } from "@/i18n/routing";
 
+/** 앱 빌드에서만 끈다 — `scripts/build-app.sh` */
+const DETAIL_ENABLED = process.env.NEXT_PUBLIC_DETAIL_ENABLED !== "false";
+
 /**
  * 추천·저장이 함께 쓰는 목록 행.
  *
@@ -56,11 +59,8 @@ export function PlaceRow({ place, note, saved, onToggleSave }: PlaceRowProps) {
     place.weatherType ? t(`weatherType.${place.weatherType}`) : null,
   ].filter(Boolean);
 
-  return (
-    <Link
-      href={`/place/${place.contentId}`}
-      className="flex items-start gap-4 border-b border-hair px-[--gutter] py-6 transition-colors active:bg-surface"
-    >
+  const body = (
+    <>
       <div className="min-w-0 flex-1">
         {/* 정렬 메타(저장 탭)와 분류 뱃지(추천 탭)가 같은 자리를 나눠 쓴다 */}
         {note ? (
@@ -133,6 +133,20 @@ export function PlaceRow({ place, note, saved, onToggleSave }: PlaceRowProps) {
           className="absolute -top-1.5 -right-1.5"
         />
       </div>
+    </>
+  );
+
+  const rowClass = "flex items-start gap-4 border-b border-hair px-[--gutter] py-6";
+
+  // ponytail: 앱 빌드엔 S20 이 없어 링크가 404 로 간다. FE-FEAT-010 에서 상세가 붙으면 분기째 지운다
+  if (!DETAIL_ENABLED) return <div className={rowClass}>{body}</div>;
+
+  return (
+    <Link
+      href={`/place/${place.contentId}`}
+      className={`${rowClass} transition-colors active:bg-surface`}
+    >
+      {body}
     </Link>
   );
 }
