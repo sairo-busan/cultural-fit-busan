@@ -3,8 +3,10 @@
  * 화면ID는 피그마 IA v4.0 기준 — docs/화면_IA.md 참고.
  *
  * Model B(9/10 회의, docs/decisions/2026-09-11_DB필드_확정.md) 적용 —
- * places(TourAPI 원본) + score_board(DB_01) + place_info(DB_02) + place_by_cf8(DB_03)를
- * 서버에서 조인한 응답 형태. placeTags 컬렉션은 더 안 씀.
+ * places(TourAPI 원본) + score_board(DB_01) + place_info(DB_02)를 서버에서 조인한
+ * 응답 형태. placeTags 컬렉션은 더 안 씀. place_by_cf8(DB_03)는 9/15부터 이 응답에
+ * 안 실림 — 아무 화면도 안 읽는 채로 960행씩 매번 보내고 있어서 뺐고, S20 상세는
+ * `GET /api/place/[id]`(placeDetail.ts, BE-FEAT-013)에서 따로 받는다.
  *
  * `whyKo`·`weatherType`·`petAllowed`는 필드명을 그대로 유지했다(화면 코드 안 건드리려고,
  * 9/14 PR#18 리뷰 코멘트) — 값의 출처만 옛 placeTags에서 DB_01/02로 바뀌었다.
@@ -102,9 +104,6 @@ export type Place = {
   barrierFree: boolean | null;
   /** DB_01 수작업 태깅(API 시드 + 유나 보완) */
   petAllowed: boolean | null;
-
-  /** S20 상세용 — (CF8코드 → 문구) 8개, DB_03. 서버는 유저 코드를 모르니 다 내려주고 클라이언트가 고른다 */
-  reasonByCf8: Record<string, string | null>;
 
   titleEn?: string | null; // = DB_02.place_name_en
 };

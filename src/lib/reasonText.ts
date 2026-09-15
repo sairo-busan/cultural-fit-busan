@@ -3,7 +3,9 @@
  *
  * 두 종류로 나뉜다 — 소스가 다르다:
  *   S10 피드 한 줄   `whyKo`(= DB_02.place_desc, 장소 단위 — 유형과 무관)
- *   S20 상세 이유    `reasonByCf8[cf8Code]`(= DB_03.recommendation_reason, (CF8코드×장소) 단위)
+ *   S20 상세 이유    `reasonByCf8[cf8Code]`(= DB_03.recommendation_reason, (CF8코드×장소) 단위) —
+ *                    9/15부터 목록 API(/api/recommend)엔 안 실리고 상세 API
+ *                    (`GET /api/place/[id]`, placeDetail.ts)에서만 온다
  *
  * whyKo가 placeTags.why_ko를 대체하면서 필드명은 그대로 뒀다 — PlaceRow.tsx 등
  * 화면 코드를 안 건드리기 위해서다(값의 출처만 DB_02로 바뀜, 9/14 PR#18 리뷰 코멘트).
@@ -76,8 +78,9 @@ export function generateReasons(input: ReasonInput): string[] {
 
 /**
  * S20 상세용 — 유저 CF8 코드에 해당하는 DB_03 문구를 고른다.
- * `reasonByCf8`는 서버가 (CF8코드×place_id) 960행을 place_id로 묶어 내려준 값 —
- * 서버는 유저 코드를 모르므로(개인정보 미전송 원칙) 8개를 다 받아 클라이언트에서 고른다.
+ * `reasonByCf8`는 `GET /api/place/[id]` 응답에 들어있는 값(placeDetail.ts) — 서버는
+ * 유저 코드를 모르므로(개인정보 미전송 원칙) 8개를 다 받아 클라이언트에서 고른다.
+ * 아직 S20 화면이 없어서 호출하는 곳이 없다 — 화면 붙일 때 여기서 가져다 쓰면 됨.
  */
 export function pickDetailReason(
   cf8Code: string,

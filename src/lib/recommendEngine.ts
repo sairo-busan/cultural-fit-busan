@@ -41,8 +41,6 @@ export type EnginePlaceInput = PlaceForFilter &
     contentId: string | null;
     whyKo: string | null;
     whyEn: string | null;
-    /** (CF8코드 → 문구) 8개 — S20 상세용, generateReasons가 아니라 pickDetailReason이 쓴다 */
-    reasonByCf8?: Record<string, string | null>;
   };
 
 export type RankedPlace<T extends EnginePlaceInput> = T & {

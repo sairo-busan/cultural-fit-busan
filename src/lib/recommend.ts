@@ -67,13 +67,6 @@ type PlaceInfoDoc = {
   placeDescEn?: string | null;
 };
 
-/** place_by_cf8(DB_03) — (cf8Code, placeId)가 PK, S20 상세 유형별 이유 */
-type PlaceByCf8Doc = {
-  cf8Code: string;
-  placeId: string;
-  recommendationReason: string | null;
-};
-
 const INDOOR_OUTDOOR_MAP: Record<string, "indoor" | "outdoor" | "mixed"> = {
   INDOOR: "indoor",
   OUTDOOR: "outdoor",
@@ -86,34 +79,56 @@ export type RecommendParams = {
 };
 
 /**
+ * 유저 무관 공통 데이터라 서버 메모리에 캐싱(9/15, QA 중 발견 — 유저마다 똑같은
+ * 120곳 조인 결과인데 요청마다 DB를 4번씩 새로 조회하고 있었음). contentTypeId별로
+ * limit 없는 전체 목록을 캐시해두고, limit은 캐시에서 읽은 뒤 잘라 쓴다. TTL 5분 —
+ * 시트 재적재는 개발 중 수작업으로만 일어나서 그 정도 지연은 괜찮다.
+ */
+const recommendCache = new Map<string, { data: RecommendedPlace[]; cachedAt: number }>();
+const CACHE_TTL_MS = 5 * 60_000;
+
+/**
  * Model B(9/10 회의) — 좌표는 서버로 전송받지 않는다. CF8 매칭·상황보정·정렬은
  * 전부 클라이언트(recommendEngine.ts)에서 수행 — 이 함수는 개인화 없이
- * score_board(DB_01) + place_info(DB_02) + place_by_cf8(DB_03) + places(TourAPI)를
- * 조인한 원본 후보 목록만 만든다.
+ * score_board(DB_01) + place_info(DB_02) + places(TourAPI)를 조인한 원본 후보
+ * 목록만 만든다.
  *
  * content_id가 없는 place_id는 이미지·좌표를 못 구해서 응답에서 뺀다(에린 확인 대기,
  * docs/decisions/2026-09-11_DB필드_확정.md — 9/14 기준 유나에게 채우기 요청함).
+ *
+ * 9/15 — reasonByCf8(DB_03, CF8코드×장소 960행)는 목록 응답에서 뺐다. S20 상세용
+ * 데이터인데 아무 화면도 안 읽고(PlaceRow.tsx 등 grep 0건), 이제 전용 API가
+ * 있다(placeDetail.ts, BE-FEAT-013) — 그쪽이 같은 원칙(서버가 유저 CF8코드 모름,
+ * 8개 다 내려줌)으로 이미 제공한다. 덕분에 place_by_cf8 조회(960행) 자체가 통째로
+ * 없어져서 응답 크기·DB 부담 둘 다 줄었다.
  */
 export async function getRecommendations({
   contentTypeId,
-  limit = 120,
+  limit,
 }: RecommendParams): Promise<RecommendedPlace[]> {
+  const cacheKey = contentTypeId ?? "__all__";
+  const cached = recommendCache.get(cacheKey);
+  const full =
+    cached && Date.now() - cached.cachedAt < CACHE_TTL_MS
+      ? cached.data
+      : await computeRecommendations(contentTypeId);
+
+  if (!cached || Date.now() - cached.cachedAt >= CACHE_TTL_MS) {
+    recommendCache.set(cacheKey, { data: full, cachedAt: Date.now() });
+  }
+
+  return limit === undefined ? full : full.slice(0, limit);
+}
+
+async function computeRecommendations(contentTypeId?: string): Promise<RecommendedPlace[]> {
   const db = await getDb();
 
-  const [scoreBoards, placeInfos, reasonDocs] = await Promise.all([
+  const [scoreBoards, placeInfos] = await Promise.all([
     db.collection<ScoreBoardDoc>("score_board").find({}).toArray(),
     db.collection<PlaceInfoDoc>("place_info").find({}).toArray(),
-    db.collection<PlaceByCf8Doc>("place_by_cf8").find({}).toArray(),
   ]);
 
   const infoByPlaceId = new Map(placeInfos.map((i) => [i.placeId, i]));
-
-  const reasonByPlaceId = new Map<string, Record<string, string | null>>();
-  for (const r of reasonDocs) {
-    const bucket = reasonByPlaceId.get(r.placeId) ?? {};
-    bucket[r.cf8Code] = r.recommendationReason;
-    reasonByPlaceId.set(r.placeId, bucket);
-  }
 
   const contentIds = scoreBoards.map((s) => s.contentId).filter((id): id is string => !!id);
   const placeDocs = await db
@@ -192,8 +207,6 @@ export async function getRecommendations({
       barrierFree: place.barrierFree ?? null,
       petAllowed: score.petAllowed ?? null,
 
-      reasonByCf8: reasonByPlaceId.get(score.placeId) ?? {},
-
       titleEn: info?.placeNameEn ?? null,
 
       // Fit 점수·근거는 클라이언트(recommendEngine.ts)가 계산
@@ -202,8 +215,6 @@ export async function getRecommendations({
       tags: [],
       distanceMin: null,
     });
-
-    if (results.length >= limit) break;
   }
 
   return results;

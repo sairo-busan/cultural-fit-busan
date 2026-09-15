@@ -51,7 +51,6 @@ export const MOCK_PLACES: Place[] = [
     eveningScore: null,
     isRestaurant: null,
     barrierFree: null,
-    reasonByCf8: {},
   },
   {
     contentId: "132307",
@@ -101,7 +100,6 @@ export const MOCK_PLACES: Place[] = [
     eveningScore: null,
     isRestaurant: null,
     barrierFree: null,
-    reasonByCf8: {},
   },
   {
     contentId: "127535",
@@ -151,7 +149,6 @@ export const MOCK_PLACES: Place[] = [
     eveningScore: null,
     isRestaurant: null,
     barrierFree: null,
-    reasonByCf8: {},
   },
   {
     contentId: "mock-cafe-01",
@@ -201,7 +198,6 @@ export const MOCK_PLACES: Place[] = [
     eveningScore: null,
     isRestaurant: null,
     barrierFree: null,
-    reasonByCf8: {},
   },
 ];
 
