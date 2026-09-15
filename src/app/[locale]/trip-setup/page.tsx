@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { useStoredState } from "@/hooks/useStoredState";
 import { AppHeader } from "@/components/common/AppHeader";
@@ -11,6 +11,7 @@ import {
 import {
   TRIP_SETUP_COPY,
   DEFAULT_TRIP_SETUP,
+  normalizeTripSetup,
   visibleQuestions,
   summaryLabels,
   firstUnanswered,
@@ -22,10 +23,12 @@ import type { TripSetup } from "@/types/trip";
 
 export function TripSetupPage() {
   const router = useRouter();
-  const [setup, setSetup] = useStoredState<TripSetup>(
+  const [stored, setSetup] = useStoredState<TripSetup>(
     STORAGE_KEYS.tripSetup,
     DEFAULT_TRIP_SETUP,
   );
+  // 옛 빌드가 남긴 모양이 섞여 들어온다 — 씻어서 쓴다
+  const setup = useMemo(() => normalizeTripSetup(stored), [stored]);
 
   /** 미선택으로 지적된 문항 id — 추천 받기를 누른 뒤에만 표시한다 */
   const [flagged, setFlagged] = useState<string | null>(null);
