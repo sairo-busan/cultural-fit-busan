@@ -1,8 +1,26 @@
 /**
- * S10(추천 피드)/S20(장소 상세) 등 장소 관련 화면이 백엔드(/api/places)로부터 받는 타입.
+ * S10(추천 피드)/S20(장소 상세) 등 장소 관련 화면이 백엔드(/api/recommend)로부터 받는 타입.
  * 화면ID는 피그마 IA v4.0 기준 — docs/화면_IA.md 참고.
- * places(raw) + placeTags(큐레이션)를 서버에서 조인한 응답 형태.
- * (docs/데이터_마트_정의서.md 참고)
+ *
+ * Model B(9/10 회의, docs/decisions/2026-09-11_DB필드_확정.md) 적용 —
+ * places(TourAPI 원본) + score_board(DB_01) + place_info(DB_02)를 서버에서 조인한
+ * 응답 형태. placeTags 컬렉션은 더 안 씀. place_by_cf8(DB_03)는 9/15부터 이 응답에
+ * 안 실림 — 아무 화면도 안 읽는 채로 960행씩 매번 보내고 있어서 뺐고, S20 상세는
+ * `GET /api/place/[id]`(placeDetail.ts, BE-FEAT-013)에서 따로 받는다.
+ *
+ * `whyKo`·`weatherType`·`petAllowed`는 필드명을 그대로 유지했다(화면 코드 안 건드리려고,
+ * 9/14 PR#18 리뷰 코멘트) — 값의 출처만 옛 placeTags에서 DB_01/02로 바뀌었다.
+ *
+ * 9/15 — 옛 92번 시트 원시 태깅 중 DB_01/02/03에 대응 컬럼이 없고 복귀 계획도 없는
+ * 필드는 응답에서 뺐다(noiseLevel·crowdLevel·stayMinutes 등 30개). `placeType`만
+ * 예외로 남겼는데, 같은 날 유나가 DB_01에 실제로 신규 컬럼을 추가하고 120곳 다
+ * 채웠다 — 값셋은 옛 92번 시트 4종("식음형" 등)이 아니라 새 10종 체계다.
+ * `petCondition`도 같이 신설된 필드(반려동반 이용조건 원문).
+ *
+ * 이 필드들을 읽는 화면 쪽(main): `src/components/place/PlaceRow.tsx`(crowdLevel·
+ * stayMinutes·budgetLevel), `src/app/[locale]/place/[id]/page.tsx`(나머지 대부분 —
+ * 이 파일은 옛 S20이고 BE-FEAT-013 기반 새 S20으로 교체될 예정이라 필드별로 안 고치고
+ * 새 S20이 교체할 때 같이 정리하는 쪽을 권장 — 소피에게 요청 필요).
  */
 
 export type PlaceInfoItem = {
@@ -30,106 +48,75 @@ export type Place = {
   eventStartDate: string | null;
   eventEndDate: string | null;
 
-  // === placeTags (유나 태깅). 아직 태깅 안 된 장소는 전부 null, coverage=0 ===
-  noiseLevel: number | null; // 1~5
-  crowdLevel: number | null; // 1~5
-  crowdPeak: string | null;
-  crowdCalm: string | null;
-  localDepth: number | null; // 1~5
-  englishSupport: number | null; // 0~2 (0=불가, 1=메뉴판·표지판만, 2=대화 가능)
-  spiceLevel: number | null; // 0~5, 0 = 음식점 아님
   weatherType: "indoor" | "outdoor" | "mixed" | null; // mixed = 실내외 겸용(예: 자갈치시장). 정본 시트 실데이터 값 기준
-  bestTime: string | null;
-  placeType: "식음형" | "시장형" | "해양야경형" | "문화역사형" | null;
-  fitSolo: number | null; // 1~5
-  tipType: string | null;
-  tipHeadline: string | null;
-  pro: string | null;
-  con: string | null;
-  whyKo: string | null;
-  whyEn: string | null;
-  coverage: number; // 0~100. 70+ 정상노출 / 40~69 하향노출 / 40미만 Hard Filter 제외
+  /** DB_01 신규 컬럼(9/15, 유나 추가·120곳 태깅 완료) */
+  placeType:
+    | "역사·문화"
+    | "전망·야경"
+    | "해변·해안"
+    | "자연·공원"
+    | "시장·먹거리"
+    | "문화·관광"
+    | "체험·시설"
+    | "종교·사찰"
+    | "휴식·웰니스"
+    | "도시·거리"
+    | null;
+  /** DB_01 신규 컬럼(9/15, 유나 추가) — petAllowed=false면 "동반 불가", true면 실제 이용조건 원문 */
+  petCondition: string | null;
+  whyKo: string | null; // = DB_02.place_desc (S10 카드 한 줄, 장소 단위)
+  whyEn: string | null; // = DB_02.place_desc_en
 
-  // === CF8 매칭용 (BE-FEAT-007) ===
-  cf8Match: string | null; // 정본 cfp_match, CF8 3글자 코드(예: "ELD"). FE-FEAT-005가 취향 매칭에 직접 사용
-  hasRaw: boolean | null; // Hard Filter — 날음식 취급 여부. null = UNKNOWN(해당 없음 포함), 감점 아니라 제외 판단용
-  hasMeatOnly: boolean | null;
-  hasSeafoodOnly: boolean | null;
-  seatingType: "street" | "indoor" | "mixed" | null;
-  fitCouple: number | null; // 1~5, 동반 적합도
-  fitFriends: number | null;
-  fitFamily: number | null;
-  stayMinutes: number | null; // 평균 체류시간(분)
-  budgetLevel: number | null; // 1~4
-  proEn: string | null;
-  conEn: string | null;
-  infoKo: string | null; // 이용 방법·실용 정보
-  infoEn: string | null;
-  sourceUrl: string | null;
-  taggedStatus: "review" | "done" | null; // 태깅 사람검수 상태
-
-  // === place_id — 92번 시트에 추가 요청 중, 응답 전까지 전부 null ===
+  // === place_id (DB_01/02/03 조인 키, content_id로 이 응답을 만들 때만 서버 내부에서 씀) ===
   placeId: string | null;
 
-  // === CF8 3축(F/G/H) — 확장 태깅 후보 탭에서 가져올 예정(2단계 계산 로직) ===
-  cfAtmosphereScore: number | null; // -2~+2, 차분함↔에너지
-  cfLocalFamousScore: number | null; // -2~+2, 로컬↔대표명소
-  cfDeepVarietyScore: number | null; // -2~+2, 깊게↔다양하게
+  // === CF8 6분할 점수(DB_01, Model B) — cf8Match.ts가 코드 3글자로 3개를 골라 합산 ===
+  calmnessScore: number | null; // 0~3, 차분함(C)
+  energyScore: number | null; // 0~3, 에너지(E)
+  localScore: number | null; // 0~3, 로컬(L)
+  landmarkScore: number | null; // 0~3, 대표명소(F)
+  stayDeeplyScore: number | null; // 0~3, 깊게머무름(D)
+  diverseExperienceScore: number | null; // 0~3, 다양하게경험(V)
 
-  // === 코스역할 7종 — 확장 태깅 후보 탭에서 가져올 예정(2단계), 지금 순위 계산엔 미사용 ===
-  photoMemoryValue: number | null; // 0~100
-  culturalValue: number | null;
-  natureValue: number | null;
-  foodValue: number | null;
-  walkingRequired: number | null;
-  restAvailability: number | null;
-  indoorShelter: number | null;
+  // === 동행별 점수(DB_01) — situationalScore.ts가 선택한 컬럼들을 합산 ===
+  soloScore: number | null;
+  coupleFriendScore: number | null;
+  parentsScore: number | null;
+  kidsScore: number | null;
+  petScore: number | null;
 
-  // === 동행유형별 점수(CF8추천구조 I~N열, 6종) — 유나 확인 대기, 현재 전부 null ===
-  // 기존 fitSolo/fitCouple/fitFriends/fitFamily(1~5 스케일, CFP16 시절)와 스케일·분류가
-  // 다름(0~100, 6분류: 혼자/연인/친구/부모님/아이/반려동물) — 통합 여부 확인 필요
-  companionScoreSolo: number | null; // 0~100
-  companionScoreCouple: number | null;
-  companionScoreFriends: number | null;
-  companionScoreParents: number | null;
-  companionScoreKid: number | null;
-  companionScorePet: number | null;
+  // === 날씨/계절/시간대별 점수(DB_01) — 접속 시점 기준 하나씩만 골라 씀 ===
+  sunnyScore: number | null;
+  rainyScore: number | null;
+  cloudyScore: number | null;
+  springScore: number | null;
+  summerScore: number | null;
+  autumnScore: number | null;
+  winterScore: number | null;
+  morningScore: number | null;
+  afternoonScore: number | null;
+  eveningScore: number | null;
 
-  // === 날씨/계절/시간대별 점수(CF8추천구조 O~X열) — 유나 확인 대기, 현재 전부 null ===
-  weatherScoreSunny: number | null; // 0~100
-  weatherScoreRainy: number | null;
-  weatherScoreCloudy: number | null;
-  seasonScoreSpring: number | null;
-  seasonScoreSummer: number | null;
-  seasonScoreFall: number | null;
-  seasonScoreWinter: number | null;
-  timeScoreMorning: number | null;
-  timeScoreAfternoon: number | null;
-  timeScoreEvening: number | null;
-
-  // === 접근성·반려동물 하드필터 — 92번 시트에 빈 컬럼 추가 요청 중, 현재 전부 null(UNKNOWN) ===
+  // === 하드필터 — 전부 "확인된 false"와 "미등록(null)"을 구분한다 ===
+  /** TourAPI 콘텐츠타입 등으로 자동 파생. "식사 전" 미선택 시 식당 제외에 씀 */
+  isRestaurant: boolean | null;
+  /** 무장애 API 파생값(ingest-places.ts) — "이동약자 배려시설 있음" */
+  barrierFree: boolean | null;
+  /** DB_01 수작업 태깅(API 시드 + 유나 보완) */
   petAllowed: boolean | null;
-  wheelchairAccessible: boolean | null;
-  strollerAccessible: boolean | null;
-  stairsAlternative: boolean | null;
 
-  // === APP S20 전용 (목데이터 확장, 에린 API 확정 후 구조 조정 예정) ===
-  titleEn?: string | null;
-  howToUse?: string[] | null; // 이용 방법 3단계
-  reviewGood?: string | null;
-  reviewBad?: string | null;
-  reviewTip?: string | null;
-  parking?: string | null;
-  alternativeIds?: string[]; // 대안 장소 contentId 목록 (정본 alt_id_1/alt_id_2)
+  titleEn?: string | null; // = DB_02.place_name_en
 };
 
 /**
- * S10 피드용 — 추천엔진(에린 작업 중, 아직 미완성)이 Place에 얹어서 내려줄 필드.
- * 지금은 목업이라도 이 형태(fitScore, reasons)로 맞춰두면 나중에 엔진 붙을 때 교체만 하면 됨.
+ * S10 피드용 — 클라이언트 추천엔진(recommendEngine.ts)이 Place에 얹는 필드.
+ * 서버(/api/recommend)는 개인화 없이 원본만 주고, fitScore·reasons·rank는 브라우저에서
+ * 계산해 붙인다(개인정보 서버 미전송 원칙). GPS 제거로 거리 표시는 없다.
  */
 export type RecommendedPlace = Place & {
   fitScore: number; // 0~100
-  reasons: string[]; // 문장형 근거, S20 등 상세 설명용. 예: ["조용한 곳을 찾으신다면", "현지인이 가는 곳"]
+  reasons: string[]; // 문장형 근거(whyKo 우선, 없으면 최강축 문장)
   tags: string[]; // 짧은 라벨, S10 카드용. 예: ["활기", "바다"]
-  distanceMin: number | null; // 도보 분, 위치 권한 없으면 null
+  /** GPS 제거(9/10 회의)로 항상 null — 옛 화면(PlaceCard.tsx 등) 호환용으로만 남김 */
+  distanceMin: number | null;
 };

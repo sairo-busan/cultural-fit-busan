@@ -1,14 +1,19 @@
 "use client";
 
 import Image from "next/image";
-import { Link } from "@/i18n/navigation";
 import { useParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { AppHeader } from "@/components/common/AppHeader";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { findRecommendedById, findPlaceById } from "@/data/mock-places";
-import type { Place } from "@/types/place";
+import { findRecommendedById } from "@/data/mock-places";
 
+/**
+ * 9/15 QA — 이 파일이 main merge 중 통째로 삭제돼서 카드 클릭 시 404 났던 문제 수정.
+ * BE-FEAT-011 리뷰로 뺀 옛 92번 시트 잔재 필드(noiseLevel·crowdLevel·tipHeadline·
+ * howToUse·reviewGood 등)를 쓰던 섹션은 걷어냈다 — 어차피 그 필드들은 실데이터에서도
+ * 항상 null이라 원래도 빈 화면이었다. 새 S20(BE-FEAT-013 기반, feat/s20-place-detail)이
+ * 머지되면 이 파일 전체를 교체한다 — 소피에게 요청함.
+ */
 export default function PlaceDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -40,13 +45,6 @@ export default function PlaceDetailPage() {
       </div>
     );
   }
-
-  const noise = place.noiseLevel ?? 0;
-  const english = place.englishSupport ?? 0;
-  const local = place.localDepth ?? 0;
-  const alternatives = (place.alternativeIds ?? [])
-    .map((altId) => findPlaceById(altId))
-    .filter((item): item is Place => item !== undefined);
 
   return (
     <div className="min-h-full pb-[40px]">
@@ -131,75 +129,7 @@ export default function PlaceDetailPage() {
 
       <Divider />
 
-      {/* BEFORE YOU GO */}
-      {place.tipHeadline && (
-        <>
-          <section className="px-[20px] pt-[20px] pb-[20px]">
-            <div className="rounded-[12px] bg-surface px-[16px] py-[16px]">
-              <p className="mb-[10px] text-[11px] font-light tracking-wider text-accent uppercase">
-                BEFORE YOU GO
-              </p>
-              <p className="mb-[8px] text-[16px] font-normal text-foreground">
-                {place.tipHeadline}
-              </p>
-              {place.pro && (
-                <p className="text-[13px] font-light leading-relaxed text-sub-text">
-                  {place.pro}
-                </p>
-              )}
-              <p className="mt-[12px] text-[11px] font-light text-muted">
-                자체 태깅 · {place.tipType === "etiquette" ? "에티켓 기준" : "예약 운영 방식 기준"}
-              </p>
-            </div>
-          </section>
-          <Divider />
-        </>
-      )}
-
-      {/* 대안 장소 */}
-      {alternatives.length > 0 && (
-        <>
-          <section className="px-[20px] pt-[20px] pb-[20px]">
-            <p className="mb-[16px] text-[13px] font-light text-muted">
-              이곳 대신 갈 만한 곳
-            </p>
-            <div className="flex flex-col gap-[16px]">
-              {alternatives.map((alt) => (
-                <Link
-                  key={alt.contentId}
-                  href={`/place/${alt.contentId}`}
-                  className="flex items-center gap-[12px]"
-                >
-                  <div className="relative size-[56px] shrink-0 overflow-hidden rounded-[8px] bg-surface">
-                    {alt.firstImage ? (
-                      <Image
-                        src={alt.firstImage}
-                        alt={alt.title}
-                        fill
-                        className="object-cover"
-                        sizes="56px"
-                      />
-                    ) : (
-                      <div className="h-full w-full bg-border" />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-[14px] font-normal text-foreground">
-                      {alt.title}
-                    </p>
-                    <p className="text-[12px] font-light text-sub-text">
-                      {alt.pro ?? alt.overview?.slice(0, 30)}
-                    </p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
-          <Divider />
-        </>
-      )}
-
-      {/* 지금 이곳은 — 실시간 막대 4축 */}
+      {/* 지금 이곳은 — 운영/날씨 */}
       <section className="px-[20px] pt-[20px] pb-[20px]">
         <div className="mb-[20px] flex items-baseline justify-between">
           <span className="text-[13px] font-light text-muted">지금 이곳은</span>
@@ -207,12 +137,6 @@ export default function PlaceDetailPage() {
             {new Date().getHours()}:{String(new Date().getMinutes()).padStart(2, "0")} 기준
           </span>
         </div>
-        <BarRow
-          label="혼잡도"
-          value={place.crowdLevel ?? 0}
-          status={place.crowdLevel && place.crowdLevel <= 2 ? "한산한 편" : "혼잡한 편"}
-          note={`${place.crowdCalm ?? ""}이 가장 여유롭습니다`}
-        />
         <BarRow
           label="운영"
           value={4}
@@ -225,117 +149,6 @@ export default function PlaceDetailPage() {
           status={place.weatherType === "indoor" ? "비 가림 있음" : "야외"}
           note="맑음 27° · 야외 활동 좋음"
         />
-        <BarRow
-          label="거리"
-          value={place.distanceMin ? Math.max(1, 5 - Math.floor(place.distanceMin / 10)) : 5}
-          status={place.distanceMin ? `도보 ${place.distanceMin}분` : "위치 정보 없음"}
-        />
-      </section>
-
-      <Divider />
-
-      {/* 이 장소는 — 고정 3축 (소음도/예산/로컬) */}
-      <section className="px-[20px] pt-[20px] pb-[20px]">
-        <p className="mb-[20px] text-[13px] font-light text-muted">이 장소는</p>
-        <BarRow
-          label="소음도"
-          value={noise}
-          status={noise <= 2 ? "조용한 편" : "사람이 많은 편"}
-        />
-        <BarRow
-          label="예산"
-          value={place.spiceLevel === 0 ? 2 : 3}
-          status={place.spiceLevel === 0 ? "음료 수준" : "1인 2만원 선"}
-        />
-        <BarRow
-          label="로컬"
-          value={local}
-          status={local >= 4 ? "현지인 분위기" : "관광객 중심"}
-        />
-      </section>
-
-      <Divider />
-
-      {/* 이용 방법 */}
-      {place.howToUse && place.howToUse.length > 0 && (
-        <>
-          <section className="px-[20px] pt-[20px] pb-[20px]">
-            <div className="mb-[16px] flex items-center gap-[8px]">
-              <span className="flex size-[20px] items-center justify-center text-[11px] font-light text-accent">
-                i
-              </span>
-              <span className="text-[14px] font-normal text-foreground">
-                이용 방법
-              </span>
-            </div>
-            <div className="flex flex-col gap-[16px]">
-              {place.howToUse.map((step, stepIndex) => (
-                <div key={stepIndex} className="flex gap-[12px]">
-                  <span className="mt-[2px] flex size-[24px] shrink-0 items-center justify-center rounded-full bg-accent/10 text-[12px] font-normal text-accent">
-                    {stepIndex + 1}
-                  </span>
-                  <p className="text-[13px] font-light leading-relaxed text-foreground">
-                    {step}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
-          <Divider />
-        </>
-      )}
-
-      {/* 방문객 실제 후기 */}
-      {(place.reviewGood || place.reviewBad || place.reviewTip) && (
-        <>
-          <section className="px-[20px] pt-[20px] pb-[20px]">
-            <div className="mb-[16px] flex items-center gap-[8px]">
-              <span className="flex size-[20px] items-center justify-center text-[11px] font-light text-accent">
-                ii
-              </span>
-              <span className="text-[14px] font-normal text-foreground">
-                방문객 실제 후기
-              </span>
-            </div>
-            <div className="flex flex-col gap-[16px]">
-              {place.reviewGood && (
-                <ReviewItem label="좋았던 점" text={place.reviewGood} />
-              )}
-              {place.reviewBad && (
-                <ReviewItem label="아쉬운 점" text={place.reviewBad} />
-              )}
-              {place.reviewTip && (
-                <ReviewItem label="알아두기" text={place.reviewTip} />
-              )}
-            </div>
-          </section>
-          <Divider />
-        </>
-      )}
-
-      {/* 기본 정보 */}
-      <section className="px-[20px] pt-[20px] pb-[20px]">
-        <div className="mb-[16px] flex items-center gap-[8px]">
-          <span className="flex size-[20px] items-center justify-center text-[11px] font-light text-accent">
-            iii
-          </span>
-          <span className="text-[14px] font-normal text-foreground">
-            기본 정보
-          </span>
-        </div>
-        <div className="flex flex-col gap-[12px]">
-          {place.parking && (
-            <InfoRow label="주차" text={place.parking} />
-          )}
-          <InfoRow
-            label="영어"
-            text={english >= 3 ? "안내 표지와 발권기 영문 병기" : "영어 소통 어려움"}
-          />
-          <InfoRow
-            label="혼잡"
-            text={place.crowdPeak ? `${place.crowdPeak} 대기 길어짐` : "정보 없음"}
-          />
-        </div>
       </section>
 
       <Divider />
@@ -413,28 +226,6 @@ function BarRow({
           {note}
         </p>
       )}
-    </div>
-  );
-}
-
-function ReviewItem({ label, text }: { label: string; text: string }) {
-  return (
-    <div>
-      <p className="mb-[4px] text-[12px] font-normal text-accent">{label}</p>
-      <p className="text-[13px] font-light leading-relaxed text-foreground">
-        {text}
-      </p>
-    </div>
-  );
-}
-
-function InfoRow({ label, text }: { label: string; text: string }) {
-  return (
-    <div className="flex gap-[16px]">
-      <span className="w-[40px] shrink-0 text-[13px] font-normal text-accent">
-        {label}
-      </span>
-      <span className="text-[13px] font-light text-foreground">{text}</span>
     </div>
   );
 }

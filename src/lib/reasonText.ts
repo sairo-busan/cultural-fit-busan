@@ -1,13 +1,22 @@
 /**
- * 추천이유 문장 생성 (FE-FEAT-005, 04_추천로직 R060).
- * "최강 일치축 + why_ko → 근거 1문장 생성" — LLM 없이 룰 기반, placeTags에
- * 이미 사전 생성·DB화된 문구(whyKo/whyEn)를 조합만 한다. 서버 왕복 불필요 —
- * /api/recommend 응답에 whyKo 등이 이미 포함돼 있어 클라이언트에서 바로 계산.
+ * 추천이유 문장 — Model B (9/10 회의 확정, docs/decisions/2026-09-11_DB필드_확정.md).
+ *
+ * 두 종류로 나뉜다 — 소스가 다르다:
+ *   S10 피드 한 줄   `whyKo`(= DB_02.place_desc, 장소 단위 — 유형과 무관)
+ *   S20 상세 이유    `reasonByCf8[cf8Code]`(= DB_03.recommendation_reason, (CF8코드×장소) 단위) —
+ *                    9/15부터 목록 API(/api/recommend)엔 안 실리고 상세 API
+ *                    (`GET /api/place/[id]`, placeDetail.ts)에서만 온다
+ *
+ * whyKo가 placeTags.why_ko를 대체하면서 필드명은 그대로 뒀다 — PlaceRow.tsx 등
+ * 화면 코드를 안 건드리기 위해서다(값의 출처만 DB_02로 바뀜, 9/14 PR#18 리뷰 코멘트).
+ * LLM 없이 룰 기반, 서버가 이미 붙여서 내려준 문구를 조합만 한다(R060).
  */
 
 export type ReasonInput = {
   cf8FitScore: number | null;
+  cf8Max: number;
   companionScore: number | null;
+  companionMax: number;
   weatherScore: number | null;
   seasonScore: number | null;
   timeScore: number | null;
@@ -25,26 +34,31 @@ const COMPONENT_LABEL_KO: Record<ComponentKey, string> = {
   time: "시간대",
 };
 
-/** "최강 일치축" — null 아닌 성분 중 점수가 가장 높은 축 하나를 고른다. */
+/** 축마다 만점이 달라(cf8=9~3, 동행=9~3, 날씨/계절/시간=5) 원점수로 비교하면 안 된다.
+ * 0~100 정규화한 뒤 비교한다(#20 PR 리뷰 — cf7/9(78%) vs 날씨4/5(80%)를 원점수로
+ * 비교하면 순서가 뒤집힘). */
+const FIXED_MAX = 5; // 날씨·계절·시간
+
+/** null 아닌 성분 중 정규화 점수가 가장 높은 축 하나를 고른다. */
 function findStrongestComponent(input: ReasonInput): ComponentKey | null {
-  const components: { key: ComponentKey; value: number | null }[] = [
-    { key: "cf8", value: input.cf8FitScore },
-    { key: "companion", value: input.companionScore },
-    { key: "weather", value: input.weatherScore },
-    { key: "season", value: input.seasonScore },
-    { key: "time", value: input.timeScore },
+  const components: { key: ComponentKey; value: number | null; max: number }[] = [
+    { key: "cf8", value: input.cf8FitScore, max: input.cf8Max },
+    { key: "companion", value: input.companionScore, max: input.companionMax },
+    { key: "weather", value: input.weatherScore, max: FIXED_MAX },
+    { key: "season", value: input.seasonScore, max: FIXED_MAX },
+    { key: "time", value: input.timeScore, max: FIXED_MAX },
   ];
 
-  const available = components.filter(
-    (c): c is { key: ComponentKey; value: number } => c.value !== null && !Number.isNaN(c.value)
-  );
+  const available = components
+    .filter((c) => c.value !== null && !Number.isNaN(c.value) && c.max > 0)
+    .map((c) => ({ key: c.key, pct: (c.value as number) / c.max }));
   if (available.length === 0) return null;
 
-  return available.reduce((max, c) => (c.value > max.value ? c : max)).key;
+  return available.reduce((max, c) => (c.pct > max.pct ? c : max)).key;
 }
 
 /**
- * S10 카드용 reasons 배열 생성. whyKo가 있으면 그대로 1순위, 없으면 최강
+ * S10 카드용 reasons 배열. whyKo(=place_desc)가 있으면 그대로 1순위, 없으면 최강
  * 일치축 기반 기본 문장으로 대체. 과장·평점 추정 금지(R060) — 원문 그대로만 사용.
  */
 export function generateReasons(input: ReasonInput): string[] {
@@ -60,4 +74,17 @@ export function generateReasons(input: ReasonInput): string[] {
   }
 
   return reasons;
+}
+
+/**
+ * S20 상세용 — 유저 CF8 코드에 해당하는 DB_03 문구를 고른다.
+ * `reasonByCf8`는 `GET /api/place/[id]` 응답에 들어있는 값(placeDetail.ts) — 서버는
+ * 유저 코드를 모르므로(개인정보 미전송 원칙) 8개를 다 받아 클라이언트에서 고른다.
+ * 아직 S20 화면이 없어서 호출하는 곳이 없다 — 화면 붙일 때 여기서 가져다 쓰면 됨.
+ */
+export function pickDetailReason(
+  cf8Code: string,
+  reasonByCf8: Record<string, string | null> | undefined
+): string | null {
+  return reasonByCf8?.[cf8Code] ?? null;
 }

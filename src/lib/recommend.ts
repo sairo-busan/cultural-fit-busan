@@ -1,6 +1,7 @@
 import { getDb } from "@/lib/mongodb";
-import type { RecommendedPlace, PlaceInfoItem } from "@/types/place";
+import type { RecommendedPlace, PlaceInfoItem, Place } from "@/types/place";
 
+/** places(TourAPI 정본) — contentId가 PK(_id) */
 type PlaceDoc = {
   _id: string;
   contentTypeId: string;
@@ -18,83 +19,58 @@ type PlaceDoc = {
   info?: PlaceInfoItem[];
   eventStartDate?: string;
   eventEndDate?: string;
+  /** ingest-places.ts가 무장애 API로 파생(9/11) */
+  barrierFree?: boolean | null;
 };
 
-type PlaceTagsDoc = {
-  contentId: string;
-  noiseLevel: number | null;
-  crowdLevel: number | null;
-  crowdPeak: string | null;
-  crowdCalm: string | null;
-  localDepth: number | null;
-  englishSupport: number | null;
-  spiceLevel: number | null;
-  weatherType: "indoor" | "outdoor" | "mixed" | null;
-  bestTime: string | null;
-  placeType: "식음형" | "시장형" | "해양야경형" | "문화역사형" | null;
-  fitSolo: number | null;
-  tipType: string | null;
-  tipHeadline: string | null;
-  pro: string | null;
-  con: string | null;
-  whyKo: string | null;
-  whyEn: string | null;
-  coverage: number;
+/** score_board(DB_01, Model B) — placeId가 PK */
+type ScoreBoardDoc = {
+  placeId: string;
+  placeName: string | null;
+  contentId: string | null;
+  calmnessScore: number | null;
+  energyScore: number | null;
+  localScore: number | null;
+  landmarkScore: number | null;
+  stayDeeplyScore: number | null;
+  diverseExperienceScore: number | null;
+  soloScore: number | null;
+  coupleFriendScore: number | null;
+  parentsScore: number | null;
+  kidsScore: number | null;
+  petScore: number | null;
+  sunnyScore: number | null;
+  rainyScore: number | null;
+  cloudyScore: number | null;
+  springScore: number | null;
+  summerScore: number | null;
+  autumnScore: number | null;
+  winterScore: number | null;
+  morningScore: number | null;
+  afternoonScore: number | null;
+  eveningScore: number | null;
+  indoorOutdoor: "INDOOR" | "OUTDOOR" | "MIXED" | null;
+  petAllowed?: boolean | null;
+  /** 9/15 유나 추가 — 10종 체계, 옛 92번 시트 4종과 다름 */
+  placeType?: Place["placeType"];
+  /** 9/15 유나 추가 — petAllowed=false면 "동반 불가" 원문 */
+  petCondition?: string | null;
+};
 
-  cf8Match: string | null;
-  hasRaw: boolean | null;
-  hasMeatOnly: boolean | null;
-  hasSeafoodOnly: boolean | null;
-  seatingType: "street" | "indoor" | "mixed" | null;
-  fitCouple: number | null;
-  fitFriends: number | null;
-  fitFamily: number | null;
-  stayMinutes: number | null;
-  budgetLevel: number | null;
-  proEn: string | null;
-  conEn: string | null;
-  infoKo: string | null;
-  infoEn: string | null;
-  sourceUrl: string | null;
-  taggedStatus: "review" | "done" | null;
-  alternativeIds: string[];
+/** place_info(DB_02) — placeId가 PK, S10 카드 한 줄용 */
+type PlaceInfoDoc = {
+  placeId: string;
+  placeName: string | null;
+  placeDesc: string | null;
+  /** 9/15 시트 확장 — BE-FEAT-014에서 재적재해야 값이 채워짐, 그전엔 undefined */
+  placeNameEn?: string | null;
+  placeDescEn?: string | null;
+};
 
-  placeId: string | null;
-
-  cfAtmosphereScore: number | null;
-  cfLocalFamousScore: number | null;
-  cfDeepVarietyScore: number | null;
-
-  photoMemoryValue: number | null;
-  culturalValue: number | null;
-  natureValue: number | null;
-  foodValue: number | null;
-  walkingRequired: number | null;
-  restAvailability: number | null;
-  indoorShelter: number | null;
-
-  companionScoreSolo: number | null;
-  companionScoreCouple: number | null;
-  companionScoreFriends: number | null;
-  companionScoreParents: number | null;
-  companionScoreKid: number | null;
-  companionScorePet: number | null;
-
-  weatherScoreSunny: number | null;
-  weatherScoreRainy: number | null;
-  weatherScoreCloudy: number | null;
-  seasonScoreSpring: number | null;
-  seasonScoreSummer: number | null;
-  seasonScoreFall: number | null;
-  seasonScoreWinter: number | null;
-  timeScoreMorning: number | null;
-  timeScoreAfternoon: number | null;
-  timeScoreEvening: number | null;
-
-  petAllowed: boolean | null;
-  wheelchairAccessible: boolean | null;
-  strollerAccessible: boolean | null;
-  stairsAlternative: boolean | null;
+const INDOOR_OUTDOOR_MAP: Record<string, "indoor" | "outdoor" | "mixed"> = {
+  INDOOR: "indoor",
+  OUTDOOR: "outdoor",
+  MIXED: "mixed",
 };
 
 export type RecommendParams = {
@@ -103,46 +79,82 @@ export type RecommendParams = {
 };
 
 /**
- * BE-FEAT-006: 좌표는 서버로 전송받지 않는다(위치 정보 사용 리스크 검토 참고).
- * 거리 계산·정렬·CF8 매칭은 전부 클라이언트(FE-FEAT-005)에서 수행 — 이 함수는
- * places+placeTags를 조인한 목록만 제공한다.
+ * 유저 무관 공통 데이터라 서버 메모리에 캐싱(9/15, QA 중 발견 — 유저마다 똑같은
+ * 120곳 조인 결과인데 요청마다 DB를 4번씩 새로 조회하고 있었음). contentTypeId별로
+ * limit 없는 전체 목록을 캐시해두고, limit은 캐시에서 읽은 뒤 잘라 쓴다. TTL 5분 —
+ * 시트 재적재는 개발 중 수작업으로만 일어나서 그 정도 지연은 괜찮다.
+ */
+const recommendCache = new Map<string, { data: RecommendedPlace[]; cachedAt: number }>();
+const CACHE_TTL_MS = 5 * 60_000;
+
+/**
+ * Model B(9/10 회의) — 좌표는 서버로 전송받지 않는다. CF8 매칭·상황보정·정렬은
+ * 전부 클라이언트(recommendEngine.ts)에서 수행 — 이 함수는 개인화 없이
+ * score_board(DB_01) + place_info(DB_02) + places(TourAPI)를 조인한 원본 후보
+ * 목록만 만든다.
  *
- * 후보는 placeTags가 있는 장소로 한정한다(태깅 안 된 곳은 추천하지 않는다는
- * 설계 원칙). PR#9 리뷰 지적 대응: 이전엔 places 2,231건 전체를 조회한 뒤
- * 정렬 없이 앞 N건만 잘라 반환해 "가까운 N곳"이 아니라 "적재 순서상 앞 N곳"이
- * 나가는 문제가 있었다 — 태깅된 곳(현재 49건)만 후보로 좁혀서 그 왜곡을 줄이고,
- * 조회량도 2,231건에서 태깅 건수로 줄인다. 실제 위치 기반 정렬은 CF8 엔진
- * 붙일 때(FE-FEAT-005) 클라이언트가 처리한다.
+ * content_id가 없는 place_id는 이미지·좌표를 못 구해서 응답에서 뺀다(에린 확인 대기,
+ * docs/decisions/2026-09-11_DB필드_확정.md — 9/14 기준 유나에게 채우기 요청함).
+ *
+ * 9/15 — reasonByCf8(DB_03, CF8코드×장소 960행)는 목록 응답에서 뺐다. S20 상세용
+ * 데이터인데 아무 화면도 안 읽고(PlaceRow.tsx 등 grep 0건), 이제 전용 API가
+ * 있다(placeDetail.ts, BE-FEAT-013) — 그쪽이 같은 원칙(서버가 유저 CF8코드 모름,
+ * 8개 다 내려줌)으로 이미 제공한다. 덕분에 place_by_cf8 조회(960행) 자체가 통째로
+ * 없어져서 응답 크기·DB 부담 둘 다 줄었다.
  */
 export async function getRecommendations({
   contentTypeId,
-  limit = 20,
+  limit,
 }: RecommendParams): Promise<RecommendedPlace[]> {
+  const cacheKey = contentTypeId ?? "__all__";
+  const cached = recommendCache.get(cacheKey);
+  const full =
+    cached && Date.now() - cached.cachedAt < CACHE_TTL_MS
+      ? cached.data
+      : await computeRecommendations(contentTypeId);
+
+  if (!cached || Date.now() - cached.cachedAt >= CACHE_TTL_MS) {
+    recommendCache.set(cacheKey, { data: full, cachedAt: Date.now() });
+  }
+
+  return limit === undefined ? full : full.slice(0, limit);
+}
+
+async function computeRecommendations(contentTypeId?: string): Promise<RecommendedPlace[]> {
   const db = await getDb();
 
-  const tagDocs = await db.collection<PlaceTagsDoc>("placeTags").find({}).toArray();
-  const tagsByContentId = new Map(tagDocs.map((t) => [t.contentId, t]));
+  const [scoreBoards, placeInfos] = await Promise.all([
+    db.collection<ScoreBoardDoc>("score_board").find({}).toArray(),
+    db.collection<PlaceInfoDoc>("place_info").find({}).toArray(),
+  ]);
 
-  const query: Record<string, unknown> = {
-    _id: { $in: tagDocs.map((t) => t.contentId) },
-    mapX: { $type: "number" },
-    mapY: { $type: "number" },
-  };
-  if (contentTypeId) query.contentTypeId = contentTypeId;
+  const infoByPlaceId = new Map(placeInfos.map((i) => [i.placeId, i]));
 
+  const contentIds = scoreBoards.map((s) => s.contentId).filter((id): id is string => !!id);
   const placeDocs = await db
     .collection<PlaceDoc>("places")
-    .find(query)
-    .limit(limit)
+    .find({ _id: { $in: contentIds } })
     .toArray();
+  const placesByContentId = new Map(placeDocs.map((p) => [p._id, p]));
 
-  const results: RecommendedPlace[] = placeDocs.map((place) => {
-    const tags = tagsByContentId.get(place._id)!;
+  const results: RecommendedPlace[] = [];
 
-    return {
+  for (const score of scoreBoards) {
+    if (!score.contentId) continue; // content_id 없으면 이미지·좌표를 못 구함 — 스킵
+    const place = placesByContentId.get(score.contentId);
+    if (!place) continue; // places에 아직 적재 안 된 content_id
+
+    if (contentTypeId && place.contentTypeId !== contentTypeId) continue;
+
+    const info = infoByPlaceId.get(score.placeId);
+    const weatherType = score.indoorOutdoor ? INDOOR_OUTDOOR_MAP[score.indoorOutdoor] : null;
+
+    results.push({
       contentId: place._id,
       contentTypeId: place.contentTypeId,
-      title: place.title,
+      // 결정문서(2026-09-11_DB필드_확정.md) — 카드 제목은 DB_02 place_name이 정본.
+      // TourAPI title("봉래산(부산)" 식)은 place_name이 아직 없을 때만 임시 대체(#19 리뷰).
+      title: info?.placeName ?? place.title,
       addr1: place.addr1,
       addr2: place.addr2,
       mapX: place.mapX,
@@ -157,90 +169,53 @@ export async function getRecommendations({
       eventStartDate: place.eventStartDate ?? null,
       eventEndDate: place.eventEndDate ?? null,
 
-      noiseLevel: tags.noiseLevel,
-      crowdLevel: tags.crowdLevel,
-      crowdPeak: tags.crowdPeak,
-      crowdCalm: tags.crowdCalm,
-      localDepth: tags.localDepth,
-      englishSupport: tags.englishSupport,
-      spiceLevel: tags.spiceLevel,
-      weatherType: tags.weatherType,
-      bestTime: tags.bestTime,
-      placeType: tags.placeType,
-      fitSolo: tags.fitSolo,
-      tipType: tags.tipType,
-      tipHeadline: tags.tipHeadline,
-      pro: tags.pro,
-      con: tags.con,
-      whyKo: tags.whyKo,
-      whyEn: tags.whyEn,
-      coverage: tags.coverage,
+      weatherType,
+      placeType: score.placeType ?? null,
+      petCondition: score.petCondition ?? null,
+      whyKo: info?.placeDesc ?? null,
+      // 다국어(영/한) 확정, DB_02 place_desc_en도 120곳 채워짐(9/15) — BE-FEAT-014 재적재 전까지는 undefined→null
+      whyEn: info?.placeDescEn ?? null,
 
-      cf8Match: tags.cf8Match,
-      hasRaw: tags.hasRaw,
-      hasMeatOnly: tags.hasMeatOnly,
-      hasSeafoodOnly: tags.hasSeafoodOnly,
-      seatingType: tags.seatingType,
-      fitCouple: tags.fitCouple,
-      fitFriends: tags.fitFriends,
-      fitFamily: tags.fitFamily,
-      stayMinutes: tags.stayMinutes,
-      budgetLevel: tags.budgetLevel,
-      proEn: tags.proEn,
-      conEn: tags.conEn,
-      infoKo: tags.infoKo,
-      infoEn: tags.infoEn,
-      sourceUrl: tags.sourceUrl,
-      taggedStatus: tags.taggedStatus,
-      alternativeIds: tags.alternativeIds,
+      placeId: score.placeId,
 
-      // 92번/CF8추천구조 미반영분 — 아래는 유나 확인 대기 중이라 DB에 키 자체가
-      // 없을 수 있음. undefined면 JSON.stringify가 키를 통째로 지워버려 타입
-      // 계약(T | null, 필수 필드)이 깨지므로 명시적으로 null 폴백
-      placeId: tags.placeId ?? null,
+      calmnessScore: score.calmnessScore,
+      energyScore: score.energyScore,
+      localScore: score.localScore,
+      landmarkScore: score.landmarkScore,
+      stayDeeplyScore: score.stayDeeplyScore,
+      diverseExperienceScore: score.diverseExperienceScore,
 
-      cfAtmosphereScore: tags.cfAtmosphereScore ?? null,
-      cfLocalFamousScore: tags.cfLocalFamousScore ?? null,
-      cfDeepVarietyScore: tags.cfDeepVarietyScore ?? null,
+      soloScore: score.soloScore,
+      coupleFriendScore: score.coupleFriendScore,
+      parentsScore: score.parentsScore,
+      kidsScore: score.kidsScore,
+      petScore: score.petScore,
 
-      photoMemoryValue: tags.photoMemoryValue ?? null,
-      culturalValue: tags.culturalValue ?? null,
-      natureValue: tags.natureValue ?? null,
-      foodValue: tags.foodValue ?? null,
-      walkingRequired: tags.walkingRequired ?? null,
-      restAvailability: tags.restAvailability ?? null,
-      indoorShelter: tags.indoorShelter ?? null,
+      sunnyScore: score.sunnyScore,
+      rainyScore: score.rainyScore,
+      cloudyScore: score.cloudyScore,
+      springScore: score.springScore,
+      summerScore: score.summerScore,
+      autumnScore: score.autumnScore,
+      winterScore: score.winterScore,
+      morningScore: score.morningScore,
+      afternoonScore: score.afternoonScore,
+      eveningScore: score.eveningScore,
 
-      companionScoreSolo: tags.companionScoreSolo ?? null,
-      companionScoreCouple: tags.companionScoreCouple ?? null,
-      companionScoreFriends: tags.companionScoreFriends ?? null,
-      companionScoreParents: tags.companionScoreParents ?? null,
-      companionScoreKid: tags.companionScoreKid ?? null,
-      companionScorePet: tags.companionScorePet ?? null,
+      // TourAPI contenttypeid=39(음식점)로 자동 파생 — 유나 예외 오버라이드는 추후
+      isRestaurant: place.contentTypeId === "39",
+      barrierFree: place.barrierFree ?? null,
+      petAllowed: score.petAllowed ?? null,
 
-      weatherScoreSunny: tags.weatherScoreSunny ?? null,
-      weatherScoreRainy: tags.weatherScoreRainy ?? null,
-      weatherScoreCloudy: tags.weatherScoreCloudy ?? null,
-      seasonScoreSpring: tags.seasonScoreSpring ?? null,
-      seasonScoreSummer: tags.seasonScoreSummer ?? null,
-      seasonScoreFall: tags.seasonScoreFall ?? null,
-      seasonScoreWinter: tags.seasonScoreWinter ?? null,
-      timeScoreMorning: tags.timeScoreMorning ?? null,
-      timeScoreAfternoon: tags.timeScoreAfternoon ?? null,
-      timeScoreEvening: tags.timeScoreEvening ?? null,
+      titleEn: info?.placeNameEn ?? null,
 
-      petAllowed: tags.petAllowed ?? null,
-      wheelchairAccessible: tags.wheelchairAccessible ?? null,
-      strollerAccessible: tags.strollerAccessible ?? null,
-      stairsAlternative: tags.stairsAlternative ?? null,
-
-      // Fit 점수·거리는 클라이언트(FE-FEAT-005)가 계산
+      // Fit 점수·근거는 클라이언트(recommendEngine.ts)가 계산
       fitScore: 0,
       reasons: [],
       tags: [],
       distanceMin: null,
-    };
-  });
+    });
+  }
 
   return results;
 }

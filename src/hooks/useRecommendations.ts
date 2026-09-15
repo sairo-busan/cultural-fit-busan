@@ -94,7 +94,9 @@ export function useRecommendations(): UseRecommendationsResult {
         const { lat, lng } = BUSAN_CITY_HALL;
 
         const [recommendRes, weatherRes] = await Promise.all([
-          fetch("/api/recommend?limit=100"),
+          // 9/15 소피 리뷰 발견 — main 병합 중 120→100으로 되돌아가 20곳이 추천에서
+          // 빠지는 문제. 정본 120곳 전체를 후보로 받아야 클라이언트 랭킹이 맞다.
+          fetch("/api/recommend?limit=120"),
           fetch(`/api/weather?lat=${lat}&lng=${lng}&op=forecast`),
         ]);
 

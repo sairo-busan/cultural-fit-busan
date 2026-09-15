@@ -29,7 +29,17 @@
       "식음형": "Food",
       "시장형": "Market",
       "해양야경형": "Coast & night",
-      "문화역사형": "Culture"
+      "문화역사형": "Culture",
+      "역사·문화": "History & culture",
+      "전망·야경": "Views & night",
+      "해변·해안": "Beach & coast",
+      "자연·공원": "Nature & parks",
+      "시장·먹거리": "Market & food",
+      "문화·관광": "Culture & sightseeing",
+      "체험·시설": "Hands-on & facilities",
+      "종교·사찰": "Temples",
+      "휴식·웰니스": "Rest & wellness",
+      "도시·거리": "City streets"
     },
     "savedToast": "Added to Saved",
     "savedToastAction": "View",

@@ -1,29 +1,45 @@
 /**
- * 하드필터 — 클라이언트에서 CF8 매칭 전에 후보를 제외/표시하는 로직 (FE-FEAT-005 Step 6).
+ * 하드필터 — Model B (9/10 회의 확정, docs/decisions/2026-09-11_DB필드_확정.md).
  *
- * 06_TRV_여행경험문항(TRV06) 옵션 설명 기준 설계:
- *   - raw_meat/raw_seafood = 안전 성격 → 확인되면(true) 무조건 제외(하드)
- *   - vegan/spicy         = 선호도 성격 → CALC_04에 가중치가 정의돼 있지 않아 점수 가산은
- *                           하지 않고, "적합 후보" 배지만 붙인다(matchesPreference)
- *   - allergy             = 자동판단 안 함, 필터링 대상 아님(매장 확인 필요 안내만)
+ * CF8만 점수화하고 조건값은 점수에 안 반영한다 — 전부 후보를 빼거나 남기는
+ * WHERE 조건이다. "확인된 false"와 "미등록(null)"을 구분한다: null은 통과시키고
+ * 화면에 "정보 확인 중"으로만 표시한다(false는 두 API 특성상 실무적으로 거의 안 나옴).
  *
- * 03A-4_평가기준·근거(HF_WHEELCHAIR 등) 기준: 접근성 필드는 명시적으로 false(확인된
- * 불가)일 때만 제외. null(UNKNOWN)은 제외하지 않고 "정보 확인 중" 표시 대상으로 남긴다
- * (07_UI_화면수정 S20/S30 원칙과 동일).
+ * 음식 제약은 이번 범위에서 빼는 쪽으로 제안됐지만 팀 결정 대기 중이라 값은 받되
+ * 필터링에는 안 쓴다(no-op) — 결정되면 여기 한 군데만 고치면 된다.
  */
 
-export type FoodRestriction = "none" | "spicy" | "vegan" | "raw_meat" | "raw_seafood" | "allergy";
+export type FoodRestriction = "none" | "spicy" | "vegan" | "raw_meat" | "raw_seafood" | "pork";
 export type WalkingDifficulty = "none" | "long_walk" | "stairs_slope" | "stroller" | "wheelchair";
+export type CurrentContext =
+  | "time_flexible"
+  | "before_meal"
+  | "indoor_first"
+  | "outdoor_preferred"
+  | "available_now"
+  | "avoid_crowd"
+  | "none";
 
 export type PlaceForFilter = {
-  coverage: number;
-  hasRaw: boolean | null;
-  hasMeatOnly: boolean | null;
-  hasSeafoodOnly: boolean | null;
-  spiceLevel: number | null;
-  wheelchairAccessible: boolean | null;
-  strollerAccessible: boolean | null;
-  stairsAlternative: boolean | null;
+  /**
+   * DB_01 신설 컬럼(indoor_outdoor). 필드명은 화면(`RecommendedPlace.weatherType`,
+   * PlaceRow.tsx 뱃지)이 이미 쓰는 이름을 그대로 재사용해서 값을 중복으로 안 갖고 간다.
+   * 유나가 태깅하기 전까지 전부 null.
+   */
+  weatherType: "indoor" | "outdoor" | "mixed" | null;
+  /** TourAPI contenttypeid=39 등으로 자동 파생(recommend.ts) */
+  isRestaurant: boolean | null;
+  /** 무장애 API 파생값(ingest-places.ts) — "이동약자 배려시설 있음" */
+  barrierFree: boolean | null;
+  /** DB_01 수작업 태깅(API 시드 + 유나 보완) */
+  petAllowed: boolean | null;
+};
+
+export type HardFilterInput = {
+  /** S03 mobilityCare에서 "none" 아닌 값이 하나라도 있으면 true — 세부 4종 다 이 하나로 합침 */
+  hasMobilityConstraint: boolean;
+  petWith: boolean;
+  currentContext: CurrentContext[];
 };
 
 export type HardFilterResult = {
@@ -32,47 +48,37 @@ export type HardFilterResult = {
   reasons: string[];
 };
 
-/** COVERAGE_LOW(<40) · 확인된 raw_meat/raw_seafood · 확인된(false) 접근성 제약만 제외한다. */
-export function applyHardFilter(
-  place: PlaceForFilter,
-  foodRestrictions: FoodRestriction[],
-  walkingDifficulties: WalkingDifficulty[]
-): HardFilterResult {
+export function applyHardFilter(place: PlaceForFilter, input: HardFilterInput): HardFilterResult {
   const reasons: string[] = [];
 
-  if (place.coverage < 40) reasons.push("COVERAGE_LOW");
-
-  if (foodRestrictions.includes("raw_meat") && place.hasRaw === true) {
-    reasons.push("RAW_MEAT_CONFIRMED");
-  }
-  if (foodRestrictions.includes("raw_seafood") && place.hasSeafoodOnly === true) {
-    reasons.push("RAW_SEAFOOD_CONFIRMED");
+  // 보행부담 — 뭐든 하나 선택돼 있으면 확인된 불가(false)만 제외, null은 통과
+  if (input.hasMobilityConstraint && place.barrierFree === false) {
+    reasons.push("BARRIER_NOT_FREE");
   }
 
-  if (walkingDifficulties.includes("wheelchair") && place.wheelchairAccessible === false) {
-    reasons.push("WHEELCHAIR_NOT_ACCESSIBLE");
+  // 반려동물 동반 — 확인된 불가(false)만 제외, null은 통과
+  if (input.petWith && place.petAllowed === false) {
+    reasons.push("PET_NOT_ALLOWED");
   }
-  if (walkingDifficulties.includes("stroller") && place.strollerAccessible === false) {
-    reasons.push("STROLLER_NOT_ACCESSIBLE");
+
+  // current_context — CF8과 별개인 필터링 룰(9/10 회의)
+  // "식사 전"을 고르지 않았으면 식당류를 뺀다. isRestaurant가 UNKNOWN(null)이면 통과.
+  // currentContext가 아예 빈 배열(QUICK — S03을 건너뛴 사용자)이면 "안 골랐다"가 아니라
+  // "정보 없음"이라 필터를 걸면 안 된다(#20 PR 리뷰 — QUICK에서 식당이 전부 빠지는 버그).
+  if (
+    input.currentContext.length > 0 &&
+    !input.currentContext.includes("before_meal") &&
+    place.isRestaurant === true
+  ) {
+    reasons.push("NOT_BEFORE_MEAL");
   }
-  if (walkingDifficulties.includes("stairs_slope") && place.stairsAlternative === false) {
-    reasons.push("NO_STAIRS_ALTERNATIVE");
+  if (input.currentContext.includes("indoor_first") && place.weatherType === "outdoor") {
+    reasons.push("NOT_INDOOR");
   }
+  if (input.currentContext.includes("outdoor_preferred") && place.weatherType === "indoor") {
+    reasons.push("NOT_OUTDOOR");
+  }
+  // available_now·avoid_crowd·time_flexible: 대응 데이터 없음, 이번 범위에서 미반영
 
   return { excluded: reasons.length > 0, reasons };
-}
-
-/**
- * vegan/spicy 선호 배지 — 점수에 반영하지 않고 UI 표시용 플래그만 반환한다
- * (CALC_04에 이 항목 가중치가 없어서 임의 숫자를 만들지 않기로 결정, 2026-09-05).
- */
-export function matchesSoftFoodPreference(
-  place: PlaceForFilter,
-  foodRestrictions: FoodRestriction[]
-): boolean {
-  if (foodRestrictions.includes("vegan") && place.hasMeatOnly === false) return true;
-  if (foodRestrictions.includes("spicy") && place.spiceLevel !== null && place.spiceLevel <= 1) {
-    return true;
-  }
-  return false;
 }
