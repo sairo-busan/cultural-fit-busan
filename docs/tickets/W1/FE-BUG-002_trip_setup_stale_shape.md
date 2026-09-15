@@ -2,7 +2,8 @@
 
 ```
 증상   /trip-setup 이 "This page couldn't load" 로 죽는다. 서버는 200
-원인   저장 키는 그대로인데 객체 모양이 바뀌었다 — 읽는 쪽이 안 씻는다
+원인   FE-FEAT-008 이 객체 모양을 바꾸면서 저장 키 trip_setup 은 그대로 뒀다
+       코드는 새 모양으로 일관되고, 브라우저에 남은 옛 데이터만 어긋난다
 해결   읽는 쪽에 normalizeTripSetup() — 저장 경로는 건드리지 않는다
 ```
 
@@ -14,12 +15,12 @@
 |-----|-------|
 | Prefix | FE |
 | Type | BUG |
-| Severity | Critical |
-| Layer | Data / Hook |
+| Severity | High |
+| Layer | Data |
 | Status | In Progress |
-| Screen | S03 · S10 |
+| Screen | S03 |
 | Depends | — |
-| Related | FE-BUG-001 (같은 부류 — 저장값을 안 씻는다) · FE-FEAT-008 (모양을 바꾼 쪽) |
+| Related | FE-BUG-001 (같은 부류 — 저장값을 안 씻는다) · FE-FEAT-008 (모양을 바꾼 쪽) · BE-FEAT-011 (S10 경로 담당) |
 
 ---
 
@@ -39,17 +40,33 @@ Reload to try again, or go back.
 /en/trip-setup   200   (HTML 에 본문까지 들어 있다)
 ```
 
-죽는 건 하이드레이션 직후다. 예전 빌드로 S03 을 한 번이라도 채운 사람만 걸린다 —
-팀 전원과, 배포본을 먼저 만져 본 사람 전부다. 시크릿 창에서는 재현되지 않는다.
+죽는 건 하이드레이션 직후다.
 
-### 무엇이 망가지나
+### 누가 걸리나
 
-| 화면 | 증상 |
+localStorage 에 옛 `trip_setup` 이 남은 브라우저만이다.
+
+| | 상태 |
 |---|---|
-| S03 | 열리지 않는다 |
-| S10 | **터지지 않는다.** 대신 동행·보행 조건이 조용히 빠진 채 추천이 나간다 |
+| 실사용자 | 없음 — 배포 전 |
+| 팀 4인 | 걸림 |
+| 배포본을 열어 본 사람 | 걸림 |
+| 시크릿 창 · 새 기기 | 멀쩡 |
 
-S10 쪽이 더 위험하다. 화면이 멀쩡해서 "추천이 왜 이러지" 로만 보인다.
+`clearDiagnosis()`(`lib/storage.ts`)가 `trip_setup` 을 지우므로 "진단 다시 하기" 한 번으로도 풀린다.
+그래서 즉시 장애는 아니다 — Severity 를 High 로 둔 이유다.
+
+### 그런데도 코드로 막는 이유
+
+이 모양은 또 바뀐다.
+
+```
+BE-FEAT-011   TripSetupLike 에서 foodRestriction 을 빼고 currentContext 를 넣는다
+FE-FEAT-012   온보딩 S00~S03 재설계 예정
+```
+
+지금 "각자 지우세요" 로 넘기면 다음 변경 때 같은 공지를 또 해야 하고,
+그때는 테스터가 붙어 있을 수 있다. 읽는 쪽에 한 번 두면 이후 변경이 조용히 흡수된다.
 
 ---
 
@@ -57,15 +74,44 @@ S10 쪽이 더 위험하다. 화면이 멀쩡해서 "추천이 왜 이러지" �
 
 ### 1. 모양이 바뀌었는데 키는 그대로다
 
-`FE-FEAT-008` 이 `companion_type` 배열을 세 필드로 쪼개면서 이름이 여럿 바뀌었다.
+`FE-FEAT-008`(PR #15)이 S03 을 시트 기준으로 개편하며 세 종류로 바꿨다.
 저장 키 `trip_setup` 은 그대로다.
+
+**① 이름만 바뀐 것**
 
 ```
 walkingDifficulty  →  mobilityCare
 currentSituation   →  currentContext
-travelWith         →  primaryCompanion · childWith · petWith
 transport          →  transportMode
+petTravelMode      →  petCarry
 ```
+
+**② 구조가 쪼개진 것** — 터지는 원인이 여기다
+
+```ts
+// 전 — 배열 하나
+travelWith: ("solo"|"couple"|"friends"|"parents"|"kid"|"pet")[]
+
+// 후 — 주 동행 1개 + 독립 토글 2개
+primaryCompanion: "solo" | "friend_couple" | "parents" | null
+childWith: boolean
+petWith:   boolean
+```
+
+`couple`·`friends` 가 `friend_couple` 로 합쳐졌고 `kid`·`pet` 은 배열 원소에서
+불리언 필드로 빠졌다. 타입 자체가 배열 → 문자열·불리언으로 바뀌었다.
+
+**③ 이름은 같은데 값 코드가 바뀐 것**
+
+```
+childAgeGroup    age_0_3 · age_4_7 · age_8_13 · age_14_18
+              →  infant · preschool · elementary · teen
+
+currentContext   rain · time_rich · indoor · outdoor · right_now
+              →  time_flexible · indoor_first · outdoor_preferred · available_now
+```
+
+이름도 값도 그대로라 살아남는 건 `foodRestriction` 하나뿐이다.
 
 ### 2. 읽는 쪽이 안 씻는다
 
@@ -91,10 +137,10 @@ setup.mobilityCare.length === 0       // undefined.length → TypeError
 
 - `src/data/tripSetup.ts` — `normalizeTripSetup()`
 - `src/app/[locale]/trip-setup/page.tsx` — 읽은 값을 통과시킨다
-- `src/hooks/useRecommendations.ts` — 엔진에 넘기기 전에 통과시킨다
 
 ### 제외
 
+- `src/hooks/useRecommendations.ts` — S10 경로는 `BE-FEAT-011` 이 담당한다. 아래 참고
 - `useStoredState` 자체 — 키마다 모양이 달라 훅이 알 수 없다. 씻는 책임은 값 쪽에 둔다
 - 다른 저장 키(`cfb_saved` 등) — `FE-FEAT-010` 에서 S20 을 다시 쓸 때 같이 본다
 - 마이그레이션 코드 — 옛 값을 새 값으로 옮기지 않는다. 아래 참고
@@ -121,6 +167,18 @@ const TOGGLE_KEYS = new Set(TRIP_QUESTIONS.flatMap((q) => q.toggles?.map((t) => 
 키 이름이 같고 값이 유효한 것(`foodRestriction`)은 그대로 살아남는다.
 화면이 다시 저장하는 순간 정상 모양으로 덮인다.
 
+### 왜 S10 은 안 건드리나
+
+`BE-FEAT-011`(PR #20)이 `resolveActiveFilters` 에서 같은 일을 이미 한다.
+
+```ts
+const mobilityCare = keepKnown(tripSetup.mobilityCare ?? [], WALKING_DIFFICULTIES);
+primary: isPrimaryCompanion(tripSetup.primaryCompanion) ? tripSetup.primaryCompanion : null
+```
+
+`?? []` 로 없는 키를 막고 `keepKnown` 으로 모르는 값을 버린다 — 이 티켓의 결과와 같다.
+여기서 훅을 함께 고치면 PR #20 리베이스 때 풀 충돌만 하나 늘어난다.
+
 ---
 
 ## Acceptance Criteria
@@ -129,7 +187,6 @@ const TOGGLE_KEYS = new Set(TRIP_QUESTIONS.flatMap((q) => q.toggles?.map((t) => 
 - [x] 새 모양은 값이 하나도 안 바뀐다
 - [x] 배열 자리에 문자열, 값 자리에 숫자가 들어와도 안 터진다
 - [x] `null` · 문자열 · 빈 값에서 기본값으로 떨어진다
-- [x] S10 이 옛 모양에서도 조건을 읽는다
 - [x] `tsc --noEmit` · `lint` · `build` 통과
 
 ---
