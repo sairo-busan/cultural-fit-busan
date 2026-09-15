@@ -25,6 +25,8 @@ type PlaceDoc = {
   mapX: number;
   mapY: number;
   firstImage: string | null;
+  /** TourAPI에 사진이 없는 곳 직접 소싱한 대체 사진(9/16, upload-place-photos.ts) */
+  customImage?: string | null;
   images?: string[];
   operationInfo?: OperationInfo;
   accessibilityInfo?: Record<string, string> | null;
@@ -154,8 +156,14 @@ export async function getPlaceDetail(contentId: string): Promise<PlaceDetail | n
   const reasonByCf8: Record<string, string | null> = {};
   for (const r of reasonDocs) reasonByCf8[r.cf8Code] = r.recommendationReason;
 
+  // customImage(9/16 직접 소싱, 11곳)는 항상 갤러리에 합친다 — 영주하늘눈전망대처럼
+  // images는 있는데 firstImage만 없는 곳도 있어서, "없을 때만" 조건으로는 안 걸린다.
   const images = Array.from(
-    new Set([place.firstImage, ...(place.images ?? [])].filter((u): u is string => !!u))
+    new Set(
+      [place.firstImage, place.customImage, ...(place.images ?? [])].filter(
+        (u): u is string => !!u
+      )
+    )
   ).map(toHttps);
 
   const accessibility = Object.entries(place.accessibilityInfo ?? {})

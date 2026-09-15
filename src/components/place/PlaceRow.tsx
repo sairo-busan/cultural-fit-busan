@@ -66,9 +66,12 @@ export function PlaceRow({ place, note, saved, onToggleSave }: PlaceRowProps) {
         {note ? (
           <span className="ds-label block leading-none text-primary">{note}</span>
         ) : (
+          // 9/16 QA 발견 — 시트 place_type에 10종 밖 값("쇼핑" 등, 유나 확인 요청함)이
+          // 섞여 들어오면 t()가 MISSING_MESSAGE로 던져서 피드 전체가 크래시났다.
+          // 모르는 값은 원문 그대로 보여주고 넘어간다.
           placeType && (
             <span className="ds-label block leading-none text-secondary">
-              {t(`placeType.${placeType}`)}
+              {t.has(`placeType.${placeType}`) ? t(`placeType.${placeType}`) : placeType}
             </span>
           )
         )}
