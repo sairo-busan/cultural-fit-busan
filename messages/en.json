@@ -141,5 +141,32 @@
     },
     "start": "Get started",
     "browse": "Just look around first"
+  },
+  "onboarding": {
+    "later": "Maybe later",
+    "progress": "{current} / {total} · {axis}",
+    "axis": {
+      "atmosphere": "Atmosphere",
+      "placeType": "Places",
+      "experience": "Pace"
+    },
+    "quit": {
+      "withResult": {
+        "title": "Finish this later?",
+        "body": "Your current type stays. Answers so far won't be saved.",
+        "keep": "Keep going",
+        "leave": "Stop for now"
+      },
+      "noResult": {
+        "title": "You won't see picks yet",
+        "body": "Picks are built from three answers. Just {remaining} more.",
+        "keep": "Keep going",
+        "leave": "Look around anyway"
+      }
+    },
+    "toast": {
+      "unsaved": "Your answers weren't saved. Let's start again.",
+      "retake": "Your type changes only when you finish"
+    }
   }
 }

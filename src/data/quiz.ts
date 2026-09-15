@@ -152,41 +152,6 @@ export const QUIZ_TEXT: Record<Locale, Record<QuizId, QuizQuestionText>> = {
 
 export const TOTAL_QUESTIONS = QUIZ_QUESTIONS.length;
 
-// === 화면 문구 (피그마 S01) ===
-
-export type QuizIntro = {
-  eyebrow: string;
-  title: string;
-  description: string;
-  footnote: string;
-  submitHint: string;
-  /** 피그마 S01 우상단 — 취향 미설정 상태로 추천 피드 진입 */
-  skipLabel: string;
-  submitLabel: string;
-};
-
-export const QUIZ_INTRO: Record<Locale, QuizIntro> = {
-  ko: {
-    eyebrow: "FIND YOUR STYLE",
-    title: "여행 스타일 찾기",
-    description: "세 가지만 고르면 나에게 맞는 부산이 보입니다.",
-    footnote: "고른 답으로 나에게 맞는 부산 여행 유형을 찾아드려요.",
-    submitHint: "세 문항을 모두 고르시면 결과가 나옵니다",
-    skipLabel: "건너뛰기",
-    submitLabel: "내 여행 스타일 확인하기",
-  },
-  // DRAFT
-  en: {
-    eyebrow: "FIND YOUR STYLE",
-    title: "Find your travel style",
-    description: "Three choices, and Busan starts fitting you.",
-    footnote: "Your answers decide which places come first.",
-    submitHint: "Answer all three to see your result",
-    skipLabel: "Skip",
-    submitLabel: "See my travel style",
-  },
-};
-
 // === 초기값 (onboarding + profile 공용) ===
 
 export const DEFAULT_QUIZ_ANSWERS: QuizAnswers = {

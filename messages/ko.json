@@ -141,5 +141,32 @@
     },
     "start": "시작하기",
     "browse": "먼저 둘러볼게요"
+  },
+  "onboarding": {
+    "later": "나중에 할게요",
+    "progress": "{current} / {total} · {axis}",
+    "axis": {
+      "atmosphere": "분위기",
+      "placeType": "장소",
+      "experience": "여행 방식"
+    },
+    "quit": {
+      "withResult": {
+        "title": "다음에 고를까요?",
+        "body": "지금 유형 그대로 추천을 볼 수 있어요. 고르던 답은 저장되지 않아요",
+        "keep": "계속 고를게요",
+        "leave": "그만할게요"
+      },
+      "noResult": {
+        "title": "지금 멈추면 추천을 볼 수 없어요",
+        "body": "추천은 세 가지 답으로 만들어요. {remaining}개만 더 고르면 돼요",
+        "keep": "계속 고를게요",
+        "leave": "그래도 둘러볼게요"
+      }
+    },
+    "toast": {
+      "unsaved": "고르던 답은 저장되지 않았어요. 처음부터 골라주세요",
+      "retake": "끝까지 고르면 새 유형으로 바뀌어요"
+    }
   }
 }
