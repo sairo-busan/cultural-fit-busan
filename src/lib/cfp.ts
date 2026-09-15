@@ -23,9 +23,13 @@ import type {
 
 /**
  * ⚠️ 유형명이 탭마다 다르다. S02 화면 정본은 `2_03A_CF8프로필`(유나 9/9 지정)이다.
- *    `04_CF8_유형` 은 아직 갱신 전이라 ELV·EFD·EFV 세 개가 옛 이름으로 남아 있다.
- *    영문명은 `04_CF8_유형` 에만 있어 그대로 두지만, 한글이 어긋난 상태라 재확인이 필요하다.
+ *    `04_CF8_유형` 은 아직 갱신 전이라 ELV·EFD·EFV 세 개가 옛 이름으로 남아 있었다.
+ *    영문명(`nameEn`)이 그 옛 한글 기준으로 만들어져 있어(Vivid Local Runner·Hotspot
+ *    Relaxer·Landmark Hopper), 9/15에 현재 한글(nameKo)에 맞춰 다시 옮겼다 —
+ *    `cf8Profiles.ts`의 `profileName`(en)도 같이 고쳤다. 시트에 `*_en` 컬럼이 생기면
+ *    그쪽이 정본이다.
  *
+
  * ⚠️ 이 상수는 FE-FEAT-007에서 `src/data/cf8Profiles.ts` 로 옮기고 삭제한다.
  *    시트가 자주 바뀌어(9/7→9/9 이틀 사이 3개 변경) 하드코딩 유지 비용이 크다.
  */
@@ -66,17 +70,17 @@ const CF8_TYPES: Record<Cf8Code, Cf8TypeMeta> = {
   },
   ELV: {
     nameKo: "활기찬 동네 탐험가",
-    nameEn: "Vivid Local Runner",
+    nameEn: "Lively Local Explorer",
     description: "생동감 있는 로컬 장소를 다양하게 발견하는 성향을 반영했어요.",
   },
   EFD: {
     nameKo: "활기찬 명소 감상자",
-    nameEn: "Hotspot Relaxer",
+    nameEn: "Lively Landmark Admirer",
     description: "활기찬 부산 대표명소를 충분히 체험하는 성향을 반영했어요.",
   },
   EFV: {
     nameKo: "인기 명소 탐방가",
-    nameEn: "Landmark Hopper",
+    nameEn: "Popular Landmark Hopper",
     description: "생동감 있는 대표명소를 다양하게 둘러보는 성향을 반영했어요.",
   },
 };
