@@ -11,7 +11,13 @@ import { distanceMinutes } from "@/lib/distance";
 
 type ScoreBoardRow = { placeId: string; contentId: string | null };
 type PlaceRow = { _id: string; title: string; mapX: number; mapY: number; firstImage: string | null };
-type PlaceInfoRow = { placeId: string; placeDesc: string | null };
+type PlaceInfoRow = {
+  placeId: string;
+  placeName: string | null;
+  placeNameEn?: string | null;
+  placeDesc: string | null;
+  placeDescEn?: string | null;
+};
 
 export type NearbyPlace = {
   contentId: string;
@@ -19,6 +25,10 @@ export type NearbyPlace = {
   title: string;
   firstImage: string | null;
   placeDesc: string | null;
+  /** BE-FEAT-013 — S20 상세 화면이 언어별로 바로 쓴다 */
+  nameKo: string;
+  nameEn: string | null;
+  descEn: string | null;
   /** 두 장소 고정 좌표 사이 도보 분 — 유저 위치 아님 */
   distanceMin: number;
 };
@@ -53,12 +63,16 @@ export async function getNearbyPlaces(contentId: string, limit = 3): Promise<Nea
     const place = placesByContentId.get(score.contentId);
     if (!place) continue;
 
+    const info = infoByPlaceId.get(score.placeId);
     candidates.push({
       contentId: place._id,
       placeId: score.placeId,
       title: place.title,
       firstImage: place.firstImage,
-      placeDesc: infoByPlaceId.get(score.placeId)?.placeDesc ?? null,
+      placeDesc: info?.placeDesc ?? null,
+      nameKo: info?.placeName ?? place.title,
+      nameEn: info?.placeNameEn ?? null,
+      descEn: info?.placeDescEn ?? null,
       distanceMin: distanceMinutes(origin.mapY, origin.mapX, place.mapY, place.mapX),
     });
   }
