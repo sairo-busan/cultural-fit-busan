@@ -6,22 +6,6 @@ import type { TripQuestion, TripSetup } from "@/types/trip";
  * 시트가 바뀌면 이 파일만 고친다.
  */
 
-export const TRIP_SETUP_COPY = {
-  title: "여행 조건을 알려주세요",
-  description:
-    "여행을 함께하는 사람과 이동 방식 지금 상황까지 고려해 최적의 장소를 찾아드려요.",
-  emptySummary: "조건 미선택",
-  clearAll: (n: number) => `${n}개 선택해제`,
-  singleHint: "단일 선택",
-  primaryCta: "추천 받기",
-  skipCta: "건너뛰기",
-  /** 하단 안내 (화면설계서 11) */
-  fillNotice:
-    "각 영역에서 조건을 선택해주세요. 해당 조건이 없는 경우 '불편한 점 없어요' 또는 '피하는 음식 없어요'를 선택할 수 있어요.",
-  /** 미선택 영역을 지적할 때 */
-  incompleteHint: "이 영역을 선택해주세요",
-} as const;
-
 /** 시트 순서 그대로. 조건부 문항은 트리거 바로 뒤에 온다. */
 export const TRIP_QUESTIONS: TripQuestion[] = [
   {
@@ -330,41 +314,6 @@ export function visibleQuestions(setup: TripSetup): TripQuestion[] {
     if (!q.showWhen) return true;
     return setup[q.showWhen.key] === q.showWhen.equals;
   });
-}
-
-/**
- * 요약 바 라벨. 문항 순서대로, 조건부 문항 값도 포함한다.
- *
- * 9/15 소피 리뷰 발견 — 이 함수가 항상 TRIP_QUESTIONS(한국어 정본)에서 라벨을 읽어서
- * 영문 모드에서도 요약 바만 한국어로 나왔다. `translations`로 id별 영문 텍스트를
- * 받으면 그쪽 label을 우선한다(트립셋업 페이지의 `localize()`와 같은 조회 방식).
- */
-export function summaryLabels(
-  setup: TripSetup,
-  translations?: Record<
-    string,
-    { options: Record<string, { label: string }>; toggles?: Record<string, { label: string }> }
-  >,
-): string[] {
-  const labels: string[] = [];
-
-  for (const question of visibleQuestions(setup)) {
-    const en = translations?.[question.id];
-    const value = setup[question.key];
-    const picked = Array.isArray(value) ? value : value ? [value] : [];
-
-    for (const code of picked) {
-      const label =
-        en?.options[String(code)]?.label ?? question.options.find((o) => o.value === code)?.label;
-      if (label) labels.push(label);
-    }
-
-    for (const toggle of question.toggles ?? []) {
-      if (setup[toggle.key]) labels.push(en?.toggles?.[toggle.key]?.label ?? toggle.option.label);
-    }
-  }
-
-  return labels;
 }
 
 /**

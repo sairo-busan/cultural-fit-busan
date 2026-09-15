@@ -8,10 +8,7 @@ import * as RadioGroup from "@radix-ui/react-radio-group";
  * Radix에는 체크박스 *그룹* 프리미티브가 없어 복수는 브라우저 기본을 쓴다.
  */
 
-/** `chip` — S03, 라벨만. `row` — S01, 라디오 표시가 왼쪽에 오는 행. */
-export type ChoiceVariant = "chip" | "row";
-
-/** 도메인 타입에 의존하지 않는다 — S01(축 값)과 S03(조건 코드)이 함께 쓴다 */
+/** 도메인 타입에 의존하지 않는다 — 화면 데이터(시트 사본)를 그대로 받는다 */
 export type ChoiceOption = {
   /** 선택 시 저장되는 값 */
   value: string;
@@ -24,36 +21,22 @@ export type ChoiceOption = {
   conflictsWith?: readonly string[];
 };
 
-const itemClass = (
-  variant: ChoiceVariant,
-  selected: boolean,
-  invalid = false,
-) => {
-  if (variant === "chip") {
-    const fill = selected
-      ? "border-ink bg-white text-ink"
-      : invalid
-        ? "border-ds-error bg-ds-surface text-ink"
-        : "border-transparent bg-ds-surface text-gray-600";
-    return `ds-body-2 rounded-full border px-4 py-2 transition-all active:scale-[0.97] ${fill}`;
-  }
+/** 연회색 칩, 고르면 잉크 */
+const itemClass = (selected: boolean, invalid = false) =>
+  `ds-body-2 inline-flex min-h-11 items-center rounded-full px-4 transition-colors active:opacity-80 ${
+    selected ? "bg-primary font-semibold text-white" : "bg-surface font-medium text-ink"
+  } ${invalid && !selected ? "ring-1 ring-danger ring-inset" : ""}`;
 
-  // row 는 개별 테두리를 두지 않는다 — 문항 카드가 이미 경계를 만든다
-  return `ds-body-2 flex min-h-12 w-full items-center gap-3 rounded-lg px-1 py-2 text-left transition-colors ${
-    selected ? "text-ink" : "text-gray-600"
-  }`;
-};
-
-const listClass = (variant: ChoiceVariant) =>
-  variant === "chip" ? "flex flex-wrap gap-2" : "flex flex-col";
+const LIST = "flex flex-wrap gap-2";
 
 type BaseProps = {
   /** 문항 제목 요소의 id */
   labelledBy: string;
   options: readonly ChoiceOption[];
-  variant?: ChoiceVariant;
   /** 미선택으로 지적된 문항 — 테두리를 올려 눈에 띄게 한다 */
   invalid?: boolean;
+  /** 목록 모양. 두 그룹을 한 줄로 이어 붙일 때 `contents` */
+  className?: string;
 };
 
 // === 단일 선택 ===
@@ -64,8 +47,8 @@ export function RadioChipGroup({
   value,
   onChange,
   onDeselect,
-  variant = "chip",
   invalid = false,
+  className = LIST,
 }: BaseProps & {
   value: string | null;
   onChange: (value: string) => void;
@@ -77,7 +60,7 @@ export function RadioChipGroup({
       aria-labelledby={labelledBy}
       value={value ?? ""}
       onValueChange={onChange}
-      className={listClass(variant)}
+      className={className}
     >
       {options.map((option) => {
         const selected = value === option.value;
@@ -88,24 +71,9 @@ export function RadioChipGroup({
             value={option.value}
             // Radix는 선택된 항목을 다시 눌러도 onValueChange를 부르지 않는다
             onClick={selected ? onDeselect : undefined}
-            className={itemClass(variant, selected, invalid)}
+            className={itemClass(selected, invalid)}
           >
-            {variant === "row" ? (
-              <>
-                {/* 피그마 S01 — 라디오 표시가 왼쪽, 라벨만 (설명문 없음) */}
-                <span
-                  aria-hidden
-                  className={`flex size-5 shrink-0 items-center justify-center rounded-full border transition-colors ${
-                    selected ? "border-ink" : "border-gray-300"
-                  }`}
-                >
-                  <RadioGroup.Indicator className="size-[9px] rounded-full bg-ink" />
-                </span>
-                <span className="flex-1">{option.label}</span>
-              </>
-            ) : (
-              option.label
-            )}
+            {option.label}
           </RadioGroup.Item>
         );
       })}
@@ -120,8 +88,8 @@ export function CheckChipGroup({
   options,
   values,
   onChange,
-  variant = "chip",
   invalid = false,
+  className = LIST,
 }: BaseProps & {
   values: readonly string[];
   onChange: (values: string[]) => void;
@@ -151,14 +119,14 @@ export function CheckChipGroup({
   };
 
   return (
-    <fieldset aria-labelledby={labelledBy} className={listClass(variant)}>
+    <fieldset aria-labelledby={labelledBy} className={className}>
       {options.map((option) => {
         const selected = values.includes(option.value);
 
         return (
           <label
             key={option.value}
-            className={`${itemClass(variant, selected, invalid)} cursor-pointer has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ink`}
+            className={`${itemClass(selected, invalid)} cursor-pointer has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ink`}
           >
             {/* 칩 전체가 클릭 영역이다. `sr-only` 라 포커스와 접근성 트리에는 남는다 */}
             <input

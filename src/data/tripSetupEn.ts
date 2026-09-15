@@ -1,30 +1,12 @@
 /**
  * S03(조건 입력) 영문 텍스트 — `tripSetup.ts`(한국어 정본)의 번역본.
  *
- * `TRIP_QUESTIONS`/`TRIP_SETUP_COPY` 구조·엔진 값(`value`)은 그대로 두고, id·value로
- * 찾아 쓰는 조회용 상수만 따로 둔다 — 기존 구조를 안 건드려서 소피 쪽 컴포넌트
- * 수정 범위를 최소로 줄인다. 쓰는 쪽 예시:
- *
- *   const copy = locale === "en" ? TRIP_SETUP_COPY_EN : TRIP_SETUP_COPY;
- *   const qText = locale === "en" ? TRIP_QUESTION_TEXT_EN[question.id] : question;
+ * `TRIP_QUESTIONS` 구조·엔진 값(`value`)은 그대로 두고, id·value로 찾아 쓰는
+ * 조회용 상수만 따로 둔다. 화면 고정 문구는 messages `tripSetup` 에 있다.
  *
  * 9/15 — 시트에 영문 컬럼이 없어 여기서 직접 옮겼다(DRAFT 취급, quiz.ts/profile.ts와
  * 같은 원칙). 시트에 `*_en` 컬럼이 생기면 그쪽이 정본이 된다.
  */
-
-export const TRIP_SETUP_COPY_EN = {
-  title: "Tell us about your trip",
-  description:
-    "We'll factor in who's with you, how you're getting around, and your situation right now to find the best places.",
-  emptySummary: "No conditions selected",
-  clearAll: (n: number) => `Clear ${n}`,
-  singleHint: "Choose one",
-  primaryCta: "Get recommendations",
-  skipCta: "Skip",
-  fillNotice:
-    "Please choose a condition in each section. If none applies, you can pick \"Nothing bothers me\" or \"No food restrictions\".",
-  incompleteHint: "Please choose something in this section",
-} as const;
 
 type OptionText = { label: string; description: string };
 

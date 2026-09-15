@@ -203,5 +203,22 @@
       "finding": "Your travel character is…",
       "found": "Found it!"
     }
+  },
+  "tripSetup": {
+    "title": "What's your trip like today?",
+    "lead": "We'll recommend places that fit your choices",
+    "count": {
+      "one": "One",
+      "any": "Any",
+      "companion": "One + extras"
+    },
+    "empty": {
+      "one": "Pick one",
+      "any": "Nothing applies? Pick \"None\""
+    },
+    "submit": "Get my picks",
+    "submitDone": "Get my picks",
+    "later": "Maybe later",
+    "reset": "Reset"
   }
 }
