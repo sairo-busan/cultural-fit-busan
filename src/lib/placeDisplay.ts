@@ -42,6 +42,17 @@ export function districtLabelEn(addr1: string): string | null {
 }
 
 /**
+ * 구글맵에서 장소를 검색한 상태로 연다. 영문 화면도 한국어 이름을 쓴다 — 구글의 한국 장소는 한국어 이름으로 가장 잘 잡힌다.
+ *
+ * 좌표만 넘기면 장소가 아니라 핀이 뜬다. 주소를 붙이면 오히려 검색 목록으로 떨어진다.
+ * 이름에 "부산" 이 없으면 붙인다 — 전국에 같은 이름이 있다.
+ */
+export function googleMapsUrl(nameKo: string): string {
+  const query = nameKo.includes("부산") ? nameKo : `${nameKo} 부산`;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+}
+
+/**
  * 추천 이유가 한 줄 설명으로 시작하면 그 첫 문장을 뗀다.
  * "가야 고분과 … 역사박물관입니다. 비교적 조용한…" → "비교적 조용한…"
  *

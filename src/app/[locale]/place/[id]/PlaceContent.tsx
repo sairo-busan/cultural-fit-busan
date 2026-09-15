@@ -1,19 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { EmptyState } from "@/components/common/EmptyState";
-import { SaveButton } from "@/components/place/SaveButton";
 import { useSavedPlaces } from "@/hooks/useSavedPlaces";
 import { useStoredSnapshot } from "@/hooks/useStoredSnapshot";
-import { useRouter } from "@/i18n/navigation";
-import { districtLabel, districtLabelEn, reasonWithoutLead, secureImageUrl } from "@/lib/placeDisplay";
+import { Link, useRouter } from "@/i18n/navigation";
+import { districtLabel, districtLabelEn, googleMapsUrl, reasonWithoutLead, secureImageUrl } from "@/lib/placeDisplay";
 import { readCf8Code } from "@/lib/storage";
 import { PlaceSkeleton } from "./PlaceSkeleton";
 import type { Locale } from "@/i18n/routing";
-import type { PlaceDetail } from "@/types/place";
+import type { NearbyPlace, PlaceDetail } from "@/types/place";
 
 /**
  * 없는 id 와 불러오기 실패를 가른다. 목록이 바뀌어 사라진 곳에 "다시 시도" 를
@@ -30,6 +29,8 @@ export function PlaceContent() {
   const { id } = useParams<{ id: string }>();
   const locale = useLocale() as Locale;
   const t = useTranslations("placeDetail");
+  // 실내 · 야외 문구는 목록 행과 같은 것을 쓴다
+  const tPlace = useTranslations("place");
 
   const { ids: savedIds, toggle } = useSavedPlaces();
   const cf8Code = useStoredSnapshot(readCf8Code, null);
@@ -93,6 +94,7 @@ export function PlaceContent() {
   }
 
   const { place } = load;
+  const saved = savedIds.has(place.contentId);
   const en = locale === "en";
   const name = en ? (place.nameEn ?? place.nameKo) : place.nameKo;
   const desc = en ? place.descEn : place.descKo;
@@ -112,13 +114,19 @@ export function PlaceContent() {
   // 둘 중 하나라도 길면 둘 다 한 줄 전체를 쓴다. 한쪽만 펴면 짝이 반 칸에 혼자 남는다
   const wideHours = [hours, closedDays].some((v) => (v?.length ?? 0) > WIDE_AT);
 
+  const guide = en ? place.guideEn : place.guideDetailKo;
+  // 놓치기 쉬운 것 · 무장애 원문은 한국어뿐이다
+  const tips = en
+    ? []
+    : TIP_KEYS.flatMap((key) => (place.tipsKo[key] ? [{ key, text: place.tipsKo[key] }] : []));
+  const access = en ? [] : place.accessibility.filter((a) => t.has(`accessibility.${a.key}`));
+
   return (
-    <article className="pb-12">
+    // 다른 장소로 넘어가면 갤러리 위치 · 근처 목록을 처음부터 다시 그린다
+    <article key={place.contentId}>
       <Hero
         images={place.images}
         name={name}
-        saved={savedIds.has(place.contentId)}
-        onToggleSave={() => toggle(place.contentId)}
       />
 
       <div className="screen">
@@ -140,7 +148,10 @@ export function PlaceContent() {
         <dl className="mt-6 grid grid-cols-2 gap-x-4 gap-y-4 border-t border-hair pt-4">
           <Fact label={t("facts.hours")} value={hours} wide={wideHours} />
           <Fact label={t("facts.closedDays")} value={closedDays} wide={wideHours} />
-          <Fact label={t("facts.rain")} value={place.weatherType ? t(`rain.${place.weatherType}`) : null} />
+          <Fact
+            label={t("facts.indoorOutdoor")}
+            value={place.weatherType ? tPlace(`weatherType.${place.weatherType}`) : null}
+          />
           <Fact
             label={t("facts.pet")}
             value={place.petAllowed === null ? null : t(place.petAllowed ? "pet.yes" : "pet.no")}
@@ -150,10 +161,162 @@ export function PlaceContent() {
           <Fact
             label={t("facts.accessibility")}
             value={place.accessibility.length > 0 ? t("facts.accessibilityYes") : null}
+            // 목록이 가이드 아래라 "안내 있음" 만 보고 내용을 못 찾는다. 해시를 쓰면 뒤로 가기가 이 페이지에 한 번 더 걸린다
+            onPress={access.length > 0 ? () => scrollToSection("accessibility") : undefined}
           />
         </dl>
+
+        {guide && (
+          <section className="mt-6 border-t border-hair pt-6">
+            <h2 className="ds-title-1">{t("guideTitle")}</h2>
+            {guide.split(/\n\s*\n/).map((para, i) => (
+              <p key={i} className="ds-body-2 mt-3 whitespace-pre-line">
+                {para}
+              </p>
+            ))}
+          </section>
+        )}
+
+        {tips.length > 0 && (
+          <section className="mt-6">
+            <h3 className="ds-title-2">{t("tipsTitle")}</h3>
+            {tips.map(({ key, text }) => (
+              <div key={key} className="mt-3 flex gap-3">
+                <span className="w-0.75 shrink-0 rounded-full bg-primary" aria-hidden />
+                <div>
+                  <p className="ds-caption font-semibold text-sub">{t(`tips.${key}`)}</p>
+                  <p className="ds-body-2 mt-0.5">{text}</p>
+                </div>
+              </div>
+            ))}
+          </section>
+        )}
+
+        {access.length > 0 && (
+          <section className="mt-6 border-t border-hair pt-6">
+            <h2 id="accessibility" tabIndex={-1} className="ds-title-1 scroll-mt-6 outline-none">
+              {t("accessibilityTitle")}
+            </h2>
+            <dl className="mt-2">
+              {access.map((a) => (
+                <div key={a.key} className="flex gap-4 border-b border-hair py-3 last:border-0">
+                  <dt className="ds-caption w-18 shrink-0 font-semibold text-sub">{t(`accessibility.${a.key}`)}</dt>
+                  <dd className="ds-body-2 min-w-0 whitespace-pre-line">{a.text}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        )}
+
+        <Nearby contentId={place.contentId} en={en} />
+
+        <p className="ds-caption mt-8 text-sub">{t("source")}</p>
+      </div>
+
+      {/* 지도는 구글맵으로 넘긴다 — 외국인 사용자에게 카카오맵은 설치돼 있지 않은 앱이다. 길찾기는 구글맵 안에서 이어간다 */}
+      <div className="screen sticky bottom-0 mt-6 flex gap-3 border-t border-hair bg-page pt-3 pb-[calc(12px+env(safe-area-inset-bottom,0px))]">
+        <a
+          href={googleMapsUrl(place.nameKo)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="ds-title-2 flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-line text-ink active:bg-surface"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="size-4.5" aria-hidden>
+            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0" />
+            <circle cx="12" cy="10" r="3" />
+          </svg>
+          {t("map")}
+          <span className="sr-only">({t("newWindow")})</span>
+        </a>
+        {/* 저장은 이 버튼 한 곳이다. 사진 위에 또 두면 같은 일을 두 번 배운다 */}
+        <button
+          type="button"
+          onClick={() => toggle(place.contentId)}
+          aria-pressed={saved}
+          className="ds-title-2 flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-primary text-white active:bg-primary-press"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill={saved ? "currentColor" : "none"}
+            stroke="currentColor"
+            strokeWidth={1.9}
+            strokeLinejoin="round"
+            className="size-4.5"
+            aria-hidden
+          >
+            <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
+          </svg>
+          {t(saved ? "saved" : "save")}
+        </button>
       </div>
     </article>
+  );
+}
+
+/** 관람 순서는 뺀다 — 120곳 중 119곳이 도슨트 자세히 본문의 문장과 같아 바로 위 문단을 되풀이한다 */
+const TIP_KEYS = ["photo", "caution"] as const;
+
+/** 이 분 수까지는 걸어갈 거리로 적는다. 넘으면 직선거리 km — 도보 40분을 권하지 않는다 */
+const WALK_MAX_MIN = 20;
+
+/** 섹션 제목으로 스크롤하고 포커스를 옮긴다. 스크린리더도 같은 자리로 간다 */
+function scrollToSection(id: string) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+  el.focus({ preventScroll: true });
+}
+
+/** 함께 둘러볼 곳 — 비었거나 불러오지 못하면 섹션째 그리지 않는다 */
+function Nearby({ contentId, en }: { contentId: string; en: boolean }) {
+  const t = useTranslations("placeDetail");
+  const [places, setPlaces] = useState<NearbyPlace[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/place/nearby?contentId=${encodeURIComponent(contentId)}&limit=3`)
+      .then((res) => (res.ok ? (res.json() as Promise<NearbyPlace[]>) : []))
+      .then((list) => {
+        if (!cancelled) setPlaces(list);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [contentId]);
+
+  if (places.length === 0) return null;
+
+  return (
+    <section className="mt-6 border-t border-hair pt-6">
+      <h2 className="ds-title-1">{t("nearbyTitle")}</h2>
+      <ul className="mt-2">
+        {places.map((p) => {
+          const line = en ? p.descEn : p.placeDesc;
+          return (
+            <li key={p.contentId} className="border-b border-hair last:border-0">
+              <Link href={`/place/${p.contentId}`} className="flex min-h-12 items-center gap-3 py-3 active:bg-surface">
+                <span className="relative size-13 shrink-0 overflow-hidden rounded bg-surface">
+                  {p.firstImage && (
+                    <Image src={secureImageUrl(p.firstImage)} alt="" fill sizes="52px" className="object-cover" />
+                  )}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="ds-body-2 block font-semibold">{en ? (p.nameEn ?? p.nameKo) : p.nameKo}</span>
+                  {line && <span className="ds-caption mt-0.5 block truncate text-sub">{line}</span>}
+                </span>
+                <span className="ds-caption shrink-0 font-bold text-ink tabular-nums">
+                  {p.distanceMin <= WALK_MAX_MIN
+                    ? t("walkAbout", { m: p.distanceMin })
+                    : t("distanceKm", { km: ((p.distanceMin * 80) / 1000).toFixed(1) })}
+                </span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
 
@@ -170,6 +333,7 @@ function Fact({
   value,
   tel,
   note,
+  onPress,
   wide = false,
 }: {
   label: string;
@@ -179,6 +343,8 @@ function Fact({
   note?: string | null;
   /** 한 줄 전체 폭. 긴 문단이라 굵기도 한 단 낮춘다 */
   wide?: boolean;
+  /** 값을 눌러 아래 섹션으로 간다 */
+  onPress?: () => void;
 }) {
   const t = useTranslations("placeDetail");
 
@@ -193,6 +359,10 @@ function Fact({
             </span>
             <span className="sr-only">{t("facts.none")}</span>
           </>
+        ) : onPress ? (
+          <button type="button" onClick={onPress} className="text-left underline decoration-line underline-offset-4">
+            {value}
+          </button>
         ) : tel ? (
           <a href={`tel:${tel}`} className="underline decoration-line underline-offset-4">
             {value}
@@ -215,34 +385,19 @@ function Fact({
 function Hero({
   images,
   name,
-  saved,
-  onToggleSave,
 }: {
   images: string[];
   name: string;
-  saved: boolean;
-  onToggleSave: () => void;
 }) {
   const t = useTranslations("placeDetail");
   const tPlace = useTranslations("place");
   const router = useRouter();
-  const [index, setIndex] = useState(0);
   const scroller = useRef<HTMLDivElement>(null);
 
   // 링크를 직접 열고 들어오면 돌아갈 기록이 없다
   const back = () => (window.history.length > 1 ? router.back() : router.push("/feed"));
 
-  /** 스와이프가 없는 입력(키보드 · 마우스)을 위한 한 장씩 넘기기 */
-  const go = (to: number) => {
-    const el = scroller.current;
-    if (!el) return;
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    el.scrollTo({ left: to * el.clientWidth, behavior: reduce ? "auto" : "smooth" });
-  };
-
   const hasMany = images.length > 1;
-  const arrow =
-    "absolute top-1/2 hidden size-10 -translate-y-1/2 place-items-center rounded-full bg-ink/65 text-white pointer-fine:grid";
 
   return (
     // 포커스 테두리는 사진 위에 겹쳐 그린다. 전역 테두리는 바깥쪽이라 화면 끝에서 잘린다
@@ -254,14 +409,11 @@ function Hero({
           role="region"
           aria-label={t("photos", { name })}
           className="flex size-full snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] focus-visible:outline-none! [&::-webkit-scrollbar]:hidden"
-          onScroll={(e) => {
-            const el = e.currentTarget;
-            setIndex(Math.round(el.scrollLeft / el.clientWidth));
-          }}
           onKeyDown={(e) => {
             if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
             e.preventDefault();
-            go(Math.min(images.length - 1, Math.max(0, index + (e.key === "ArrowRight" ? 1 : -1))));
+            const el = e.currentTarget;
+            scrollToPhoto(el, photoIndex(el) + (e.key === "ArrowRight" ? 1 : -1), images.length);
           }}
         >
           {images.map((src, i) => (
@@ -295,36 +447,65 @@ function Hero({
             <path d="M15 18l-6-6 6-6" />
           </svg>
         </button>
-        <SaveButton
-          saved={saved}
-          onToggle={onToggleSave}
-          placeName={name}
-          onScrim={false}
-          className="rounded-full bg-white/95"
-        />
       </div>
 
+      {hasMany && <GalleryControls scroller={scroller} total={images.length} />}
+    </div>
+  );
+}
+
+/** 지금 보이는 사진 번호 */
+function photoIndex(el: HTMLElement): number {
+  return Math.round(el.scrollLeft / el.clientWidth);
+}
+
+/** 스와이프가 없는 입력(키보드 · 마우스)을 위한 한 장씩 넘기기 */
+function scrollToPhoto(el: HTMLElement, to: number, total: number) {
+  const target = Math.min(total - 1, Math.max(0, to));
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  el.scrollTo({ left: target * el.clientWidth, behavior: reduce ? "auto" : "smooth" });
+}
+
+/**
+ * 사진 번호와 좌우 화살표. 스크롤 위치를 여기서만 상태로 들고 있어서,
+ * 사진을 넘겨도 다시 그려지는 것은 이 두 요소뿐이다 — 사진 목록은 그대로다.
+ */
+function GalleryControls({ scroller, total }: { scroller: RefObject<HTMLDivElement | null>; total: number }) {
+  const t = useTranslations("placeDetail");
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const el = scroller.current;
+    if (!el) return;
+    const onScroll = () => setIndex(photoIndex(el));
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, [scroller]);
+
+  const go = (to: number) => scroller.current && scrollToPhoto(scroller.current, to, total);
+  const arrow =
+    "absolute top-1/2 hidden size-10 -translate-y-1/2 place-items-center rounded-full bg-ink/65 text-white pointer-fine:grid";
+
+  return (
+    <>
       {/* 마우스 · 트랙패드에서만. 터치 기기에서는 스와이프가 있고 목업에도 없다 */}
-      {hasMany && index > 0 && (
+      {index > 0 && (
         <button type="button" onClick={() => go(index - 1)} aria-label={t("prevPhoto")} className={`${arrow} left-3`}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} className="size-5" aria-hidden>
             <path d="M15 18l-6-6 6-6" />
           </svg>
         </button>
       )}
-      {hasMany && index < images.length - 1 && (
+      {index < total - 1 && (
         <button type="button" onClick={() => go(index + 1)} aria-label={t("nextPhoto")} className={`${arrow} right-3`}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} className="size-5" aria-hidden>
             <path d="M9 18l6-6-6-6" />
           </svg>
         </button>
       )}
-
-      {hasMany && (
-        <span className="absolute right-3 bottom-3 rounded-full bg-ink/65 px-3 py-1 text-[11px] font-semibold text-white tabular-nums">
-          {t("photoCount", { n: index + 1, total: images.length })}
-        </span>
-      )}
-    </div>
+      <span className="absolute right-3 bottom-3 rounded-full bg-ink/65 px-3 py-1 text-[11px] font-semibold text-white tabular-nums">
+        {t("photoCount", { n: index + 1, total })}
+      </span>
+    </>
   );
 }
