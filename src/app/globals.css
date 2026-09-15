@@ -82,7 +82,8 @@
   --color-page: var(--page);
 
   --font-sans: var(--font-sans);
-  --font-serif: var(--font-serif-display);
+  /* 서체는 Pretendard 한 벌 — font-serif · ds-serif 를 쓰던 곳도 같은 서체로 */
+  --font-serif: var(--font-sans);
 
   /* 옛 이름 — 위 매핑을 그대로 따라간다 */
   --color-background: var(--background);
