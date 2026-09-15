@@ -119,5 +119,65 @@
     "noAccount": "계정이 없습니다. 진단 결과와 저장한 곳은 이 기기에만 남습니다.",
     "retakeQuiz": "취향 진단 다시 하기",
     "takeQuiz": "진단하기"
+  },
+  "placeDetail": {
+    "back": "뒤로",
+    "photoCount": "{n} / {total}",
+    "fitTitle": "이 곳이 맞는 이유",
+    "facts": {
+      "hours": "영업시간",
+      "closedDays": "휴무일",
+      "phone": "전화",
+      "accessibility": "무장애",
+      "accessibilityYes": "시설 안내 있음",
+      "none": "정보 없음"
+    },
+    "guideTitle": "문화 가이드",
+    "tipsTitle": "놓치기 쉬운 것",
+    "tips": {
+      "route": "관람 순서",
+      "photo": "사진 포인트",
+      "caution": "유의사항"
+    },
+    "accessibilityTitle": "이동 약자 안내",
+    "accessibility": {
+      "parking": "주차",
+      "wheelchair": "휠체어",
+      "exit": "출입구",
+      "elevator": "엘리베이터",
+      "restroom": "화장실",
+      "route": "이동 경로",
+      "stroller": "유아차",
+      "lactationroom": "수유실",
+      "infantsfamilyetc": "영유아 가족",
+      "handicapetc": "지체장애 기타",
+      "publictransport": "대중교통",
+      "ticketoffice": "매표소",
+      "auditorium": "관람석",
+      "helpdog": "보조견",
+      "guidehuman": "안내 요원",
+      "audioguide": "음성 안내",
+      "braileblock": "점자블록",
+      "brailepromotion": "점자 안내물",
+      "blindhandicapetc": "시각장애 기타",
+      "hearinghandicapetc": "청각장애 기타"
+    },
+    "nearbyTitle": "함께 둘러볼 곳",
+    "walkAbout": "도보 약 {m}분",
+    "distanceKm": "{km}km",
+    "map": "지도 보기",
+    "directions": "길찾기",
+    "newWindow": "새 창에서 열림",
+    "source": "사진 · 영업 · 무장애 정보 — 한국관광공사 TourAPI",
+    "notFound": {
+      "title": "장소를 찾을 수 없어요",
+      "body": "목록이 바뀌었을 수 있어요.",
+      "action": "추천으로"
+    },
+    "loadFailed": {
+      "title": "불러오지 못했어요",
+      "body": "연결을 확인하고 다시 시도해 주세요.",
+      "action": "다시 시도"
+    }
   }
 }
