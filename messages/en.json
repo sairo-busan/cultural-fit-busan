@@ -1,0 +1,112 @@
+{
+  "place": {
+    "save": "Save {name}",
+    "removeFromSaved": "Remove {name} from saved",
+    "noPhoto": "no photo",
+    "weatherType": {
+      "indoor": "Indoor",
+      "outdoor": "Outdoor",
+      "mixed": "Indoor & outdoor"
+    },
+    "crowd": {
+      "low": "Rarely busy",
+      "high": "Often busy"
+    },
+    "budget": {
+      "low": "Free or low"
+    },
+    "stay": {
+      "minutes": "About {m}m",
+      "hours": "About {h}h",
+      "hoursMinutes": "About {h}h {m}m"
+    },
+    "fit": {
+      "great": "Great fit",
+      "good": "Good fit",
+      "fair": "Fair fit"
+    },
+    "placeType": {
+      "식음형": "Food",
+      "시장형": "Market",
+      "해양야경형": "Coast & night",
+      "문화역사형": "Culture"
+    },
+    "savedToast": "Added to Saved",
+    "savedToastAction": "View",
+    "removedToast": "Removed from Saved",
+    "undo": "Undo"
+  },
+  "nav": {
+    "forYou": "For you",
+    "saved": "Saved",
+    "me": "Me"
+  },
+  "feed": {
+    "title": "For you, now",
+    "yourType": "Your travel type",
+    "nowIn": "Busan · {weather} · as of {time}",
+    "weather": {
+      "sunny": "Clear",
+      "cloudy": "Cloudy",
+      "rainy": "Rain"
+    },
+    "sectionTitle": "Good for you right now",
+    "sortByMatch": "Best match",
+    "needQuiz": {
+      "title": "Tell us your style first",
+      "body": "Three choices, and we'll order places to fit you.",
+      "action": "Find your style"
+    },
+    "noResults": {
+      "title": "Nothing matches those conditions",
+      "body": "No place meets all of them. Dropping just one usually opens up a lot.",
+      "action": "Change conditions"
+    },
+    "nowInNoTime": "Busan · {weather}",
+    "loadFailed": {
+      "title": "Couldn't load places",
+      "body": "Check your connection and try again.",
+      "action": "Try again"
+    }
+  },
+  "saved": {
+    "title": "Saved",
+    "count": "{count} places",
+    "empty": {
+      "title": "Nothing saved yet",
+      "body": "Tap the bookmark on a place you like and it lands here. Saved on this device only.",
+      "action": "Browse recommendations"
+    },
+    "sortLabel": "Sort by",
+    "sort": {
+      "recent": "Recently saved",
+      "fit": "Best fit"
+    },
+    "filterLabel": "Filter by area",
+    "filterAll": "All",
+    "noneInDistrict": "Nothing saved in this area.",
+    "savedAt": {
+      "today": "Saved today",
+      "yesterday": "Saved yesterday",
+      "daysAgo": "Saved {d} days ago",
+      "date": "Saved {m}/{d}"
+    }
+  },
+  "me": {
+    "title": "You",
+    "travelStyle": "Travel style",
+    "notDiagnosed": "Not taken",
+    "tripConditions": "Trip conditions",
+    "conditionsSet": "Set",
+    "conditionsNone": "Not set",
+    "language": "Language",
+    "locale": {
+      "ko": "한국어",
+      "en": "English"
+    },
+    "about": "About",
+    "noAccount": "No account needed. Your result and saved places stay on this device.",
+    "retakeQuiz": "Retake the quiz",
+    "takeQuiz": "Take it"
+  }
+}

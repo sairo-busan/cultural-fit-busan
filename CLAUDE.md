@@ -57,8 +57,8 @@
 |---|---|
 | bg | `#FFFFFF` |
 | text | `#111213` |
-| accent (딥그린) | `#2A5A48` |
-| sub-accent (클레이) | `#A06A48` |
+| primary (잉크) | `#111213` — 브랜드색을 따로 두지 않고 잉크 농도로 위계를 만든다 |
+| danger / caution | `#A33A2A` / `#8A6320` |
 | 본문 | Noto Sans KR 300/200/400 |
 | 숫자·영문 강조 | Cormorant Garamond (serif) |
 
