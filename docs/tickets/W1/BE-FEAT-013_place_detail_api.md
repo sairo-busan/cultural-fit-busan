@@ -15,7 +15,7 @@
 | Type | FEAT |
 | Severity | Critical |
 | Layer | Lib / API / Script |
-| Status | In Progress |
+| Status | Done |
 | Owner | 에린 |
 | Depends | BE-FEAT-014(시트 재적재, PR#24) · BE-FEAT-012(nearbyPlaces) |
 | Related | FE-FEAT-010(S20 화면, `feat/s20-place-detail`) |
