@@ -11,6 +11,9 @@ type PlaceDoc = {
   mapX: number;
   mapY: number;
   firstImage: string | null;
+  /** TourAPI에 사진이 없는 곳(12곳 중 11곳, 9/16) 직접 소싱해 Vercel Blob에 올린 대체
+   * 사진 — upload-place-photos.ts. firstImage 없을 때만 폴백으로 쓴다. */
+  customImage?: string | null;
   images?: string[];
   homepage: string | null;
   overview: string | null;
@@ -159,7 +162,7 @@ async function computeRecommendations(contentTypeId?: string): Promise<Recommend
       addr2: place.addr2,
       mapX: place.mapX,
       mapY: place.mapY,
-      firstImage: place.firstImage,
+      firstImage: place.firstImage ?? place.customImage ?? null,
       images: place.images ?? [],
       homepage: place.homepage,
       overview: place.overview,
