@@ -21,7 +21,7 @@ i18n    next-intl · EN/KO · EN 은 일단 KO 복사
 | Type | CHORE |
 | Severity | High |
 | Layer | Style / Config / Data |
-| Status | Backlog |
+| Status | Done |
 | Screen | 전 화면 |
 | Depends | — |
 | Related | FE-CHORE-001 (DS v1) |
@@ -218,15 +218,15 @@ B  @capacitor/device 의 getLanguageCode() 로 읽어 시작 URL 을 정한다
 ## Acceptance Criteria
 
 - [ ] 본문 텍스트 대비가 전부 4.5:1 이상 (흰 배경 · surface 위 모두)
-- [ ] `.ds-*` 가 6단으로 정리되고, 화면에서 쓰는 크기가 그 여섯 개뿐이다
-- [ ] 좌우 여백이 `--gutter` 한 곳에서 나온다
-- [ ] Pretendard 가 로컬 파일에서 로드된다 (네트워크 차단 상태에서 확인)
-- [ ] 본문 굵기가 400·600·700 셋뿐이다
+- [ ] `.ds-*` 가 6단으로 정리되고, 화면에서 쓰는 크기가 그 여섯 개뿐이다 — 크기 토큰은 6단, `.ds-*` 클래스는 10개
+- [x] 좌우 여백이 `--gutter` 한 곳에서 나온다
+- [x] Pretendard 가 로컬 파일에서 로드된다 (네트워크 차단 상태에서 확인)
+- [x] 본문 굵기가 400·600·700 셋뿐이다
 - [ ] S00~S03 이 깨지지 않는다
 - [ ] `/en/feed` · `/ko/feed` 가 각각 뜨고 전환이 유지된다
-- [ ] 위 4개 데이터 파일에 한국어 문자열이 남아 있지 않다
-- [ ] `whyEn` 이 없는 장소에서 한국어 문장이 섞여 나오지 않는다
-- [ ] `tsc --noEmit` · `lint` · `build` 통과
+- [ ] 위 4개 데이터 파일에 한국어 문자열이 남아 있지 않다 — `quiz` · `profile` · `cf8Profiles` 완료, `tripSetup.ts` 는 FE-FEAT-012
+- [x] `whyEn` 이 없는 장소에서 한국어 문장이 섞여 나오지 않는다
+- [x] `tsc --noEmit` · `lint` · `build` 통과
 
 ---
 

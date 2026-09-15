@@ -16,7 +16,7 @@
 | Type | BUG |
 | Severity | Critical |
 | Layer | Hook / Lib |
-| Status | In Progress |
+| Status | Done |
 | Screen | S10 |
 | Depends | — |
 | Related | FE-FEAT-009 (S10 이 이 수정을 전제로 한다) |
@@ -148,11 +148,11 @@ try {
 
 ## Acceptance Criteria
 
-- [ ] `"CLD"`(따옴표 포함)로 저장돼 있어도 점수가 계산된다
-- [ ] 따옴표 없이 저장된 값도 그대로 통과한다
-- [ ] 49곳의 점수가 서로 다르다 (전부 같으면 엔진이 안 도는 것)
-- [ ] 유형을 바꾸면 순서가 바뀐다
-- [ ] `tsc --noEmit` · `lint` · `build` 통과
+- [x] `"CLD"`(따옴표 포함)로 저장돼 있어도 점수가 계산된다
+- [x] 따옴표 없이 저장된 값도 그대로 통과한다
+- [x] 49곳의 점수가 서로 다르다 (전부 같으면 엔진이 안 도는 것) — 16.7~100점, 서로 다른 값 10개
+- [x] 유형을 바꾸면 순서가 바뀐다
+- [x] `tsc --noEmit` · `lint` · `build` 통과
 
 ---
 

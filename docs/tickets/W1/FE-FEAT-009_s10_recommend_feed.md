@@ -20,7 +20,7 @@ S10    목록이 왜 이 순서인지 읽히게. 문장이 없어도 무너지�
 | Type | FEAT |
 | Severity | Critical |
 | Layer | Page / Component / Lib |
-| Status | In Progress |
+| Status | Done |
 | Screen | S10 · S40 저장 · S50 내 정보 |
 | Depends | FE-CHORE-002 (토큰 · i18n) · FE-BUG-001 (cf8_code) |
 | Related | FE-FEAT-006 (`useRecommendations`) — 티켓 파일 없음. 커밋 `f548505`·`5698024` 참고 |
