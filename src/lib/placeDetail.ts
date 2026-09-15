@@ -1,0 +1,168 @@
+/**
+ * 장소 상세(S20) 단건 조회 — BE-FEAT-013.
+ *
+ * places(TourAPI 원본) + score_board(DB_01, placeId 역참조용) + place_info(DB_02) +
+ * place_by_cf8(DB_03)을 contentId 하나 기준으로 조인한다. 목록(getRecommendations)과
+ * 달리 개인화·필터링이 없는 단순 조회다.
+ *
+ * operationInfo/engOperationInfo는 TourAPI 원본 객체를 그대로 저장해둔 거라 콘텐츠
+ * 타입마다 키 이름이 다르다(BE-FEAT-013 티켓 Context 참고) — 여기서 우선순위 목록으로
+ * 골라 화면이 바로 쓸 문자열 하나로 정리한다.
+ */
+
+import { getDb } from "@/lib/mongodb";
+
+type OperationInfo = Record<string, string>;
+
+type PlaceDoc = {
+  _id: string;
+  contentTypeId: string;
+  title: string;
+  addr1: string;
+  mapX: number;
+  mapY: number;
+  firstImage: string | null;
+  images?: string[];
+  operationInfo?: OperationInfo;
+  accessibilityInfo?: Record<string, string> | null;
+  engContentId?: string;
+  engOperationInfo?: OperationInfo;
+};
+
+type ScoreBoardRow = { placeId: string; contentId: string | null };
+
+type PlaceInfoDoc = {
+  placeId: string;
+  placeName: string | null;
+  placeNameEn?: string | null;
+  placeDesc: string | null;
+  placeDescEn?: string | null;
+  guideDetailKo?: string | null;
+  guideEn?: string | null;
+  /** "관람 순서: …\n사진 포인트: …\n유의사항: …" 원문 그대로 (BE-FEAT-014) */
+  guideTipsRawKo?: string | null;
+};
+
+type PlaceByCf8Doc = { cf8Code: string; placeId: string; recommendationReason: string | null };
+
+export type PlaceDetail = {
+  contentId: string;
+  addr1: string;
+  mapX: number;
+  mapY: number;
+  images: string[];
+  nameKo: string;
+  nameEn: string | null;
+  descKo: string | null;
+  descEn: string | null;
+  reasonByCf8: Record<string, string | null>;
+  guideDetailKo: string | null;
+  guideEn: string | null;
+  tipsKo: { route: string | null; photo: string | null; caution: string | null };
+  hours: string | null;
+  closedDays: string | null;
+  hoursEn: string | null;
+  closedDaysEn: string | null;
+  phone: string | null;
+  accessibility: { key: string; text: string }[];
+};
+
+const HOURS_KEYS = ["usetime", "usetimeculture", "opentime", "usetimeleports"];
+const CLOSED_KEYS = ["restdate", "restdateculture", "restdateshopping", "restdateleports"];
+const PHONE_KEYS = ["infocenter", "infocenterculture", "infocentershopping", "infocenterleports"];
+
+/** <br> → 줄바꿈, 앞뒤 공백 제거. 후보 키 중 값이 있는 첫 번째를 쓴다. */
+function pickOperationValue(info: OperationInfo | undefined, keys: string[]): string | null {
+  if (!info) return null;
+  for (const key of keys) {
+    const raw = info[key];
+    if (raw && raw.trim() !== "") {
+      return raw.replace(/<br\s*\/?>/gi, "\n").trim();
+    }
+  }
+  return null;
+}
+
+/** 영문 값 중 `N/A (Open all year round)` 식으로 오는 걸 괄호 안만 남긴다. */
+function cleanEnglishValue(value: string | null): string | null {
+  if (!value) return null;
+  const match = value.match(/^N\/A\s*\(([^)]*)\)$/i);
+  return match ? match[1].trim() : value;
+}
+
+/** "라벨: 값" 줄 3개짜리 원문을 {route, photo, caution}으로 분리한다. */
+function parseTips(raw: string | null | undefined): PlaceDetail["tipsKo"] {
+  const empty = { route: null, photo: null, caution: null };
+  if (!raw) return empty;
+
+  const lines = raw.split("\n");
+  const pick = (label: string) => {
+    const line = lines.find((l) => l.trim().startsWith(label));
+    return line ? line.trim().slice(label.length).trim() : null;
+  };
+  return {
+    route: pick("관람 순서:"),
+    photo: pick("사진 포인트:"),
+    caution: pick("유의사항:"),
+  };
+}
+
+/** http:// → https:// (secureImageUrl 동등 로직 — main의 PR#18 병합 전이라 직접 둔다) */
+function toHttps(url: string): string {
+  return url.replace(/^http:\/\//, "https://");
+}
+
+export async function getPlaceDetail(contentId: string): Promise<PlaceDetail | null> {
+  const db = await getDb();
+
+  const place = await db.collection<PlaceDoc>("places").findOne({ _id: contentId });
+  if (!place) return null;
+
+  const score = await db.collection<ScoreBoardRow>("score_board").findOne({ contentId });
+  const placeId = score?.placeId;
+
+  const [info, reasonDocs] = await Promise.all([
+    placeId ? db.collection<PlaceInfoDoc>("place_info").findOne({ placeId }) : Promise.resolve(null),
+    placeId
+      ? db.collection<PlaceByCf8Doc>("place_by_cf8").find({ placeId }).toArray()
+      : Promise.resolve([]),
+  ]);
+
+  const reasonByCf8: Record<string, string | null> = {};
+  for (const r of reasonDocs) reasonByCf8[r.cf8Code] = r.recommendationReason;
+
+  const images = Array.from(
+    new Set([place.firstImage, ...(place.images ?? [])].filter((u): u is string => !!u))
+  ).map(toHttps);
+
+  const accessibility = Object.entries(place.accessibilityInfo ?? {})
+    .filter(([key, text]) => key !== "contentid" && typeof text === "string" && text.trim() !== "")
+    .map(([key, text]) => ({ key, text }));
+
+  return {
+    contentId: place._id,
+    addr1: place.addr1,
+    mapX: place.mapX,
+    mapY: place.mapY,
+    images,
+
+    nameKo: info?.placeName ?? place.title,
+    nameEn: info?.placeNameEn ?? null,
+    descKo: info?.placeDesc ?? null,
+    descEn: info?.placeDescEn ?? null,
+
+    reasonByCf8,
+
+    guideDetailKo: info?.guideDetailKo ?? null,
+    guideEn: info?.guideEn ?? null,
+    tipsKo: parseTips(info?.guideTipsRawKo),
+
+    hours: pickOperationValue(place.operationInfo, HOURS_KEYS),
+    closedDays: pickOperationValue(place.operationInfo, CLOSED_KEYS),
+    hoursEn: cleanEnglishValue(pickOperationValue(place.engOperationInfo, HOURS_KEYS)),
+    closedDaysEn: cleanEnglishValue(pickOperationValue(place.engOperationInfo, CLOSED_KEYS)),
+    phone: pickOperationValue(place.operationInfo, PHONE_KEYS),
+
+    accessibility,
+  };
+}
