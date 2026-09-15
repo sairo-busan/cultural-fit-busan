@@ -13,6 +13,9 @@
     "build:app": "bash scripts/build-app.sh"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/cli": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
     "@radix-ui/react-radio-group": "^1.4.7",
     "@vercel/blob": "^2.8.0",
     "lucide-react": "^1.33.0",
