@@ -48,7 +48,8 @@ for path in "${EXCLUDE[@]}"; do
 done
 
 rm -rf .next out
-BUILD_TARGET=app npx next build
+# 상세 라우트를 뺐으니 목록 행도 링크를 그리지 않는다
+BUILD_TARGET=app NEXT_PUBLIC_DETAIL_ENABLED=false npx next build
 
 # ── 루트 진입점 ─────────────────────────────────────────────────
 #
@@ -59,24 +60,38 @@ BUILD_TARGET=app npx next build
 # 새로 만들어야 하고, 그러면 웹에서도 `/` 라우트가 생겨 `proxy.ts` 와 경합한다.
 # 앱 산출물에만 파일 하나를 얹는 쪽이 웹을 건드리지 않는다.
 #
-# 기본은 `en` 이다. 타겟이 부산에 도착한 외국인이라, 한국어 기기만 `ko` 로 보낸다.
+# 기본은 `ko` 다. 영어 기기만 `en` 으로 보낸다.
+#
+# Capacitor 는 확장자 없는 경로(`/en/`, `/en/feed/`)를 받으면 **항상 이 루트 파일**을
+# 돌려준다(WebViewLocalServer html5mode). 그래서 `/` 가 아니면 언어를 다시 고르지 않고
+# 실제 파일(`…/index.html`)로 보낸다. 그러지 않으면 `/en/` → 루트 → `/en/en/` 로 돈다.
 cat > out/index.html <<'HTML'
 <!doctype html>
-<html lang="en">
+<html lang="ko">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cultural Fit Busan</title>
+<title>SAIRO</title>
 </head>
 <body>
 <script>
-  var lang = (navigator.language || "en").toLowerCase();
-  location.replace(lang.indexOf("ko") === 0 ? "./ko/" : "./en/");
+  var path = location.pathname;
+  if (path === "/") {
+    var lang = (navigator.language || "ko").toLowerCase().indexOf("en") === 0 ? "en" : "ko";
+    location.replace("/" + lang + "/index.html");
+  } else {
+    location.replace(path.replace(/\/?$/, "/") + "index.html" + location.search + location.hash);
+  }
 </script>
-<noscript><a href="./en/">Continue</a></noscript>
+<noscript><a href="/ko/index.html">계속</a></noscript>
 </body>
 </html>
 HTML
+
+# 위에서 `…/index.html` 로 열린 페이지가 주소에서 `index.html` 을 뗀다. Next 가 뜨기 전에
+# 돌아야 라우터가 `/en/` 으로 읽는다 — `<head>` 맨 앞에 넣는다.
+STRIP='<script>if(location.pathname.slice(-11)==="/index.html")history.replaceState(null,"",location.pathname.slice(0,-10)+location.search+location.hash)</script>'
+find out -mindepth 2 -name index.html -print0 | xargs -0 perl -0777 -pi -e "s#<head>#<head>${STRIP}#"
 
 echo
 echo "정적 파일: out/  (API 기준 주소: $NEXT_PUBLIC_API_BASE)"
