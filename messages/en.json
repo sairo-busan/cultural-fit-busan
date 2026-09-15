@@ -118,5 +118,87 @@
     "noAccount": "No account needed. Your result and saved places stay on this device.",
     "retakeQuiz": "Retake the quiz",
     "takeQuiz": "Take it"
+  },
+  "placeDetail": {
+    "back": "Back",
+    "photoCount": "{n} / {total}",
+    "photos": "Photos of {name}",
+    "prevPhoto": "Previous photo",
+    "nextPhoto": "Next photo",
+    "fitTitle": "Why this fits you",
+    "facts": {
+      "hours": "Hours",
+      "closedDays": "Closed",
+      "indoorOutdoor": "Indoor or outdoor",
+      "pet": "Pets",
+      "phone": "Phone",
+      "accessibility": "Accessibility",
+      "accessibilityYes": "Facilities listed",
+      "none": "No information"
+    },
+    "placeType": {
+      "역사·문화": "History & culture",
+      "전망·야경": "Views & night",
+      "해변·해안": "Beach & coast",
+      "자연·공원": "Nature & parks",
+      "시장·먹거리": "Markets & food",
+      "문화·관광": "Culture & sights",
+      "체험·시설": "Activities",
+      "종교·사찰": "Temples",
+      "휴식·웰니스": "Rest & wellness",
+      "도시·거리": "Streets",
+      "쇼핑": "Shopping"
+    },
+    "pet": {
+      "yes": "Allowed",
+      "no": "Not allowed"
+    },
+    "guideTitle": "Culture guide",
+    "tipsTitle": "Easy to miss",
+    "tips": {
+      "photo": "Photo spot",
+      "caution": "Heads-up"
+    },
+    "accessibilityTitle": "Accessibility",
+    "accessibility": {
+      "parking": "Parking",
+      "wheelchair": "Wheelchair",
+      "exit": "Entrance",
+      "elevator": "Elevator",
+      "restroom": "Restroom",
+      "route": "Route",
+      "stroller": "Stroller",
+      "lactationroom": "Nursing room",
+      "infantsfamilyetc": "Families with infants",
+      "handicapetc": "Other mobility",
+      "publictransport": "Public transport",
+      "ticketoffice": "Ticket office",
+      "auditorium": "Seating",
+      "helpdog": "Assistance dogs",
+      "guidehuman": "Staff guide",
+      "audioguide": "Audio guide",
+      "braileblock": "Tactile paving",
+      "brailepromotion": "Braille materials",
+      "blindhandicapetc": "Other visual",
+      "hearinghandicapetc": "Other hearing"
+    },
+    "nearbyTitle": "Also worth a visit",
+    "walkAbout": "About {m} min walk",
+    "distanceKm": "{km} km",
+    "map": "Map",
+    "save": "Save",
+    "saved": "Saved",
+    "newWindow": "opens in a new window",
+    "source": "Photos, hours and accessibility — Korea Tourism Organization TourAPI",
+    "notFound": {
+      "title": "Place not found",
+      "body": "The list may have changed.",
+      "action": "Back to For you"
+    },
+    "loadFailed": {
+      "title": "Couldn't load this place",
+      "body": "Check your connection and try again.",
+      "action": "Try again"
+    }
   }
 }

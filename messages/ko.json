@@ -118,5 +118,87 @@
     "noAccount": "계정이 없습니다. 진단 결과와 저장한 곳은 이 기기에만 남습니다.",
     "retakeQuiz": "취향 진단 다시 하기",
     "takeQuiz": "진단하기"
+  },
+  "placeDetail": {
+    "back": "뒤로",
+    "photoCount": "{n} / {total}",
+    "photos": "{name} 사진",
+    "prevPhoto": "이전 사진",
+    "nextPhoto": "다음 사진",
+    "fitTitle": "이 곳이 맞는 이유",
+    "facts": {
+      "hours": "영업시간",
+      "closedDays": "휴무일",
+      "indoorOutdoor": "실내·야외",
+      "pet": "반려동물",
+      "phone": "전화",
+      "accessibility": "이동 편의",
+      "accessibilityYes": "안내 있음",
+      "none": "정보 없음"
+    },
+    "placeType": {
+      "역사·문화": "역사·문화",
+      "전망·야경": "전망·야경",
+      "해변·해안": "해변·해안",
+      "자연·공원": "자연·공원",
+      "시장·먹거리": "시장·먹거리",
+      "문화·관광": "문화·관광",
+      "체험·시설": "체험·시설",
+      "종교·사찰": "종교·사찰",
+      "휴식·웰니스": "휴식·웰니스",
+      "도시·거리": "도시·거리",
+      "쇼핑": "쇼핑"
+    },
+    "pet": {
+      "yes": "동반 가능",
+      "no": "동반 불가"
+    },
+    "guideTitle": "문화 가이드",
+    "tipsTitle": "놓치기 쉬운 것",
+    "tips": {
+      "photo": "사진 포인트",
+      "caution": "유의사항"
+    },
+    "accessibilityTitle": "이동 편의 안내",
+    "accessibility": {
+      "parking": "주차",
+      "wheelchair": "휠체어",
+      "exit": "출입구",
+      "elevator": "엘리베이터",
+      "restroom": "화장실",
+      "route": "이동 경로",
+      "stroller": "유아차",
+      "lactationroom": "수유실",
+      "infantsfamilyetc": "영유아 가족",
+      "handicapetc": "지체장애 기타",
+      "publictransport": "대중교통",
+      "ticketoffice": "매표소",
+      "auditorium": "관람석",
+      "helpdog": "보조견",
+      "guidehuman": "안내 요원",
+      "audioguide": "음성 안내",
+      "braileblock": "점자블록",
+      "brailepromotion": "점자 안내물",
+      "blindhandicapetc": "시각장애 기타",
+      "hearinghandicapetc": "청각장애 기타"
+    },
+    "nearbyTitle": "함께 둘러볼 곳",
+    "walkAbout": "도보 약 {m}분",
+    "distanceKm": "{km}km",
+    "map": "지도 보기",
+    "save": "저장하기",
+    "saved": "저장됨",
+    "newWindow": "새 창에서 열림",
+    "source": "사진 · 영업 · 이동 편의 정보 — 한국관광공사 TourAPI",
+    "notFound": {
+      "title": "장소를 찾을 수 없어요",
+      "body": "목록이 바뀌었을 수 있어요.",
+      "action": "추천으로"
+    },
+    "loadFailed": {
+      "title": "불러오지 못했어요",
+      "body": "연결을 확인하고 다시 시도해 주세요.",
+      "action": "다시 시도"
+    }
   }
 }
