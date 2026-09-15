@@ -49,7 +49,8 @@ export type Place = {
   eventEndDate: string | null;
 
   weatherType: "indoor" | "outdoor" | "mixed" | null; // mixed = 실내외 겸용(예: 자갈치시장). 정본 시트 실데이터 값 기준
-  /** DB_01 신규 컬럼(9/15, 유나 추가·120곳 태깅 완료) */
+  /** DB_01 신규 컬럼(9/15, 유나 추가·120곳 태깅 완료). "쇼핑"은 9/16 추가
+   * 결정(광복로패션거리 등 10종 밖 값이 나와서 11번째 카테고리로 편입) */
   placeType:
     | "역사·문화"
     | "전망·야경"
@@ -61,6 +62,7 @@ export type Place = {
     | "종교·사찰"
     | "휴식·웰니스"
     | "도시·거리"
+    | "쇼핑"
     | null;
   /** DB_01 신규 컬럼(9/15, 유나 추가) — petAllowed=false면 "동반 불가", true면 실제 이용조건 원문 */
   petCondition: string | null;
