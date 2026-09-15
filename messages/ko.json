@@ -129,11 +129,11 @@
     "facts": {
       "hours": "영업시간",
       "closedDays": "휴무일",
-      "rain": "비 올 때",
+      "indoorOutdoor": "실내·야외",
       "pet": "반려동물",
       "phone": "전화",
-      "accessibility": "무장애",
-      "accessibilityYes": "시설 안내 있음",
+      "accessibility": "이동 편의",
+      "accessibilityYes": "안내 있음",
       "none": "정보 없음"
     },
     "placeType": {
@@ -149,11 +149,6 @@
       "도시·거리": "도시·거리",
       "쇼핑": "쇼핑"
     },
-    "rain": {
-      "indoor": "완전 실내",
-      "mixed": "일부 실내",
-      "outdoor": "야외"
-    },
     "pet": {
       "yes": "동반 가능",
       "no": "동반 불가"
@@ -165,7 +160,7 @@
       "photo": "사진 포인트",
       "caution": "유의사항"
     },
-    "accessibilityTitle": "이동 약자 안내",
+    "accessibilityTitle": "이동 편의 안내",
     "accessibility": {
       "parking": "주차",
       "wheelchair": "휠체어",
@@ -192,9 +187,10 @@
     "walkAbout": "도보 약 {m}분",
     "distanceKm": "{km}km",
     "map": "지도 보기",
-    "directions": "길찾기",
+    "save": "저장하기",
+    "saved": "저장됨",
     "newWindow": "새 창에서 열림",
-    "source": "사진 · 영업 · 무장애 정보 — 한국관광공사 TourAPI",
+    "source": "사진 · 영업 · 이동 편의 정보 — 한국관광공사 TourAPI",
     "notFound": {
       "title": "장소를 찾을 수 없어요",
       "body": "목록이 바뀌었을 수 있어요.",

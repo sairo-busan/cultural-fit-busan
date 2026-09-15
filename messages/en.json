@@ -129,7 +129,7 @@
     "facts": {
       "hours": "Hours",
       "closedDays": "Closed",
-      "rain": "If it rains",
+      "indoorOutdoor": "Indoor or outdoor",
       "pet": "Pets",
       "phone": "Phone",
       "accessibility": "Accessibility",
@@ -148,11 +148,6 @@
       "휴식·웰니스": "Rest & wellness",
       "도시·거리": "Streets",
       "쇼핑": "Shopping"
-    },
-    "rain": {
-      "indoor": "Fully indoor",
-      "mixed": "Partly indoor",
-      "outdoor": "Outdoor"
     },
     "pet": {
       "yes": "Allowed",
@@ -192,7 +187,8 @@
     "walkAbout": "About {m} min walk",
     "distanceKm": "{km} km",
     "map": "Map",
-    "directions": "Directions",
+    "save": "Save",
+    "saved": "Saved",
     "newWindow": "opens in a new window",
     "source": "Photos, hours and accessibility — Korea Tourism Organization TourAPI",
     "notFound": {
