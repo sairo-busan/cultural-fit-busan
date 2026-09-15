@@ -15,8 +15,9 @@ const mongoUri = process.env.MONGODB_URI;
 if (!mongoUri) throw new Error("MONGODB_URI가 설정되지 않았습니다");
 
 const ADDR_EN: Record<string, string> = {
-  "1046349": "61 Sincheondae-ro 62beon-gil, Busanjin-gu, Busan",
-  "1250885": "7 Gupojang 2-gil, Buk-gu, Busan",
+  // 9/16 소피 리뷰로 4곳 교정 — 실제 TourAPI 영문판·기존 공식 로마자 표기 대조
+  "1046349": "61 Sincheon-daero 62beon-gil, Busanjin-gu, Busan",
+  "1250885": "7 Gupo Sijang 2-gil, Buk-gu, Busan",
   "126028": "Geumseong-dong, Geumjeong-gu, Busan",
   "126098": "Samseong-ri, Ilgwang-eup, Gijang-gun, Busan",
   "126119": "295 Saessak-ro, Busanjin-gu, Busan",
@@ -25,12 +26,12 @@ const ADDR_EN: Record<string, string> = {
   "126857": "72-1 Gwangbok-ro, Jung-gu, Busan",
   "127149": "19 Minjugongwon-gil, Jung-gu, Busan",
   "127771": "43 Suyeongseong-ro, Suyeong-gu, Busan",
-  "128053": "138 Baekyangsan-ro, Busanjin-gu, Busan",
+  "128053": "138 Baegyangsan-ro, Busanjin-gu, Busan",
   "128108": "324 Cheyukgongwon-ro 399beon-gil, Geumjeong-gu, Busan",
   "129140": "Gwangan-dong, Suyeong-gu, Busan",
   "129156": "10 Oeyangpo-ro, Gangseo-gu, Busan",
   "130145": "66 Bokcheon-ro, Dongnae-gu, Busan",
-  "130252": "175 Woojangchun-ro, Dongnae-gu, Busan",
+  "130252": "175 Ujangchun-ro, Dongnae-gu, Busan",
   "132576": "42 Jagalchi-ro, Jung-gu, Busan",
   "1607655": "202 Chungmu-daero, Seo-gu, Busan",
   "1608530": "45 Imsisudoginyeom-ro, Seo-gu, Busan",
