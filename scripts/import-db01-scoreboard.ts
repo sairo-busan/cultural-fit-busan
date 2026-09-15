@@ -20,9 +20,40 @@
 
 import path from "node:path";
 import { MongoClient } from "mongodb";
-import { readSheetCsvFile, makeColumnReader, toNum, toStr } from "./lib/csv";
+import { readSheetCsvFile, makeColumnReader, toNum, toStr, toTriState } from "./lib/csv";
 
 const CSV_PATH = path.join(__dirname, "..", "docs/_internal/scratch/DB01.csv");
+
+/**
+ * 기대 헤더 — 시트에서 이름이 한 글자라도 바뀌면 col()이 undefined를 주고 그 축이
+ * 조용히 120행 전부 null로 빠진다(#19 PR 리뷰 코멘트). 시작할 때 한 번 확인한다.
+ */
+const REQUIRED_HEADERS = [
+  "관리ID (place_id)",
+  "장소명",
+  "대표컨텐츠ID",
+  "차분함",
+  "에너지",
+  "로컬",
+  "대표명소",
+  "깊게머무름",
+  "다양하게경험",
+  "혼자",
+  "친구/연인",
+  "부모님",
+  "아이",
+  "반려동물",
+  "맑음",
+  "비",
+  "흐림",
+  "봄",
+  "여름",
+  "가을",
+  "겨울",
+  "오전",
+  "오후",
+  "저녁",
+];
 
 const mongoUri = process.env.MONGODB_URI;
 if (!mongoUri) throw new Error("MONGODB_URI가 설정되지 않았습니다");
@@ -32,6 +63,11 @@ async function main() {
   const rows = readSheetCsvFile(CSV_PATH);
   const header = rows[0];
   const col = makeColumnReader(header);
+
+  const missingHeaders = REQUIRED_HEADERS.filter((h) => !header.includes(h));
+  if (missingHeaders.length > 0) {
+    throw new Error(`DB_01 헤더 없음: ${missingHeaders.join(", ")} — 시트 헤더가 바뀌었는지 확인`);
+  }
 
   // place_id가 "plc_"로 시작하지 않는 행(빈 줄 등)은 걸러낸다
   const dataRows = rows.slice(1).filter((r) => col(r, "관리ID (place_id)")?.trim().startsWith("plc_"));
@@ -81,8 +117,7 @@ async function main() {
       indoorOutdoor: toStr(indoorOutdoorRaw)?.toUpperCase() ?? null,
     };
     if (petAllowedRaw && petAllowedRaw.trim() !== "") {
-      const t = petAllowedRaw.trim().toUpperCase();
-      set.petAllowed = t === "Y" || t === "TRUE" ? true : t === "N" || t === "FALSE" ? false : null;
+      set.petAllowed = toTriState(petAllowedRaw);
     }
 
     return {

@@ -58,7 +58,17 @@ export function parseCsv(text: string): string[][] {
  *   curl -sL "https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={GID}" -o docs/_internal/scratch/DB0N.csv
  */
 export function readSheetCsvFile(path: string): string[][] {
-  const text = fs.readFileSync(path, "utf-8");
+  let text: string;
+  try {
+    text = fs.readFileSync(path, "utf-8");
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+      throw new Error(
+        `CSV 파일 없음: ${path} — 스크립트 상단 주석의 curl 명령으로 먼저 받아야 함 (docs/_internal/scratch/는 .gitignore 대상)`
+      );
+    }
+    throw err;
+  }
   if (!text || text.length < 10) throw new Error(`CSV 파일이 비어 있음: ${path}`);
   return parseCsv(text);
 }
