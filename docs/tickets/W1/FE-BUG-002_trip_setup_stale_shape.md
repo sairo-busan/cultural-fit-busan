@@ -17,7 +17,7 @@
 | Type | BUG |
 | Severity | High |
 | Layer | Data |
-| Status | In Progress |
+| Status | Done |
 | Screen | S03 |
 | Depends | — |
 | Related | FE-BUG-001 (같은 부류 — 저장값을 안 씻는다) · FE-FEAT-008 (모양을 바꾼 쪽) · BE-FEAT-011 (S10 경로 담당) |
