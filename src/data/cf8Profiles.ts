@@ -323,7 +323,7 @@ export const CF8_PROFILES: Record<Locale, Record<Cf8Code, Cf8ProfileCopy>> = {
       },
     },
     ELV: {
-      profileName: "Vivid Local Runner",
+      profileName: "Lively Local Explorer",
       resultIntro:
         "You move lightly through Busan's markets and neighbourhoods, enjoying how the energy changes street to street.",
       recommendationPromise:
@@ -345,7 +345,7 @@ export const CF8_PROFILES: Record<Locale, Record<Cf8Code, Cf8ProfileCopy>> = {
       },
     },
     EFD: {
-      profileName: "Hotspot Relaxer",
+      profileName: "Lively Landmark Admirer",
       resultIntro:
         "You are happiest taking in the energy, the views and the sheer amount to see at Busan's landmarks.",
       recommendationPromise:
@@ -367,7 +367,7 @@ export const CF8_PROFILES: Record<Locale, Record<Cf8Code, Cf8ProfileCopy>> = {
       },
     },
     EFV: {
-      profileName: "Landmark Hopper",
+      profileName: "Popular Landmark Hopper",
       resultIntro:
         "You seek out Busan's landmarks and the scenes everyone talks about, taking in as many sides of the city as you can.",
       recommendationPromise:
