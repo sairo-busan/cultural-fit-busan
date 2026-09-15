@@ -123,6 +123,9 @@
   "placeDetail": {
     "back": "Back",
     "photoCount": "{n} / {total}",
+    "photos": "Photos of {name}",
+    "prevPhoto": "Previous photo",
+    "nextPhoto": "Next photo",
     "fitTitle": "Why this fits you",
     "facts": {
       "hours": "Hours",

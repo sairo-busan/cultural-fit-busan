@@ -1,9 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { EmptyState } from "@/components/common/EmptyState";
+import { SaveButton } from "@/components/place/SaveButton";
+import { useSavedPlaces } from "@/hooks/useSavedPlaces";
+import { useRouter } from "@/i18n/navigation";
+import { secureImageUrl } from "@/lib/placeDisplay";
 import { PlaceSkeleton } from "./PlaceSkeleton";
 import type { Locale } from "@/i18n/routing";
 import type { PlaceDetail } from "@/types/place";
@@ -23,6 +28,8 @@ export function PlaceContent() {
   const { id } = useParams<{ id: string }>();
   const locale = useLocale() as Locale;
   const t = useTranslations("placeDetail");
+
+  const { ids: savedIds, toggle } = useSavedPlaces();
 
   const [load, setLoad] = useState<Load>({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
@@ -86,8 +93,139 @@ export function PlaceContent() {
   const name = locale === "en" ? (place.nameEn ?? place.nameKo) : place.nameKo;
 
   return (
-    <article className="screen pt-safe-header pb-12">
-      <h1 className="ds-headline mt-6">{name}</h1>
+    <article className="pb-12">
+      <Hero
+        images={place.images}
+        name={name}
+        saved={savedIds.has(place.contentId)}
+        onToggleSave={() => toggle(place.contentId)}
+      />
+      <div className="screen">
+        <h1 className="ds-headline mt-6">{name}</h1>
+      </div>
     </article>
+  );
+}
+
+/**
+ * 사진 갤러리 — 화면 끝까지 채우고, 버튼은 사진 위에 흰 원으로 올린다.
+ *
+ * 흰 원 위 먹색 아이콘이라 사진 밝기와 무관하게 읽힌다. 목록 행의 스크림 방식은
+ * 22px 아이콘 하나를 위한 것이라, 48px 버튼 두 개를 올리는 여기엔 맞지 않는다.
+ */
+function Hero({
+  images,
+  name,
+  saved,
+  onToggleSave,
+}: {
+  images: string[];
+  name: string;
+  saved: boolean;
+  onToggleSave: () => void;
+}) {
+  const t = useTranslations("placeDetail");
+  const tPlace = useTranslations("place");
+  const router = useRouter();
+  const [index, setIndex] = useState(0);
+  const scroller = useRef<HTMLDivElement>(null);
+
+  // 링크를 직접 열고 들어오면 돌아갈 기록이 없다
+  const back = () => (window.history.length > 1 ? router.back() : router.push("/feed"));
+
+  /** 스와이프가 없는 입력(키보드 · 마우스)을 위한 한 장씩 넘기기 */
+  const go = (to: number) => {
+    const el = scroller.current;
+    if (!el) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollTo({ left: to * el.clientWidth, behavior: reduce ? "auto" : "smooth" });
+  };
+
+  const hasMany = images.length > 1;
+  const arrow =
+    "absolute top-1/2 hidden size-10 -translate-y-1/2 place-items-center rounded-full bg-ink/65 text-white pointer-fine:grid";
+
+  return (
+    // 포커스 테두리는 사진 위에 겹쳐 그린다. 전역 테두리는 바깥쪽이라 화면 끝에서 잘린다
+    <div className="relative aspect-[4/3] w-full bg-surface has-[[role=region]:focus-visible]:after:pointer-events-none has-[[role=region]:focus-visible]:after:absolute has-[[role=region]:focus-visible]:after:inset-0 has-[[role=region]:focus-visible]:after:shadow-[inset_0_0_0_3px_#fff,inset_0_0_0_5px_var(--ink)] has-[[role=region]:focus-visible]:after:content-['']">
+      {images.length > 0 ? (
+        <div
+          ref={scroller}
+          tabIndex={hasMany ? 0 : undefined}
+          role="region"
+          aria-label={t("photos", { name })}
+          className="flex size-full snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] focus-visible:outline-none! [&::-webkit-scrollbar]:hidden"
+          onScroll={(e) => {
+            const el = e.currentTarget;
+            setIndex(Math.round(el.scrollLeft / el.clientWidth));
+          }}
+          onKeyDown={(e) => {
+            if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+            e.preventDefault();
+            go(Math.min(images.length - 1, Math.max(0, index + (e.key === "ArrowRight" ? 1 : -1))));
+          }}
+        >
+          {images.map((src, i) => (
+            <div key={src} className="relative size-full shrink-0 snap-center">
+              <Image
+                src={secureImageUrl(src)}
+                alt={i === 0 ? name : ""}
+                fill
+                sizes="100vw"
+                className="object-cover"
+                loading={i === 0 ? "eager" : "lazy"}
+                fetchPriority={i === 0 ? "high" : "auto"}
+              />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid size-full place-items-center">
+          <span className="ds-serif ds-body-2 italic text-sub">{tPlace("noPhoto")}</span>
+        </div>
+      )}
+
+      <div className="absolute inset-x-3 top-[calc(12px+env(safe-area-inset-top,0px))] flex justify-between">
+        <button
+          type="button"
+          onClick={back}
+          aria-label={t("back")}
+          className="grid size-12 place-items-center rounded-full bg-white/95 text-ink transition-transform active:scale-95"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} className="size-5" aria-hidden>
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </button>
+        <SaveButton
+          saved={saved}
+          onToggle={onToggleSave}
+          placeName={name}
+          onScrim={false}
+          className="rounded-full bg-white/95"
+        />
+      </div>
+
+      {/* 마우스 · 트랙패드에서만. 터치 기기에서는 스와이프가 있고 목업에도 없다 */}
+      {hasMany && index > 0 && (
+        <button type="button" onClick={() => go(index - 1)} aria-label={t("prevPhoto")} className={`${arrow} left-3`}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} className="size-5" aria-hidden>
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </button>
+      )}
+      {hasMany && index < images.length - 1 && (
+        <button type="button" onClick={() => go(index + 1)} aria-label={t("nextPhoto")} className={`${arrow} right-3`}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} className="size-5" aria-hidden>
+            <path d="M9 18l6-6-6-6" />
+          </svg>
+        </button>
+      )}
+
+      {hasMany && (
+        <span className="absolute right-3 bottom-3 rounded-full bg-ink/65 px-3 py-1 text-[11px] font-semibold text-white tabular-nums">
+          {t("photoCount", { n: index + 1, total: images.length })}
+        </span>
+      )}
+    </div>
   );
 }

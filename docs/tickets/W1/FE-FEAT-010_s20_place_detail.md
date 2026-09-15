@@ -153,7 +153,10 @@ FE-FEAT-009 와 같이 `page.tsx` · `PlaceContent.tsx` · `PlaceSkeleton.tsx` �
 ### Step 3: 히어로
 
 가로 `scroll-snap` 갤러리. 2장 이상일 때만 `n / N`.
-뒤로(기록 없으면 추천으로) · 저장(`useSavedPlaces` · `SaveButton onScrim`).
+뒤로(기록 없으면 추천으로) · 저장(`useSavedPlaces` · `SaveButton`).
+
+스와이프가 없는 입력도 넘길 수 있게 한다 — 마우스 · 트랙패드에서만 좌우 화살표(`pointer-fine`),
+키보드는 갤러리에 포커스 후 ← →. 폰 화면은 목업 그대로다.
 
 ### Step 4: 머리 · 이유 · 그리드
 
@@ -249,7 +252,7 @@ Step 마다 검토를 받고 다음으로 간다.
 
 - [x] Step 1 계약 타입 · 로컬 픽스처 · 화면 문구
 - [x] Step 2 화면 뼈대 · 상태
-- [ ] Step 3 히어로 · 저장
+- [x] Step 3 히어로 · 저장
 - [ ] Step 4 머리 · 이유 · 그리드
 - [ ] Step 5 문화 가이드 · 무장애 · 함께 둘러볼 곳 · CTA
 - [ ] Step 6 BE-FEAT-013 도착 후 실데이터 검증 · `mock-places.ts` 삭제(#20 이 수정 중이라 머지 뒤)
