@@ -129,10 +129,34 @@
     "facts": {
       "hours": "Hours",
       "closedDays": "Closed",
+      "rain": "If it rains",
+      "pet": "Pets",
       "phone": "Phone",
       "accessibility": "Accessibility",
       "accessibilityYes": "Facilities listed",
       "none": "No information"
+    },
+    "placeType": {
+      "역사·문화": "History & culture",
+      "전망·야경": "Views & night",
+      "해변·해안": "Beach & coast",
+      "자연·공원": "Nature & parks",
+      "시장·먹거리": "Markets & food",
+      "문화·관광": "Culture & sights",
+      "체험·시설": "Activities",
+      "종교·사찰": "Temples",
+      "휴식·웰니스": "Rest & wellness",
+      "도시·거리": "Streets",
+      "쇼핑": "Shopping"
+    },
+    "rain": {
+      "indoor": "Fully indoor",
+      "mixed": "Partly indoor",
+      "outdoor": "Outdoor"
+    },
+    "pet": {
+      "yes": "Allowed",
+      "no": "Not allowed"
     },
     "guideTitle": "Culture guide",
     "tipsTitle": "Easy to miss",

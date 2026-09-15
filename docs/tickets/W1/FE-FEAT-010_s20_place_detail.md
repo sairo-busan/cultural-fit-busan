@@ -17,7 +17,7 @@ S20   갈지 말지 판단하는 허브. 목업 값을 걷어내고 Model B 데�
 | Layer | Page / Component / Type |
 | Status | In Progress |
 | Screen | S20 |
-| Depends | BE-FEAT-013 (장소 상세 API) · BE-FEAT-012 (근처 장소 API, PR #21) |
+| Depends | BE-FEAT-013 (장소 상세 API, PR #25) · BE-FEAT-012 (근처 장소 API, PR #21) · BE-FEAT-014 (시트 재적재, PR #24) |
 | Related | FE-FEAT-009 (저장 · 행 컴포넌트 선례) · FE-FEAT-013 (음성 도슨트) |
 
 ---
@@ -46,11 +46,14 @@ S20   갈지 말지 판단하는 허브. 목업 값을 걷어내고 Model B 데�
 ```
 120/120   place_name · place_name_en · place_desc · place_desc_en
           cultureGuideText_ko 3칸 · cultureGuideText_en          (DB_02 시트)
-0/960     recommendation_reason — ko 칼럼만 있고 값은 자리표시(`CLD추천사유1`)  (DB_03)
+960/960   recommendation_reason — ko 만. 모두 한 줄 설명(place_desc)으로 시작한다  (DB_03)
+120/120   indoor_outdoor(outdoor 68 · mixed 31 · indoor 21) · pet_allowed(TRUE 65 · FALSE 55)
+          pet_condition(한국어) · place_type(10종 + 쇼핑 1곳)                  (DB_01)
 108       firstImage        57   images(갤러리)
 60        영업시간(usetime*·opentime)   57 휴무일(restdate*)   60 문의(infocenter*)
 43        accessibilityInfo(무장애 원문)
-0         tel · indoor_outdoor · pet_allowed · place_type
+120/120   addr1En — TourAPI 영문 70 + 수기 50 (수기 4곳 도로명 수정 요청 중)
+0         tel
 ```
 
 `tel` 은 전건 비어 있고 전화번호는 `operationInfo.infocenter*` 에 있다.
@@ -76,10 +79,12 @@ S20   갈지 말지 판단하는 허브. 목업 값을 걷어내고 Model B 데�
 | 놓치기 쉬운 것 | 128자 | 120곳 모두 `관람 순서: …` `사진 포인트: …` `유의사항: …` 세 줄 |
 | en | 446자 | 자세히의 번역. 3문단. 놓치기 쉬운 것의 영문은 없다 |
 
-### 시트는 채워졌지만 DB 는 아직이다
+### 데이터와 상세 API (2026-09-15 저녁)
 
-2026-09-15 기준 `score_board.contentId` 0/120, `place_info.placeDesc` 는 `설명1`.
-재임포트와 `import-db02` 의 새 칼럼 반영이 남아 있다(에린).
+- PR #24 로 DB 재적재 — `contentId` 120/120 · DB_02 새 칼럼 · DB_03 실제 문장
+- PR #25 상세 API — `PlaceDetail` 이 이 티켓의 계약과 필드가 같다. 머지 순서 #20 → #21 → #25
+- #25 에 `addr1En` · `weatherType` · `placeType` · `petAllowed` · `petCondition` 이 추가됐다(`79d8b91`)
+- `placeType` 중 광복로패션거리 1곳이 10종 밖 값 `쇼핑` 이다(유나 확인 중)
 
 ---
 
@@ -89,9 +94,9 @@ S20   갈지 말지 판단하는 허브. 목업 값을 걷어내고 Model B 데�
 
 | 질문 | 블록 | 출처 |
 |---|---|---|
-| 어떤 곳인가 | 사진 · 이름 · 한 줄 설명 · 주소 | `images` · `name*` · `desc*` |
+| 어떤 곳인가 | 사진 · 지역 · 분류 · 이름 · 한 줄 설명 · 주소 | `images` · `placeType` · `name*` · `desc*` · `addr*` |
 | 나한테 왜 맞나 | 이 곳이 맞는 이유 | `reasonByCf8[cf8_code]` |
-| 지금 갈 수 있나 | 영업시간 · 휴무일 · 전화 · 무장애 | `hours*` · `closedDays*` · `phone` · `accessibility` |
+| 지금 갈 수 있나 | 영업시간 · 휴무일 · 비 올 때 · 반려동물 · 전화 · 무장애 | `hours*` · `closedDays*` · `weatherType` · `pet*` · `phone` · `accessibility` |
 | 가서 뭘 보나 | 문화 가이드 · 놓치기 쉬운 것 | `guideDetailKo` / `guideEn` · `tips` |
 | 다음엔 어디로 | 함께 둘러볼 곳 3곳 | `/api/place/nearby` |
 | 어떻게 가나 | 지도 보기 · 길찾기 | 구글맵 |
@@ -104,7 +109,6 @@ S20   갈지 말지 판단하는 허브. 목업 값을 걷어내고 Model B 데�
 불러오기 실패   다시 시도
 사진 없음      12/120. 자리를 유지하고 대체 표시
 진단 전       이유 블록만 빠진다
-이유 미작성    DB_03 이 비어 있는 동안 — 진단 전과 같다
 ```
 
 ### 포함 — 영문 화면
@@ -112,17 +116,21 @@ S20   갈지 말지 판단하는 허브. 목업 값을 걷어내고 Model B 데�
 | 블록 | en |
 |---|---|
 | 이름 · 설명 · 가이드 | 시트 영문 |
+| 지역 | 부산 16개 구·군 영문 표기표(`Gijang-gun`) — TourAPI 영문 주소와 같은 표기 |
+| 주소 | `addr1En`, 없으면 한국어 `addr1` |
+| 분류 | 영문 이름. 번역표에 없는 값은 뺀다 (ko 는 원문 그대로) |
+| 반려동물 조건 | 감춘다 (한국어 문구뿐) |
 | 영업시간 · 휴무일 | `hoursEn` · `closedDaysEn`, 없으면 한국어 원문 |
 | 이유 · 놓치기 쉬운 것 | 감춘다 (영문 칼럼 없음) |
 | 무장애 상세 | 감춘다. 그리드 칸은 `Facilities listed` — 긴 한국어 문장이라 읽히지 않는다 |
+
+`감춘다` 행은 에린이 LLM 번역을 검토 중이라 결정되면 바뀔 수 있다.
 
 ### 제외
 
 | 항목 | 이유 |
 |---|---|
 | 머무는 시간 · 혼잡도 · 한산한 시간 · 영어 안내 · 비용 · 후기 | Model B 에 원천 칼럼이 없다 |
-| 비 올 때 · 반려동물 | `indoor_outdoor` · `pet_allowed` 칼럼이 시트에 없다. 생기면 그리드에 한 칸씩 더한다 |
-| 분류 | 태깅 vs `contenttypeid` 자동 매핑이 결정 전이다 |
 | 음성 도슨트 | FE-FEAT-013. 음원과 팀 결정 대기 |
 | 영문 이유 | DB_03 에 영문 칼럼이 없다 |
 | 함께 둘러볼 곳 — `나와 맞는 곳` 탭 | 추천 목록 데이터(#20 머지 · 재임포트)가 있어야 검증된다. 그 뒤 세그먼트로 붙인다 |
@@ -137,7 +145,7 @@ S20   갈지 말지 판단하는 허브. 목업 값을 걷어내고 Model B 데�
 `src/types/place.ts` 에 `PlaceDetail` 을 둔다(BE-FEAT-013 계약과 같은 모양).
 
 BE 가 오기 전에는 시트 CSV · `places` 문서 · 영문 서비스로 만든 120곳 픽스처를 임시 라우트로 띄운다.
-임시 라우트는 `.git/info/exclude` 에 넣어 커밋되지 않게 한다. 이유 문장은 비워 둔다(DB_03 미작성).
+임시 라우트는 `.git/info/exclude` 에 넣어 커밋되지 않게 한다. 재적재 뒤에는 DB 실데이터로 다시 만들었다.
 
 ```
 ① 126119  부산 어린이대공원     갤러리 · 영업정보 · 무장애가 다 있는 곳
@@ -161,15 +169,16 @@ FE-FEAT-009 와 같이 `page.tsx` · `PlaceContent.tsx` · `PlaceSkeleton.tsx` �
 ### Step 4: 머리 · 이유 · 그리드
 
 ```
-중구                      districtLabel
+중구 · 역사·문화            districtLabel · placeType   (en: Jung-gu · History & culture)
 40계단 문화관광테마거리      nameKo / nameEn
 피란 시절의 기억을 품은…     descKo / descEn
-부산광역시 중구 …           addr1
+부산광역시 중구 …           addr1 / addr1En
 
 [이 곳이 맞는 이유]         ko 이고 값이 있을 때만
 
-영업시간 | 휴무일
-전화     | 무장애
+영업시간 | 휴무일            둘 중 하나라도 40자 넘으면 둘 다 한 줄 전체 폭
+비 올 때 | 반려동물          반려동물 조건은 ko 만, 값 아래 작게
+전화     | 무장애            전화는 번호 모양이 있을 때만 전화 걸기
 ```
 
 ### Step 5: 문화 가이드 · 근처 · CTA
@@ -200,10 +209,10 @@ FE-FEAT-009 와 같이 `page.tsx` · `PlaceContent.tsx` · `PlaceSkeleton.tsx` �
 
 | 항목 | 목업 | 이 구현 | 이유 |
 |---|---|---|---|
-| 그리드 | 8칸 | 4칸 (영업시간 · 휴무일 · 전화 · 무장애) | 나머지는 원천 없음 |
-| 상단 한 줄 | `중구 · 실내` | `중구` | `indoor_outdoor` 없음 |
+| 그리드 | 8칸 | 6칸 (영업시간 · 휴무일 · 비 올 때 · 반려동물 · 전화 · 무장애) | 머무는 시간 · 혼잡도 · 한산한 시간 · 영어 · 비용은 원천 없음 |
+| 상단 한 줄 | `중구 · 실내` | `중구 · 역사·문화` | 실내외는 그리드 "비 올 때" 가 맡는다 |
 | 장소명 | TourAPI `title` | 시트 `place_name` | 큐레이션 이름이고 영문이 있다 |
-| 이유 문장 | `whyKo` | `reasonByCf8[내 코드]` | 유형마다 문장이 다르다 |
+| 이유 문장 | `whyKo` | `reasonByCf8[내 코드]`, 한 줄 설명과 같은 첫 문장은 뗀다 | 유형마다 문장이 다르다. 960개 모두 한 줄 설명으로 시작해 바로 위 줄과 같은 말이 된다 |
 | 이용 방법 · 후기 | 있음 | 문화 가이드 · 놓치기 쉬운 것 | DB_02 가 대체 |
 | 음성 버튼 | 있음 | 없음 | FE-FEAT-013 |
 | 근처 | `근처에 같이 가볼 만한 곳` · `도보 2분 176m` | `함께 둘러볼 곳` · `도보 약 2분` / `2.7km` | 멀어도 3곳이 채워진다. m 값이 응답에 없고 직선거리다 |
@@ -217,7 +226,8 @@ FE-FEAT-009 와 같이 `page.tsx` · `PlaceContent.tsx` · `PlaceSkeleton.tsx` �
 - [ ] 이름 · 설명 · 가이드가 로케일에 맞게 나온다
 - [ ] 진단 결과가 있으면 그 유형의 이유 문장이 나오고, 없으면 블록이 빠진다
 - [ ] 영업정보가 없는 곳은 라벨이 남고 값이 `—` 다
-- [ ] 영문 화면의 영업시간 · 휴무일은 영문 값이 있으면 영문, 없으면 한국어다
+- [ ] 영문 화면의 영업시간 · 휴무일 · 주소는 영문 값이 있으면 영문, 없으면 한국어다
+- [ ] 영문 화면의 지역 · 분류가 영문이다
 - [ ] 사진 없는 곳에서 레이아웃이 무너지지 않는다
 - [ ] 상세에서 저장한 곳이 저장 탭 맨 위에 나온다
 - [ ] 함께 둘러볼 곳 3곳이 거리순이고 누르면 그 상세로 간다
@@ -236,6 +246,8 @@ FE-FEAT-009 와 같이 `page.tsx` · `PlaceContent.tsx` · `PlaceSkeleton.tsx` �
 | 3 | 진단 전 | `cf8_code` 삭제 후 ① | 이유 블록 없음, 나머지 정상 |
 | 4 | 영문 | `/en/place/④` | 영문 이름 · 설명 · 가이드 · 라벨 · 영업시간 `09:30-17:30 …` · 휴무일 `Mondays …` / 이유 · 놓치기 쉬운 것 없음 |
 | 4-1 | 영문 대체 | `/en/place/①` | 영업시간은 한국어 `상시 개방`(영문판에 없음) · 무장애 칸 `Facilities listed` · 무장애 상세 없음 |
+| 4-2 | 긴 값 | 복천박물관 `130145` | 휴무일이 길어 영업시간 · 휴무일 둘 다 전체 폭 · 반려동물 `동반 불가` |
+| 4-3 | 분류 영문 | `/en/place/126857` 광복로패션거리 | `Jung-gu · Shopping` · 영문 주소 |
 | 5 | 저장 | 저장 → 저장 탭 | 맨 위 · `cfb_saved` 가 `{id, savedAt}` · 해제 시 되돌리기 토스트 |
 | 6 | 없는 id | `/place/0` | 안내 + 추천으로 이동 |
 | 7 | 실패 | 오프라인 새로고침 | 다시 시도 |
@@ -253,9 +265,9 @@ Step 마다 검토를 받고 다음으로 간다.
 - [x] Step 1 계약 타입 · 로컬 픽스처 · 화면 문구
 - [x] Step 2 화면 뼈대 · 상태
 - [x] Step 3 히어로 · 저장
-- [ ] Step 4 머리 · 이유 · 그리드
+- [x] Step 4 머리 · 이유 · 그리드
 - [ ] Step 5 문화 가이드 · 무장애 · 함께 둘러볼 곳 · CTA
-- [ ] Step 6 BE-FEAT-013 도착 후 실데이터 검증 · `mock-places.ts` 삭제(#20 이 수정 중이라 머지 뒤)
+- [ ] Step 6 BE-FEAT-013 도착 후 실데이터 검증 · `mock-places.ts` 삭제(#20 의 임시 `page.tsx` 가 `findRecommendedById` 로 쓴다. page.tsx 교체와 같이)
 - [ ] 후속 — `나와 맞는 곳` 탭 (#20 머지 · 재임포트 후)
 
 ---
@@ -267,6 +279,8 @@ Step 마다 검토를 받고 다음으로 간다.
   경로 형태(`?id=` 또는 `generateStaticParams`)를 정해야 한다
 - 같은 브랜치에서 fetch 가 `NEXT_PUBLIC_API_BASE` 절대 주소로 바뀐다. 먼저 머지되는 쪽에 맞춘다
 - 빈 상태를 `EmptyState` 로 공용화하며 옮긴 `px-[--gutter]` 는 Tailwind 4 에서 `padding-inline: --gutter` 로 나와 무시된다(기존 13곳). 별도 수정
+- **#20 병합 시 `page.tsx` 내용 충돌.** #20 이 main 병합 중 지웠다가 복원했다(`f830952`). 복원본은 삭제된 필드를 쓰던 섹션을 걷어낸 231줄 임시 화면이고, S20 이 머지되면 통째로 교체하기로 에린과 합의했다. 충돌은 S20 버전으로 해결한다
+- BE-FEAT-013 티켓은 #25 의 파일이 정본이다. 이 브랜치에 있던 초안은 지웠다
 - 에린 스택(#19~#21)은 #16~#18 이전 `main` 에서 갈라져 있다. 이 브랜치는 `main` 에서 따고 계약 타입으로만 잇는다
 
 ---

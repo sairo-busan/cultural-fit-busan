@@ -7,8 +7,10 @@ import { useLocale, useTranslations } from "next-intl";
 import { EmptyState } from "@/components/common/EmptyState";
 import { SaveButton } from "@/components/place/SaveButton";
 import { useSavedPlaces } from "@/hooks/useSavedPlaces";
+import { useStoredSnapshot } from "@/hooks/useStoredSnapshot";
 import { useRouter } from "@/i18n/navigation";
-import { secureImageUrl } from "@/lib/placeDisplay";
+import { districtLabel, districtLabelEn, reasonWithoutLead, secureImageUrl } from "@/lib/placeDisplay";
+import { readCf8Code } from "@/lib/storage";
 import { PlaceSkeleton } from "./PlaceSkeleton";
 import type { Locale } from "@/i18n/routing";
 import type { PlaceDetail } from "@/types/place";
@@ -30,6 +32,7 @@ export function PlaceContent() {
   const t = useTranslations("placeDetail");
 
   const { ids: savedIds, toggle } = useSavedPlaces();
+  const cf8Code = useStoredSnapshot(readCf8Code, null);
 
   const [load, setLoad] = useState<Load>({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
@@ -90,7 +93,24 @@ export function PlaceContent() {
   }
 
   const { place } = load;
-  const name = locale === "en" ? (place.nameEn ?? place.nameKo) : place.nameKo;
+  const en = locale === "en";
+  const name = en ? (place.nameEn ?? place.nameKo) : place.nameKo;
+  const desc = en ? place.descEn : place.descKo;
+  const district = en ? districtLabelEn(place.addr1) : districtLabel(place.addr1);
+  // 시트 값이 10종 밖이면 영문 이름이 없다. 한국어를 섞지 않고 뺀다
+  const type = place.placeType
+    ? en
+      ? t.has(`placeType.${place.placeType}`) ? t(`placeType.${place.placeType}`) : null
+      : place.placeType
+    : null;
+  // 이유 문장은 한국어뿐이다. 영문 화면에 한국어 문장을 섞지 않는다
+  const rawReason = !en && cf8Code ? place.reasonByCf8[cf8Code] : null;
+  const reason = rawReason ? reasonWithoutLead(rawReason, place.descKo) : null;
+
+  const hours = en ? (place.hoursEn ?? place.hours) : place.hours;
+  const closedDays = en ? (place.closedDaysEn ?? place.closedDays) : place.closedDays;
+  // 둘 중 하나라도 길면 둘 다 한 줄 전체를 쓴다. 한쪽만 펴면 짝이 반 칸에 혼자 남는다
+  const wideHours = [hours, closedDays].some((v) => (v?.length ?? 0) > WIDE_AT);
 
   return (
     <article className="pb-12">
@@ -100,10 +120,89 @@ export function PlaceContent() {
         saved={savedIds.has(place.contentId)}
         onToggleSave={() => toggle(place.contentId)}
       />
+
       <div className="screen">
-        <h1 className="ds-headline mt-6">{name}</h1>
+        {(district || type) && (
+          <p className="ds-label mt-6 text-primary">{[district, type].filter(Boolean).join(" · ")}</p>
+        )}
+        <h1 className="ds-headline mt-2">{name}</h1>
+        {desc && <p className="ds-body-1 mt-2">{desc}</p>}
+        <p className="ds-body-2 mt-2 font-medium text-sub">{en ? (place.addr1En ?? place.addr1) : place.addr1}</p>
+
+        {reason && (
+          <div className="mt-4 rounded-xl bg-primary-tint p-4">
+            <p className="ds-label text-primary">{t("fitTitle")}</p>
+            <p className="ds-body-1 mt-2">{reason}</p>
+          </div>
+        )}
+
+        {/* 원천이 있는 칸은 이 장소에 값이 없어도 라벨을 남긴다 — 줄이 사라지면 그런 정보가 있다는 걸 알 수 없다 */}
+        <dl className="mt-6 grid grid-cols-2 gap-x-4 gap-y-4 border-t border-hair pt-4">
+          <Fact label={t("facts.hours")} value={hours} wide={wideHours} />
+          <Fact label={t("facts.closedDays")} value={closedDays} wide={wideHours} />
+          <Fact label={t("facts.rain")} value={place.weatherType ? t(`rain.${place.weatherType}`) : null} />
+          <Fact
+            label={t("facts.pet")}
+            value={place.petAllowed === null ? null : t(place.petAllowed ? "pet.yes" : "pet.no")}
+            note={!en && place.petAllowed ? place.petCondition : null}
+          />
+          <Fact label={t("facts.phone")} value={place.phone} tel={telNumber(place.phone)} />
+          <Fact
+            label={t("facts.accessibility")}
+            value={place.accessibility.length > 0 ? t("facts.accessibilityYes") : null}
+          />
+        </dl>
       </div>
     </article>
+  );
+}
+
+/** "부산종합관광안내소 051-253-8253" → "051-253-8253". 번호 모양이 없으면 전화 걸기를 붙이지 않는다 */
+function telNumber(text: string | null): string | null {
+  return text?.match(/0\d{1,2}-\d{3,4}-\d{4}|1\d{3}-\d{4}/)?.[0] ?? null;
+}
+
+/** 이 글자 수를 넘는 영업시간 · 휴무일은 반 칸에 넣으면 여러 줄로 길어진다 */
+const WIDE_AT = 40;
+
+function Fact({
+  label,
+  value,
+  tel,
+  note,
+  wide = false,
+}: {
+  label: string;
+  value: string | null;
+  tel?: string | null;
+  /** 값 아래 작은 설명 — 반려동물 동반 조건 */
+  note?: string | null;
+  /** 한 줄 전체 폭. 긴 문단이라 굵기도 한 단 낮춘다 */
+  wide?: boolean;
+}) {
+  const t = useTranslations("placeDetail");
+
+  return (
+    <div className={`min-w-0 ${wide ? "col-span-2" : ""}`}>
+      <dt className="ds-caption font-semibold text-sub">{label}</dt>
+      <dd className={`ds-body-2 mt-1 whitespace-pre-line ${wide ? "" : "font-semibold"}`}>
+        {value === null ? (
+          <>
+            <span className="text-line" aria-hidden>
+              —
+            </span>
+            <span className="sr-only">{t("facts.none")}</span>
+          </>
+        ) : tel ? (
+          <a href={`tel:${tel}`} className="underline decoration-line underline-offset-4">
+            {value}
+          </a>
+        ) : (
+          value
+        )}
+      </dd>
+      {note && <dd className="ds-caption mt-1 text-sub">{note}</dd>}
+    </div>
   );
 }
 
