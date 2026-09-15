@@ -8,10 +8,16 @@
  *
  * `whyKo`·`weatherType`·`petAllowed`는 필드명을 그대로 유지했다(화면 코드 안 건드리려고,
  * 9/14 PR#18 리뷰 코멘트) — 값의 출처만 옛 placeTags에서 DB_01/02로 바뀌었다.
- * 나머지 옛 필드(92번 시트 원시 태깅 — noiseLevel·crowdLevel·stayMinutes·placeType 등)는
- * DB_01/02/03에 대응 컬럼이 없어 그대로 유지하되 값은 계속 null이 된다 — 화면이 이미
- * null-safe하게 짜여 있어(`.filter(Boolean)`, `??`, 폴백) 카드에서 그 부분만 덜 보일 뿐
- * 깨지지 않는다.
+ *
+ * 9/15 — 옛 92번 시트 원시 태깅 중 DB_01/02/03에 대응 컬럼이 없고 복귀 계획도 없는
+ * 필드는 응답에서 뺐다(noiseLevel·crowdLevel·stayMinutes 등 30개). `placeType`만
+ * 예외로 남긴다 — DB_01에 신규 컬럼으로 추가하기로 확정(9/15)됐고 유나 태깅 대기 중이라
+ * "언젠가 값이 들어올 null"이지 "영구 죽은 필드"가 아니다.
+ *
+ * 이 필드들을 읽는 화면 쪽(main): `src/components/place/PlaceRow.tsx`(crowdLevel·
+ * stayMinutes·budgetLevel), `src/app/[locale]/place/[id]/page.tsx`(나머지 대부분 —
+ * 이 파일은 옛 S20이고 BE-FEAT-013 기반 새 S20으로 교체될 예정이라 필드별로 안 고치고
+ * 새 S20이 교체할 때 같이 정리하는 쪽을 권장 — 소피에게 요청 필요).
  */
 
 export type PlaceInfoItem = {
@@ -39,37 +45,11 @@ export type Place = {
   eventStartDate: string | null;
   eventEndDate: string | null;
 
-  // === placeTags (유나 태깅). 아직 태깅 안 된 장소는 전부 null, coverage=0 ===
-  noiseLevel: number | null; // 1~5
-  crowdLevel: number | null; // 1~5
-  crowdPeak: string | null;
-  crowdCalm: string | null;
-  localDepth: number | null; // 1~5
-  englishSupport: number | null; // 0~2 (0=불가, 1=메뉴판·표지판만, 2=대화 가능)
-  spiceLevel: number | null; // 0~5, 0 = 음식점 아님
   weatherType: "indoor" | "outdoor" | "mixed" | null; // mixed = 실내외 겸용(예: 자갈치시장). 정본 시트 실데이터 값 기준
-  bestTime: string | null;
+  /** DB_01 신규 컬럼(9/15 확정, 유나 태깅 대기) — 채워지기 전까지 항상 null */
   placeType: "식음형" | "시장형" | "해양야경형" | "문화역사형" | null;
-  fitSolo: number | null; // 1~5
-  tipType: string | null;
-  tipHeadline: string | null;
-  pro: string | null;
-  con: string | null;
   whyKo: string | null; // = DB_02.place_desc (S10 카드 한 줄, 장소 단위)
-  whyEn: string | null; // 번역 전까지 null
-
-  seatingType: "street" | "indoor" | "mixed" | null;
-  fitCouple: number | null; // 1~5, 동반 적합도
-  fitFriends: number | null;
-  fitFamily: number | null;
-  stayMinutes: number | null; // 평균 체류시간(분)
-  budgetLevel: number | null; // 1~4
-  proEn: string | null;
-  conEn: string | null;
-  infoKo: string | null; // 이용 방법·실용 정보
-  infoEn: string | null;
-  sourceUrl: string | null;
-  taggedStatus: "review" | "done" | null; // 태깅 사람검수 상태
+  whyEn: string | null; // = DB_02.place_desc_en
 
   // === place_id (DB_01/02/03 조인 키, content_id로 이 응답을 만들 때만 서버 내부에서 씀) ===
   placeId: string | null;
@@ -112,14 +92,7 @@ export type Place = {
   /** S20 상세용 — (CF8코드 → 문구) 8개, DB_03. 서버는 유저 코드를 모르니 다 내려주고 클라이언트가 고른다 */
   reasonByCf8: Record<string, string | null>;
 
-  // === APP S20 전용 (목데이터 확장, 에린 API 확정 후 구조 조정 예정) ===
-  titleEn?: string | null;
-  howToUse?: string[] | null; // 이용 방법 3단계
-  reviewGood?: string | null;
-  reviewBad?: string | null;
-  reviewTip?: string | null;
-  parking?: string | null;
-  alternativeIds?: string[]; // 대안 장소 contentId 목록 (정본 alt_id_1/alt_id_2)
+  titleEn?: string | null; // = DB_02.place_name_en
 };
 
 /**

@@ -150,38 +150,12 @@ export async function getRecommendations({
       eventStartDate: place.eventStartDate ?? null,
       eventEndDate: place.eventEndDate ?? null,
 
-      // 92번 시트 원시 태깅 — DB_01/02/03엔 대응 컬럼이 없어 계속 null(화면은 이미 null-safe)
-      noiseLevel: null,
-      crowdLevel: null,
-      crowdPeak: null,
-      crowdCalm: null,
-      localDepth: null,
-      englishSupport: null,
-      spiceLevel: null,
       weatherType,
-      bestTime: null,
+      // DB_01 신규 컬럼(9/15 확정, 유나 태깅 대기) — 채워지기 전까지 null
       placeType: null,
-      fitSolo: null,
-      tipType: null,
-      tipHeadline: null,
-      pro: null,
-      con: null,
       whyKo: info?.placeDesc ?? null,
       // 다국어(영/한) 확정, DB_02 place_desc_en도 120곳 채워짐(9/15) — BE-FEAT-014 재적재 전까지는 undefined→null
       whyEn: info?.placeDescEn ?? null,
-
-      seatingType: null,
-      fitCouple: null,
-      fitFriends: null,
-      fitFamily: null,
-      stayMinutes: null,
-      budgetLevel: null,
-      proEn: null,
-      conEn: null,
-      infoKo: null,
-      infoEn: null,
-      sourceUrl: null,
-      taggedStatus: null,
 
       placeId: score.placeId,
 
@@ -217,12 +191,6 @@ export async function getRecommendations({
       reasonByCf8: reasonByPlaceId.get(score.placeId) ?? {},
 
       titleEn: info?.placeNameEn ?? null,
-      howToUse: null,
-      reviewGood: null,
-      reviewBad: null,
-      reviewTip: null,
-      parking: null,
-      alternativeIds: [],
 
       // Fit 점수·근거는 클라이언트(recommendEngine.ts)가 계산
       fitScore: 0,
