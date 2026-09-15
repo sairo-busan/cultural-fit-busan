@@ -19,6 +19,9 @@ type PlaceDoc = {
   contentTypeId: string;
   title: string;
   addr1: string;
+  /** TourAPI 영문판(EngService2 detailCommon2) 있는 71곳은 그대로, 나머지 49곳은
+   * 개정 로마자 표기법으로 직접 옮김(9/16, ingest-eng-address.ts/fill-addr-en-llm.ts) */
+  addrEn?: string | null;
   mapX: number;
   mapY: number;
   firstImage: string | null;
@@ -29,7 +32,21 @@ type PlaceDoc = {
   engOperationInfo?: OperationInfo;
 };
 
-type ScoreBoardRow = { placeId: string; contentId: string | null };
+/** 9/16 — #25 PR 리뷰 후속 요청. 유나가 그 사이 DB_01에 채운 4개 칸(score_board) */
+type ScoreBoardRow = {
+  placeId: string;
+  contentId: string | null;
+  indoorOutdoor: "INDOOR" | "OUTDOOR" | "MIXED" | null;
+  petAllowed: boolean | null;
+  petCondition: string | null;
+  placeType: string | null;
+};
+
+const INDOOR_OUTDOOR_MAP: Record<string, "indoor" | "outdoor" | "mixed"> = {
+  INDOOR: "indoor",
+  OUTDOOR: "outdoor",
+  MIXED: "mixed",
+};
 
 type PlaceInfoDoc = {
   placeId: string;
@@ -48,6 +65,7 @@ type PlaceByCf8Doc = { cf8Code: string; placeId: string; recommendationReason: s
 export type PlaceDetail = {
   contentId: string;
   addr1: string;
+  addr1En: string | null;
   mapX: number;
   mapY: number;
   images: string[];
@@ -65,6 +83,11 @@ export type PlaceDetail = {
   closedDaysEn: string | null;
   phone: string | null;
   accessibility: { key: string; text: string }[];
+  /** DB_01(score_board) 신규 4칸(9/15 유나 추가, 9/16 상세 응답에 추가) */
+  weatherType: "indoor" | "outdoor" | "mixed" | null;
+  placeType: string | null;
+  petAllowed: boolean | null;
+  petCondition: string | null;
 };
 
 const HOURS_KEYS = ["usetime", "usetimeculture", "opentime", "usetimeleports"];
@@ -139,9 +162,12 @@ export async function getPlaceDetail(contentId: string): Promise<PlaceDetail | n
     .filter(([key, text]) => key !== "contentid" && typeof text === "string" && text.trim() !== "")
     .map(([key, text]) => ({ key, text }));
 
+  const weatherType = score?.indoorOutdoor ? INDOOR_OUTDOOR_MAP[score.indoorOutdoor] : null;
+
   return {
     contentId: place._id,
     addr1: place.addr1,
+    addr1En: place.addrEn ?? null,
     mapX: place.mapX,
     mapY: place.mapY,
     images,
@@ -164,5 +190,10 @@ export async function getPlaceDetail(contentId: string): Promise<PlaceDetail | n
     phone: pickOperationValue(place.operationInfo, PHONE_KEYS),
 
     accessibility,
+
+    weatherType,
+    placeType: score?.placeType ?? null,
+    petAllowed: score?.petAllowed ?? null,
+    petCondition: score?.petCondition ?? null,
   };
 }
