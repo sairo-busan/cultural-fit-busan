@@ -63,7 +63,13 @@ export function applyHardFilter(place: PlaceForFilter, input: HardFilterInput): 
 
   // current_context — CF8과 별개인 필터링 룰(9/10 회의)
   // "식사 전"을 고르지 않았으면 식당류를 뺀다. isRestaurant가 UNKNOWN(null)이면 통과.
-  if (!input.currentContext.includes("before_meal") && place.isRestaurant === true) {
+  // currentContext가 아예 빈 배열(QUICK — S03을 건너뛴 사용자)이면 "안 골랐다"가 아니라
+  // "정보 없음"이라 필터를 걸면 안 된다(#20 PR 리뷰 — QUICK에서 식당이 전부 빠지는 버그).
+  if (
+    input.currentContext.length > 0 &&
+    !input.currentContext.includes("before_meal") &&
+    place.isRestaurant === true
+  ) {
     reasons.push("NOT_BEFORE_MEAL");
   }
   if (input.currentContext.includes("indoor_first") && place.weatherType === "outdoor") {
