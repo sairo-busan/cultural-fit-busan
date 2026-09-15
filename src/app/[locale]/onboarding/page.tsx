@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import { useLocale } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useStoredState } from "@/hooks/useStoredState";
 import { AppHeader } from "@/components/common/AppHeader";
 import { RadioChipGroup } from "@/components/common/ChoiceChipGroup";
 import { QuizProgress } from "@/components/quiz/QuizProgress";
@@ -34,7 +34,10 @@ export function OnboardingPage() {
   const locale = useLocale() as Locale;
   const intro = QUIZ_INTRO[locale];
   const text = QUIZ_TEXT[locale];
-  const [answers, setAnswers] = useLocalStorage<QuizAnswers>(
+  // 9/16 QA 발견 — useLocalStorage는 첫 클라이언트 렌더부터 실제 저장값을 읽어서
+  // 서버 HTML(항상 기본값)과 어긋난다(하이드레이션 에러). useStoredState로 교체
+  // (트립셋업 페이지와 같은 패턴, useStoredState.ts 헤더 주석 참고).
+  const [answers, setAnswers] = useStoredState<QuizAnswers>(
     STORAGE_KEYS.answers,
     DEFAULT_QUIZ_ANSWERS,
   );

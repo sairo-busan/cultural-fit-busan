@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useRouter } from "@/i18n/navigation";
 import { AppHeader } from "@/components/common/AppHeader";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useStoredState } from "@/hooks/useStoredState";
 import { findRecommendedById } from "@/data/mock-places";
 
 /**
@@ -20,7 +20,8 @@ export default function PlaceDetailPage() {
   const contentId = params.id as string;
   const place = findRecommendedById(contentId);
 
-  const [savedIds, setSavedIds] = useLocalStorage<string[]>("cfb_saved", []);
+  // 9/16 QA 발견 — useLocalStorage 하이드레이션 버그(onboarding과 같은 문제) 방지
+  const [savedIds, setSavedIds] = useStoredState<string[]>("cfb_saved", []);
   const isSaved = savedIds.includes(contentId);
 
   function toggleSave() {
