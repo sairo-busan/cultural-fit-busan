@@ -15,7 +15,7 @@ S20   갈지 말지 판단하는 허브. 목업 값을 걷어내고 Model B 데�
 | Type | FEAT |
 | Severity | Critical |
 | Layer | Page / Component / Type |
-| Status | In Progress |
+| Status | Done |
 | Screen | S20 |
 | Depends | BE-FEAT-013 (장소 상세 API, PR #25) · BE-FEAT-012 (근처 장소 API, PR #21) · BE-FEAT-014 (시트 재적재, PR #24) |
 | Related | FE-FEAT-009 (저장 · 행 컴포넌트 선례) · FE-FEAT-013 (음성 도슨트 — 제목 아래 진입 카드 · S23) |
