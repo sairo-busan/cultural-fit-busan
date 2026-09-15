@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { apiUrl } from "@/lib/apiBase";
 import { STORAGE_KEYS, readCf8Code } from "@/lib/storage";
 import { rankPlaces, type EnginePlaceInput, type RankedPlace } from "@/lib/recommendEngine";
 import {
@@ -96,8 +97,8 @@ export function useRecommendations(): UseRecommendationsResult {
         const [recommendRes, weatherRes] = await Promise.all([
           // 9/15 소피 리뷰 발견 — main 병합 중 120→100으로 되돌아가 20곳이 추천에서
           // 빠지는 문제. 정본 120곳 전체를 후보로 받아야 클라이언트 랭킹이 맞다.
-          fetch("/api/recommend?limit=120"),
-          fetch(`/api/weather?lat=${lat}&lng=${lng}&op=forecast`),
+          fetch(apiUrl("/api/recommend?limit=120")),
+          fetch(apiUrl(`/api/weather?lat=${lat}&lng=${lng}&op=forecast`)),
         ]);
 
         if (!recommendRes.ok) throw new Error("추천 목록을 불러오지 못했습니다");
