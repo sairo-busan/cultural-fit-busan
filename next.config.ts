@@ -25,6 +25,24 @@ const nextConfig: NextConfig = {
      */
     trailingSlash: true,
   }),
+  ...(!isApp && {
+    /**
+     * 앱은 출처가 달라(`https://localhost`) 이 헤더가 있어야 API 응답을 읽는다.
+     * 인증 · 쿠키가 없는 공개 조회 API 라 출처를 좁히지 않는다.
+     * 새 라우트도 자동으로 적용된다. 정적 export 는 headers 를 지원하지 않아 웹 빌드에만 건다.
+     */
+    async headers() {
+      return [
+        {
+          source: "/api/:path*",
+          headers: [
+            { key: "Access-Control-Allow-Origin", value: "*" },
+            { key: "Access-Control-Allow-Methods", value: "GET, OPTIONS" },
+          ],
+        },
+      ];
+    },
+  }),
   images: {
     // 앱에는 이미지 최적화 서버가 없다. TourAPI 원본을 그대로 받는다
     unoptimized: isApp,
