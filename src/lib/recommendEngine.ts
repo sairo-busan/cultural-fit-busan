@@ -10,12 +10,13 @@
  * 표시는 없고, "근처 장소 추천"은 서버 쪽 별도 API(content_id 기준 거리 계산)로 뺐다.
  */
 
-import { cf8FitScoreFromCode, type PlaceCf8Scores } from "./cf8Match";
+import { cf8FitScoreFromCode, cf8FitMaxFromCode, type PlaceCf8Scores } from "./cf8Match";
 import { applyHardFilter, type PlaceForFilter } from "./hardFilter";
 import {
   currentSeason,
   currentTimeOfDay,
   selectCompanionScore,
+  selectCompanionMax,
   selectSeasonScore,
   selectTimeScore,
   selectWeatherScore,
@@ -72,7 +73,9 @@ export function rankPlaces<T extends EnginePlaceInput>(
 
     const scoreInputs = {
       cf8FitScore: cf8FitScoreFromCode(context.cf8Code, place),
+      cf8Max: cf8FitMaxFromCode(context.cf8Code, place),
       companionScore: selectCompanionScore(place, filters.companion),
+      companionMax: selectCompanionMax(place, filters.companion),
       weatherScore: selectWeatherScore(place, context.weather),
       seasonScore: selectSeasonScore(place, season),
       timeScore: selectTimeScore(place, timeOfDay),

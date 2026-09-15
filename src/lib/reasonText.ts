@@ -12,7 +12,9 @@
 
 export type ReasonInput = {
   cf8FitScore: number | null;
+  cf8Max: number;
   companionScore: number | null;
+  companionMax: number;
   weatherScore: number | null;
   seasonScore: number | null;
   timeScore: number | null;
@@ -30,22 +32,27 @@ const COMPONENT_LABEL_KO: Record<ComponentKey, string> = {
   time: "시간대",
 };
 
-/** null 아닌 성분 중 점수가 가장 높은 축 하나를 고른다. */
+/** 축마다 만점이 달라(cf8=9~3, 동행=9~3, 날씨/계절/시간=5) 원점수로 비교하면 안 된다.
+ * 0~100 정규화한 뒤 비교한다(#20 PR 리뷰 — cf7/9(78%) vs 날씨4/5(80%)를 원점수로
+ * 비교하면 순서가 뒤집힘). */
+const FIXED_MAX = 5; // 날씨·계절·시간
+
+/** null 아닌 성분 중 정규화 점수가 가장 높은 축 하나를 고른다. */
 function findStrongestComponent(input: ReasonInput): ComponentKey | null {
-  const components: { key: ComponentKey; value: number | null }[] = [
-    { key: "cf8", value: input.cf8FitScore },
-    { key: "companion", value: input.companionScore },
-    { key: "weather", value: input.weatherScore },
-    { key: "season", value: input.seasonScore },
-    { key: "time", value: input.timeScore },
+  const components: { key: ComponentKey; value: number | null; max: number }[] = [
+    { key: "cf8", value: input.cf8FitScore, max: input.cf8Max },
+    { key: "companion", value: input.companionScore, max: input.companionMax },
+    { key: "weather", value: input.weatherScore, max: FIXED_MAX },
+    { key: "season", value: input.seasonScore, max: FIXED_MAX },
+    { key: "time", value: input.timeScore, max: FIXED_MAX },
   ];
 
-  const available = components.filter(
-    (c): c is { key: ComponentKey; value: number } => c.value !== null && !Number.isNaN(c.value)
-  );
+  const available = components
+    .filter((c) => c.value !== null && !Number.isNaN(c.value) && c.max > 0)
+    .map((c) => ({ key: c.key, pct: (c.value as number) / c.max }));
   if (available.length === 0) return null;
 
-  return available.reduce((max, c) => (c.value > max.value ? c : max)).key;
+  return available.reduce((max, c) => (c.pct > max.pct ? c : max)).key;
 }
 
 /**

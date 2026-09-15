@@ -40,8 +40,23 @@ export function cf8FitScore(code: Cf8Code, place: PlaceCf8Scores): number | null
   return known.reduce((sum, v) => sum + v, 0);
 }
 
+/**
+ * cf8FitScore가 실제로 합산한 컬럼 수 기준 만점(컬럼당 3점). 축 하나가 UNKNOWN이라
+ * 빠지면 만점도 같이 줄어든다 — finalScore.ts가 이 값으로 정규화해야 R031 재정규화가
+ * 실제로 맞는다(#20 PR 리뷰 — 고정 9로 나누면 축 결측 시 조용히 불리해짐).
+ */
+export function cf8FitMax(code: Cf8Code, place: PlaceCf8Scores): number {
+  return pickCf8Columns(code, place).filter((v) => v !== null).length * 3;
+}
+
 /** cf8Code 문자열(예: "EFV")로 바로 계산하는 헬퍼. 형식이 안 맞으면 null. */
 export function cf8FitScoreFromCode(cf8Code: string, place: PlaceCf8Scores): number | null {
   if (!/^[CE][LF][DV]$/.test(cf8Code)) return null;
   return cf8FitScore(cf8Code as Cf8Code, place);
+}
+
+/** cf8FitMax 문자열 버전. 형식이 안 맞으면 0. */
+export function cf8FitMaxFromCode(cf8Code: string, place: PlaceCf8Scores): number {
+  if (!/^[CE][LF][DV]$/.test(cf8Code)) return 0;
+  return cf8FitMax(cf8Code as Cf8Code, place);
 }

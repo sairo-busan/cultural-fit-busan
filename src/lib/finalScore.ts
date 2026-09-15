@@ -10,18 +10,14 @@
  * 없을 때만 R031대로 남은 비중으로 재정규화된다(기존 `weightedAverageWithReweight`
  * 그대로 재사용).
  *
- * 축별 만점(DB_01 실데이터 기준):
- *   CF8    = 9   (0~3인 컬럼 3개 합산, 컬럼 만점이 항상 3이라 구조적으로 고정)
- *   날씨·계절·시간 = 5 (각 컬럼 만점이 5)
- *   동행   = 8   (주 동행 최대 3 + 아이 최대 3 + 반려동물 최대 2, 셋 다 겹치는 최악 케이스)
- *              ⚠️ 실제로는 대부분 주 동행 하나만 선택돼 만점 3에 그침 — 90×동행 항이
- *              날씨/계절/시간(만점 5)과 같은 급으로 설계된 원 공식과 안 맞는 지점.
- *              유나·태무 확인 대기(Sophie PR#15 "동행 점수 25%" 후속 제안과 동일 이슈).
+ * 축별 만점(DB_01 실데이터 기준, 9/15 확정):
+ *   CF8    = 고른 컬럼 수 × 3 (cf8Match.cf8FitMax) — 컬럼 하나가 UNKNOWN이면 만점도 줄어듦
+ *   동행   = 고른 컬럼 수 × 3 (situationalScore.selectCompanionMax) — CF8과 동일 방식,
+ *            동행 5컬럼도 CF6과 같은 0~3 구간으로 확정됐다(#20 PR 리뷰, 고정 8 폐기)
+ *   날씨·계절·시간 = 5 (각 컬럼 만점이 5, 항상 단일 컬럼 그대로 읽음)
  */
 
-const AXIS_MAX = {
-  cf8: 9,
-  companion: 8,
+const FIXED_AXIS_MAX = {
   weather: 5,
   season: 5,
   time: 5,
@@ -49,24 +45,30 @@ export function weightedAverageWithReweight(components: ScoreComponent[]): numbe
 }
 
 export type FinalScoreInput = {
-  cf8FitScore: number | null; // 0~9
-  companionScore: number | null; // 0~8
+  cf8FitScore: number | null;
+  /** cf8Match.cf8FitMax(code, place) — 고른 컬럼 수 × 3, cf8FitScore와 세트로 넘긴다 */
+  cf8Max: number;
+  companionScore: number | null;
+  /** situationalScore.selectCompanionMax(place, selection) — 고른 컬럼 수 × 3 */
+  companionMax: number;
   weatherScore: number | null; // 0~5
   seasonScore: number | null; // 0~5
   timeScore: number | null; // 0~5
 };
 
-function normalize(value: number | null, max: number): number | null {
-  return value == null ? null : (value / max) * 100;
+export function normalize(value: number | null, max: number): number | null {
+  if (value == null) return null;
+  if (max === 0) return null; // 만점 0 = 합산한 컬럼이 없었다는 뜻, 점수도 null이어야 정상이지만 방어
+  return (value / max) * 100;
 }
 
 /** CALC_04 비중 + R031 재정규화를 적용한 최종점수(0~100, 반올림 안 함 — 화면에서 처리) */
 export function calculateFinalScore(input: FinalScoreInput): number | null {
   return weightedAverageWithReweight([
-    { weight: CALC_04_WEIGHTS.cf8, value: normalize(input.cf8FitScore, AXIS_MAX.cf8) },
-    { weight: CALC_04_WEIGHTS.companion, value: normalize(input.companionScore, AXIS_MAX.companion) },
-    { weight: CALC_04_WEIGHTS.weather, value: normalize(input.weatherScore, AXIS_MAX.weather) },
-    { weight: CALC_04_WEIGHTS.season, value: normalize(input.seasonScore, AXIS_MAX.season) },
-    { weight: CALC_04_WEIGHTS.time, value: normalize(input.timeScore, AXIS_MAX.time) },
+    { weight: CALC_04_WEIGHTS.cf8, value: normalize(input.cf8FitScore, input.cf8Max) },
+    { weight: CALC_04_WEIGHTS.companion, value: normalize(input.companionScore, input.companionMax) },
+    { weight: CALC_04_WEIGHTS.weather, value: normalize(input.weatherScore, FIXED_AXIS_MAX.weather) },
+    { weight: CALC_04_WEIGHTS.season, value: normalize(input.seasonScore, FIXED_AXIS_MAX.season) },
+    { weight: CALC_04_WEIGHTS.time, value: normalize(input.timeScore, FIXED_AXIS_MAX.time) },
   ]);
 }

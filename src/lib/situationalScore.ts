@@ -6,6 +6,10 @@
  * 소피의 `TripSetup`이 이미 `primaryCompanion`(단일) + `childWith`/`petWith`(불리언)로
  * 나뉘어 있어서 "친구/연인을 둘로 갈라 평균" 같은 변환이 필요 없다 — 값을 그대로 받는다.
  *
+ * 동행 5컬럼은 CF6과 동일하게 0~3 구간으로 확정됐다(9/15) — 실제 부모님·반려동물
+ * 데이터가 아직 2에 그치는 건 컬럼 스케일이 다른 게 아니라 그 축 값들이 낮게 나온
+ * 것뿐이다. 그래서 만점도 CF8과 같은 방식으로 "고른 컬럼 수 × 3"이다(selectCompanionMax).
+ *
  * 날씨·계절·시간대는 접속 시점 자동 산출이라 늘 단일 선택 — 컬럼 하나를 그대로 읽는다.
  */
 
@@ -60,6 +64,23 @@ export function selectCompanionScore(
   const known = fields.map((f) => place[f]).filter((v): v is number => v !== null);
   if (fields.length === 0 || known.length === 0) return null;
   return known.reduce((sum, v) => sum + v, 0);
+}
+
+/**
+ * selectCompanionScore가 실제로 합산한 컬럼 수 기준 만점(컬럼당 3점, cf8FitMax와 동일
+ * 방식). 주 동행만 선택하면 3, +아이 6, +반려동물 6, 둘 다 9 — #20 PR 리뷰에서 지적된
+ * "분모 8 고정" 문제를 해결한다.
+ */
+export function selectCompanionMax(
+  place: PlaceSituationalScores,
+  selection: CompanionSelection
+): number {
+  const fields: (keyof PlaceSituationalScores)[] = [];
+  if (selection.primary) fields.push(PRIMARY_FIELD[selection.primary]);
+  if (selection.childWith) fields.push("kidsScore");
+  if (selection.petWith) fields.push("petScore");
+
+  return fields.filter((f) => place[f] !== null).length * 3;
 }
 
 const WEATHER_FIELD: Record<Weather, keyof PlaceSituationalScores> = {
