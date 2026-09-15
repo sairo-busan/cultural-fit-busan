@@ -62,7 +62,7 @@ export function SavedContent() {
 
     async function run() {
       try {
-        const res = await fetch("/api/recommend?limit=100");
+        const res = await fetch("/api/recommend?limit=120");
         const all = res.ok ? ((await res.json()) as RecommendedPlace[]) : [];
         if (!cancelled) setCatalog(new Map(all.map((p) => [p.contentId, p])));
       } catch {
