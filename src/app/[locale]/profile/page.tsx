@@ -4,13 +4,20 @@ import { useState, useEffect } from "react";
 import { useLocale } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useStoredSnapshot } from "@/hooks/useStoredSnapshot";
 import { buildCf8Profile } from "@/lib/cfp";
 import { AppHeader } from "@/components/common/AppHeader";
 import { AxisSlider } from "@/components/profile/AxisSlider";
 import { DEFAULT_QUIZ_ANSWERS, DEFAULT_HARD_FILTER } from "@/data/quiz";
 import { AXIS_CONFIG, AXIS_LABELS, PROFILE_COPY } from "@/data/profile";
 import { CF8_PROFILES } from "@/data/cf8Profiles";
-import { STORAGE_KEYS, clearDiagnosis, setTripSetupMode } from "@/lib/storage";
+import {
+  STORAGE_KEYS,
+  clearDiagnosis,
+  clearJustDiagnosed,
+  readJustDiagnosed,
+  setTripSetupMode,
+} from "@/lib/storage";
 import type { Cf8Axes } from "@/types/cfp";
 import type { Locale } from "@/i18n/routing";
 
@@ -28,7 +35,16 @@ export function ProfilePage() {
   const locale = useLocale() as Locale;
   const copy = PROFILE_COPY[locale];
   const axisLabels = AXIS_LABELS[locale];
-  const [loading, setLoading] = useState(true);
+  /**
+   * 분석 연출은 온보딩에서 막 넘어왔을 때만 돈다.
+   *
+   * 서버 스냅샷이 `false` 라 `/profile` 을 직접 열면(북마크·새로고침·유형 카드)
+   * 결과가 바로 그려진다. 온보딩에서 오는 길은 클라이언트 네비게이션이라 첫
+   * 렌더부터 실제 값을 읽으므로 결과가 스쳤다 가리는 깜빡임이 없다.
+   */
+  const justDiagnosed = useStoredSnapshot(readJustDiagnosed, false);
+  const [analysisDone, setAnalysisDone] = useState(false);
+  const loading = justDiagnosed && !analysisDone;
   const [loadingStep, setLoadingStep] = useState(0);
   const [answers] = useLocalStorage(STORAGE_KEYS.answers, DEFAULT_QUIZ_ANSWERS);
   const [, setCf8Code] = useLocalStorage(STORAGE_KEYS.cf8Code, "");
@@ -47,7 +63,11 @@ export function ProfilePage() {
       return () => clearTimeout(timer);
     }
 
-    const finishTimer = setTimeout(() => setLoading(false), 400);
+    const finishTimer = setTimeout(() => {
+      setAnalysisDone(true);
+      // 연출이 끝난 뒤에 지운다 — 도중에 지우면 신호가 사라지며 연출이 끊긴다
+      clearJustDiagnosed();
+    }, 400);
     return () => clearTimeout(finishTimer);
   }, [loading, loadingStep]);
 

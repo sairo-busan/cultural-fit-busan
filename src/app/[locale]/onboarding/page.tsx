@@ -16,7 +16,7 @@ import {
   DEFAULT_QUIZ_ANSWERS,
 } from "@/data/quiz";
 import { isComplete } from "@/lib/cfp";
-import { STORAGE_KEYS } from "@/lib/storage";
+import { STORAGE_KEYS, markJustDiagnosed } from "@/lib/storage";
 import type { QuizAnswers } from "@/types/cfp";
 import type { Locale } from "@/i18n/routing";
 
@@ -60,6 +60,8 @@ export function OnboardingPage() {
       scrollTo(QUIZ_QUESTIONS[pendingIndex].id);
       return;
     }
+    // S02 의 분석 연출은 이 경로로 들어올 때만 돈다
+    markJustDiagnosed();
     router.push("/profile");
   };
 
