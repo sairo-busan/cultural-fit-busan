@@ -58,6 +58,9 @@ type PlaceInfoDoc = {
   placeId: string;
   placeName: string | null;
   placeDesc: string | null;
+  /** 9/15 시트 확장 — BE-FEAT-014에서 재적재해야 값이 채워짐, 그전엔 undefined */
+  placeNameEn?: string | null;
+  placeDescEn?: string | null;
 };
 
 /** place_by_cf8(DB_03) — (cf8Code, placeId)가 PK, S20 상세 유형별 이유 */
@@ -130,7 +133,9 @@ export async function getRecommendations({
     results.push({
       contentId: place._id,
       contentTypeId: place.contentTypeId,
-      title: place.title,
+      // 결정문서(2026-09-11_DB필드_확정.md) — 카드 제목은 DB_02 place_name이 정본.
+      // TourAPI title("봉래산(부산)" 식)은 place_name이 아직 없을 때만 임시 대체(#19 리뷰).
+      title: info?.placeName ?? place.title,
       addr1: place.addr1,
       addr2: place.addr2,
       mapX: place.mapX,
@@ -162,7 +167,8 @@ export async function getRecommendations({
       pro: null,
       con: null,
       whyKo: info?.placeDesc ?? null,
-      whyEn: null, // 다국어 언어 결정 대기(유나·태무)
+      // 다국어(영/한) 확정, DB_02 place_desc_en도 120곳 채워짐(9/15) — BE-FEAT-014 재적재 전까지는 undefined→null
+      whyEn: info?.placeDescEn ?? null,
 
       seatingType: null,
       fitCouple: null,
@@ -210,7 +216,7 @@ export async function getRecommendations({
 
       reasonByCf8: reasonByPlaceId.get(score.placeId) ?? {},
 
-      titleEn: null,
+      titleEn: info?.placeNameEn ?? null,
       howToUse: null,
       reviewGood: null,
       reviewBad: null,
