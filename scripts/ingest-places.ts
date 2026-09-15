@@ -17,6 +17,10 @@ import { MongoClient } from "mongodb";
 import { BUSAN_REGION_CODE } from "../src/lib/tourApiCodes";
 
 const TOUR_API_BASE = "https://apis.data.go.kr/B551011/KorService2";
+/** 무장애여행 정보 — docs/decisions/2026-09-11_DB필드_확정.md 참고 */
+const KOR_WITH_API_BASE = "https://apis.data.go.kr/B551011/KorWithService2";
+/** 반려동물동반여행 정보 — 부산 목록 포함 여부만 씀(상세 오퍼레이션은 커버리지가 더 낮음) */
+const KOR_PET_API_BASE = "https://apis.data.go.kr/B551011/KorPetTourService2";
 
 const serviceKey = process.env.TOUR_API_KEY;
 const mongoUri = process.env.MONGODB_URI;
@@ -24,7 +28,7 @@ const mongoUri = process.env.MONGODB_URI;
 if (!serviceKey) throw new Error("TOUR_API_KEY가 설정되지 않았습니다");
 if (!mongoUri) throw new Error("MONGODB_URI가 설정되지 않았습니다");
 
-async function callTourApi(op: string, params: Record<string, string>) {
+async function callApi(base: string, op: string, params: Record<string, string>) {
   const search = new URLSearchParams({
     ...params,
     serviceKey: serviceKey!,
@@ -32,13 +36,15 @@ async function callTourApi(op: string, params: Record<string, string>) {
     MobileApp: "CulturalFitBusan",
     _type: "json",
   });
-  const res = await fetch(`${TOUR_API_BASE}/${op}?${search.toString()}`);
+  const res = await fetch(`${base}/${op}?${search.toString()}`);
   const body = await res.json();
   if (!res.ok || body.response?.header?.resultCode !== "0000") {
     throw new Error(`${op} 호출 실패: ${JSON.stringify(body.response?.header)}`);
   }
   return body.response.body;
 }
+
+const callTourApi = (op: string, params: Record<string, string>) => callApi(TOUR_API_BASE, op, params);
 
 type TourItem = Record<string, string>;
 
@@ -66,17 +72,27 @@ async function fetchAreaList(contentTypeId?: string): Promise<TourItem[]> {
 }
 
 async function fetchDetail(contentId: string, contentTypeId: string) {
-  const [common, intro, images, info] = await Promise.all([
+  const [common, intro, images, info, withTour] = await Promise.all([
     callTourApi("detailCommon2", { contentId }).catch(() => null),
     callTourApi("detailIntro2", { contentId, contentTypeId }).catch(() => null),
     callTourApi("detailImage2", { contentId, imageYN: "Y" }).catch(() => null),
     callTourApi("detailInfo2", { contentId, contentTypeId }).catch(() => null),
+    callApi(KOR_WITH_API_BASE, "detailWithTour2", { contentId }).catch(() => null),
   ]);
 
   const commonItem: TourItem | undefined = common?.items?.item?.[0];
   const introItem: TourItem | undefined = intro?.items?.item?.[0];
   const imageItems: TourItem[] = images?.items === "" || !images ? [] : images.items.item;
   const infoItems: TourItem[] = info?.items === "" || !info ? [] : info.items.item;
+
+  // 무장애여행 API — 이 장소 자체가 서비스에 없으면(withTour null) UNKNOWN(null),
+  // 있는데 필드가 전부 빈 문자열이어도 "명시적 불가"가 아니라 UNKNOWN(null).
+  // 값이 하나라도 있으면 "이동약자 배려시설 있음"=true. false는 이 API 특성상 안 나온다
+  // (docs/decisions/2026-09-11_DB필드_확정.md — "미등록을 false로 저장하면 안 되는 이유" 참고).
+  const accessibilityInfo: TourItem | null = withTour?.items?.item?.[0] ?? null;
+  const barrierFree = accessibilityInfo
+    ? Object.values(accessibilityInfo).some((v) => typeof v === "string" && v.trim() !== "")
+    : null;
 
   return {
     homepage: commonItem?.homepage?.replace(/<[^>]*>/g, "") ?? null,
@@ -86,7 +102,33 @@ async function fetchDetail(contentId: string, contentTypeId: string) {
     info: infoItems
       .filter((i) => i.infotext)
       .map((i) => ({ name: i.infoname, text: i.infotext })),
+    accessibilityInfo,
+    barrierFree,
   };
+}
+
+/**
+ * 반려동물동반여행 서비스에 등록된 부산 장소의 content_id 집합.
+ * 목록 포함 여부만 쓴다 — 상세 오퍼레이션(detailPetTour2)은 커버리지가 더 낮다.
+ * 이 목록에 없다고 "동반 불가"가 아니라 UNKNOWN — pet_allowed는 이 집합 포함 여부를
+ * true/null로만 매핑한다(DB_01의 pet_allowed 수작업 태깅 시드값으로 별도 전달).
+ */
+async function fetchPetFriendlyContentIds(): Promise<Set<string>> {
+  const ids = new Set<string>();
+  let pageNo = 1;
+  const numOfRows = 100;
+  while (true) {
+    const body = await callApi(KOR_PET_API_BASE, "areaBasedList2", {
+      lDongRegnCd: BUSAN_REGION_CODE,
+      numOfRows: String(numOfRows),
+      pageNo: String(pageNo),
+    });
+    const pageItems: TourItem[] = body.items === "" ? [] : body.items.item;
+    for (const item of pageItems) ids.add(item.contentid);
+    if (pageItems.length < numOfRows) break;
+    pageNo += 1;
+  }
+  return ids;
 }
 
 /** 축제(contentTypeId=15) 전용: searchFestival2로 eventStartDate/eventEndDate 보강 */
@@ -123,6 +165,8 @@ async function main() {
 
   const limit = process.env.INGEST_LIMIT ? parseInt(process.env.INGEST_LIMIT, 10) : undefined;
   const festivalDates = !filterType || filterType === "15" ? await fetchFestivalDates() : null;
+  const petFriendlyIds = await fetchPetFriendlyContentIds();
+  console.log(`반려동물동반여행 등록 장소(부산): ${petFriendlyIds.size}건`);
 
   const fullList = await fetchAreaList(filterType);
   const list = limit ? fullList.slice(0, limit) : fullList;
@@ -158,6 +202,9 @@ async function main() {
           lclsSystm3: item.lclsSystm3,
           modifiedTime: item.modifiedtime,
           ...detail,
+          // 반려동물동반여행 목록 포함 여부 원본 신호 — DB_01.pet_allowed 시드값 뽑을 때 참고용.
+          // 목록에 없다고 "동반 불가"가 아니라 UNKNOWN이라, false로 안 두고 null로 둔다.
+          petFriendlyApi: petFriendlyIds.has(item.contentid) ? true : null,
           ...(dates ?? {}),
           syncedAt: new Date(),
         },
