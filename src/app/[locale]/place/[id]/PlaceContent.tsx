@@ -12,7 +12,9 @@ import { districtLabel, districtLabelEn, googleMapsUrl, reasonWithoutLead, secur
 import { readCf8Code } from "@/lib/storage";
 import { PlaceSkeleton } from "./PlaceSkeleton";
 import type { Locale } from "@/i18n/routing";
-import type { NearbyPlace, PlaceDetail } from "@/types/place";
+// 응답 타입은 API 쪽 정의를 그대로 쓴다. 타입만 가져와 서버 코드는 번들에 들어가지 않는다
+import type { NearbyPlace } from "@/lib/nearbyPlaces";
+import type { PlaceDetail } from "@/lib/placeDetail";
 
 /**
  * 없는 id 와 불러오기 실패를 가른다. 목록이 바뀌어 사라진 곳에 "다시 시도" 를
