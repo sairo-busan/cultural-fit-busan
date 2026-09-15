@@ -6,10 +6,15 @@
  * 스코어링 로직(6개 중 3개를 코드로 골라 합산)은 여기서 계산하지 않는다 — 원본 컬럼을
  * 그대로 두고 cf8Match.ts가 매 요청마다 골라 쓴다.
  *
- * `indoor_outdoor`·`pet_allowed`는 유나가 아직 추가하지 않은 컬럼이라 후보 헤더 이름을
- * 여러 개 두고 찾고, 없으면 null로 둔다(docs/decisions/2026-09-11_DB필드_확정.md 참고).
- * pet_allowed는 API로 확인된 18곳을 별도 스크립트가 시드값으로 먼저 넣어두고, 이 스크립트가
- * 시트값이 있을 때만 덮어쓴다(시트 값이 비어 있으면 기존 시드값을 지우지 않음).
+ * 9/15 — `place_type`·`pet_allowed`·`pet_condition`·`indoor_outdoor` 4컬럼 유나가
+ * 전부 채움(120/120). `indoor_outdoor`·`pet_allowed`는 후보 헤더 이름을 여러 개 두고
+ * 찾던 방어 코드를 그대로 남긴다(비용 없음, 헤더가 또 바뀌어도 안전).
+ * `place_type`은 옛 92번 시트 4종("식음형" 등)이 아니라 유나가 새로 만든 10종
+ * 체계(예: "역사·문화")다 — 값셋 자체가 바뀌었다.
+ * `pet_condition`은 신규 — FALSE인 곳은 "동반 불가", TRUE인 곳은 실제 이용 조건 문구.
+ *
+ * pet_allowed는 API로 확인된 18곳을 별도 스크립트(seed-pet-allowed.ts)가 시드값으로
+ * 먼저 넣어뒀었는데, 이제 시트가 120곳 다 채워졌으니 시트값이 항상 우선한다.
  *
  * Node에서 구글시트 export URL을 직접 부르면 최근 수정분이 안 반영된 스냅샷이 오는 문제가
  * 있어(scripts/lib/csv.ts 참고) 미리 받아둔 로컬 CSV를 읽는다. 최신본이 필요하면 먼저:
@@ -84,8 +89,7 @@ async function main() {
     const contentId = toStr(col(row, "대표컨텐츠ID"));
     if (!contentId) missingContentId++;
 
-    // indoor_outdoor/pet_allowed는 유나가 아직 추가 전 — 후보 헤더 이름으로 찾고 없으면 null.
-    // pet_allowed는 시트값이 비어 있으면 $set에서 빼서, 시드 스크립트가 넣은 값을 안 지운다.
+    // 후보 헤더 이름으로 찾고 없으면 null — 헤더 이름이 또 바뀌어도 방어됨.
     const indoorOutdoorRaw = col(row, "실내외", "indoor_outdoor", "INDOOR_OUTDOOR");
     const petAllowedRaw = col(row, "반려동물동반가능", "pet_allowed", "PET_ALLOWED");
 
@@ -115,6 +119,8 @@ async function main() {
       afternoonScore: toNum(col(row, "오후")),
       eveningScore: toNum(col(row, "저녁")),
       indoorOutdoor: toStr(indoorOutdoorRaw)?.toUpperCase() ?? null,
+      placeType: toStr(col(row, "place_type")),
+      petCondition: toStr(col(row, "pet_condition")),
     };
     if (petAllowedRaw && petAllowedRaw.trim() !== "") {
       set.petAllowed = toTriState(petAllowedRaw);
