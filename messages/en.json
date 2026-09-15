@@ -168,5 +168,11 @@
       "unsaved": "Your answers weren't saved. Let's start again.",
       "retake": "Your type changes only when you finish"
     }
+  },
+  "profile": {
+    "reveal": {
+      "finding": "Your travel character is…",
+      "found": "Found it!"
+    }
   }
 }
