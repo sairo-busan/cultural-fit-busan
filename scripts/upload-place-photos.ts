@@ -11,6 +11,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import sharp from "sharp";
 import { put } from "@vercel/blob";
 import { MongoClient } from "mongodb";
 
@@ -35,12 +36,21 @@ async function main() {
   for (const file of files) {
     const contentId = path.basename(file, ".jpg");
     try {
-      const buffer = fs.readFileSync(path.join(PHOTO_DIR, file));
+      const original = fs.readFileSync(path.join(PHOTO_DIR, file));
+      // 유나가 준 원본이 폰 카메라 사진 그대로라 최대 50MB짜리도 있었다(9/16 QA
+      // 발견 — 그것만 로딩이 눈에 띄게 느림). S10 카드·S20 히어로용이라 이 정도면
+      // 충분해서 최대 1600px + JPEG 품질 80으로 줄인다.
+      const buffer = await sharp(original)
+        .resize({ width: 1600, height: 1600, fit: "inside", withoutEnlargement: true })
+        .jpeg({ quality: 80 })
+        .toBuffer();
+      console.log(`${contentId} ${original.length}B → ${buffer.length}B`);
       const blob = await put(`places/${contentId}.jpg`, buffer, {
         access: "public",
         token: blobToken,
         contentType: "image/jpeg",
         addRandomSuffix: false,
+        allowOverwrite: true,
       });
       await places.updateOne({ _id: contentId }, { $set: { customImage: blob.url } });
       console.log(`${contentId} → ${blob.url}`);
