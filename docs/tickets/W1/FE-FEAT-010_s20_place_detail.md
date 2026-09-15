@@ -248,11 +248,11 @@ FE-FEAT-009 와 같이 `page.tsx` · `PlaceContent.tsx` · `PlaceSkeleton.tsx` �
 Step 마다 검토를 받고 다음으로 간다.
 
 - [x] Step 1 계약 타입 · 로컬 픽스처 · 화면 문구
-- [ ] Step 2 화면 뼈대 · 상태
+- [x] Step 2 화면 뼈대 · 상태
 - [ ] Step 3 히어로 · 저장
 - [ ] Step 4 머리 · 이유 · 그리드
 - [ ] Step 5 문화 가이드 · 무장애 · 함께 둘러볼 곳 · CTA
-- [ ] Step 6 BE-FEAT-013 도착 후 실데이터 검증
+- [ ] Step 6 BE-FEAT-013 도착 후 실데이터 검증 · `mock-places.ts` 삭제(#20 이 수정 중이라 머지 뒤)
 - [ ] 후속 — `나와 맞는 곳` 탭 (#20 머지 · 재임포트 후)
 
 ---
@@ -263,6 +263,7 @@ Step 마다 검토를 받고 다음으로 간다.
   `src/app/[locale]/place` 를 정적 export 에서 제외한다. 앱에서 상세를 열려면
   경로 형태(`?id=` 또는 `generateStaticParams`)를 정해야 한다
 - 같은 브랜치에서 fetch 가 `NEXT_PUBLIC_API_BASE` 절대 주소로 바뀐다. 먼저 머지되는 쪽에 맞춘다
+- 빈 상태를 `EmptyState` 로 공용화하며 옮긴 `px-[--gutter]` 는 Tailwind 4 에서 `padding-inline: --gutter` 로 나와 무시된다(기존 13곳). 별도 수정
 - 에린 스택(#19~#21)은 #16~#18 이전 `main` 에서 갈라져 있다. 이 브랜치는 `main` 에서 따고 계약 타입으로만 잇는다
 
 ---
