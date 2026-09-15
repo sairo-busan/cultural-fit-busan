@@ -170,6 +170,35 @@
     }
   },
   "profile": {
+    "label": "So this is how you travel",
+    "axesHeading": "Your travel preferences",
+    "poles": {
+      "atmosphere": {
+        "left": "Calm",
+        "right": "Lively"
+      },
+      "placeType": {
+        "left": "Local",
+        "right": "Landmark"
+      },
+      "experience": {
+        "left": "One place",
+        "right": "Many places"
+      }
+    },
+    "promiseTitle": "Here's how we'll pick",
+    "primary": "Places to go now",
+    "secondary": "Add details first",
+    "secondaryHint": "We'll skip places that won't work",
+    "more": "See more",
+    "top": "Back to top",
+    "retake": {
+      "label": "Retake",
+      "title": "Retake the quiz?",
+      "body": "Your current type stays until you finish again.",
+      "confirm": "Retake",
+      "close": "Close"
+    },
     "reveal": {
       "finding": "Your travel character is…",
       "found": "Found it!"

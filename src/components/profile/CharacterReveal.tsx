@@ -18,7 +18,12 @@ type CharacterRevealProps = {
   onDone: () => void;
 };
 
-/** S01 → S02 사이 — 8유형 캐릭터가 바뀌다 내 캐릭터에서 멈춘다. */
+/**
+ * S01 → S02 사이 — 8유형 캐릭터가 바뀌다 내 캐릭터에서 멈춘다.
+ *
+ * S02 캐릭터 자리(`relative` 상자) 안에 그린다. 끝나면 같은 자리에 내 캐릭터가
+ * 남고 나머지 결과가 둘레에 나타난다.
+ */
 export function CharacterReveal({ code, name, onDone }: CharacterRevealProps) {
   const t = useTranslations("profile.reveal");
   // 서버에서는 그리지 않는다(연출 신호가 클라이언트에만 있다) — 첫 렌더에 설정을 읽어도 된다
@@ -44,26 +49,26 @@ export function CharacterReveal({ code, name, onDone }: CharacterRevealProps) {
   const found = frame === FRAMES - 1;
 
   return (
-    <div className="flex flex-1 flex-col items-center justify-center px-5">
-      <div className="relative grid size-55 place-items-center">
-        <span aria-hidden className="absolute size-45 rounded-full bg-surface" />
-        {/* 8장을 겹쳐 두고 보이는 것만 바꾼다 — 바뀔 때 이미지를 새로 받지 않는다 */}
-        {CODES.map((c) => (
-          <Image
-            key={c}
-            src={`/characters/${c}.webp`}
-            alt=""
-            width={440}
-            height={440}
-            priority
-            className={`absolute inset-0 size-full ${order[frame] === c ? "opacity-100" : "opacity-0"}`}
-          />
-        ))}
-      </div>
-      <p role="status" className="mt-6 flex min-h-16 flex-col items-center text-center">
+    <>
+      {/* 8장을 겹쳐 두고 보이는 것만 바꾼다 — 바뀔 때 이미지를 새로 받지 않는다 */}
+      {CODES.map((c) => (
+        <Image
+          key={c}
+          src={`/characters/${c}.webp`}
+          alt=""
+          width={440}
+          height={440}
+          priority
+          className={`absolute inset-0 size-full ${order[frame] === c ? "opacity-100" : "opacity-0"}`}
+        />
+      ))}
+      <p
+        role="status"
+        className="absolute top-full left-1/2 mt-4 flex w-max max-w-[calc(100vw-2.5rem)] -translate-x-1/2 flex-col items-center text-center"
+      >
         <span className="ds-body-1 text-sub">{found ? t("found") : t("finding")}</span>
-        {found && <span className="ds-headline mt-1 animate-fade-in">{name}</span>}
+        {found && <span className="ds-headline animate-fade-in mt-1">{name}</span>}
       </p>
-    </div>
+    </>
   );
 }

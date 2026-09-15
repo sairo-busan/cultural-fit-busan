@@ -204,6 +204,43 @@ body {
 .animate-reveal-d5 { animation-delay: 540ms; }
 .animate-reveal-d6 { animation-delay: 660ms; }
 
+/* 크게 올라오는 등장 — 스크롤로 들어선 영역처럼 눈에 띄어야 할 때 */
+@keyframes rise-up {
+  from {
+    opacity: 0;
+    transform: translateY(56px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-rise {
+  opacity: 0;
+  animation: rise-up 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 제자리 페이드 — 하단 고정 버튼처럼 움직이면 안 되는 것. 지연은 animate-reveal-d* 를 같이 쓴다 */
+.animate-fade-delayed {
+  opacity: 0;
+  animation: fade-in 0.6s ease-out forwards;
+}
+
+/* 더 볼 곳이 있다는 화살표 */
+@keyframes nudge {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(5px); }
+}
+
+@keyframes nudge-up {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.animate-nudge { animation: nudge 1.6s ease-in-out infinite; }
+.animate-nudge-up { animation: nudge-up 1.6s ease-in-out infinite; }
+
 @keyframes live-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.4; transform: scale(0.75); }
@@ -383,7 +420,9 @@ body {
     scroll-behavior: auto !important;
   }
 
-  .animate-reveal {
+  .animate-reveal,
+  .animate-rise,
+  .animate-fade-delayed {
     opacity: 1 !important;
     transform: none !important;
   }

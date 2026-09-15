@@ -90,7 +90,7 @@ export function OnboardingPage() {
         leftRef.current.submitted = true;
         saveQuizAnswers(next);
         markJustDiagnosed();
-        router.push("/profile");
+        router.replace("/profile");
       },
       reduce ? 0 : ADVANCE_DELAY,
     );

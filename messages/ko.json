@@ -170,6 +170,35 @@
     }
   },
   "profile": {
+    "label": "이런 여행을 좋아하시는군요",
+    "axesHeading": "내 여행 취향",
+    "poles": {
+      "atmosphere": {
+        "left": "차분",
+        "right": "활기"
+      },
+      "placeType": {
+        "left": "현지",
+        "right": "명소"
+      },
+      "experience": {
+        "left": "한 곳",
+        "right": "여러 곳"
+      }
+    },
+    "promiseTitle": "이렇게 골라드릴게요",
+    "primary": "지금 갈 곳 추천받기",
+    "secondary": "조건 넣고 추천받기",
+    "secondaryHint": "안 맞는 곳은 미리 빼드려요",
+    "more": "이런 여행 더 보기",
+    "top": "처음 화면으로",
+    "retake": {
+      "label": "다시 하기",
+      "title": "처음부터 다시 고를까요?",
+      "body": "끝까지 다시 고르기 전까지 지금 유형은 그대로예요",
+      "confirm": "다시 고르기",
+      "close": "닫기"
+    },
     "reveal": {
       "finding": "내 여행 캐릭터는…",
       "found": "찾았어요!"
