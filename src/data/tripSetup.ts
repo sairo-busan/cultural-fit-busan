@@ -332,21 +332,35 @@ export function visibleQuestions(setup: TripSetup): TripQuestion[] {
   });
 }
 
-/** 요약 바 라벨. 문항 순서대로, 조건부 문항 값도 포함한다 */
-export function summaryLabels(setup: TripSetup): string[] {
+/**
+ * 요약 바 라벨. 문항 순서대로, 조건부 문항 값도 포함한다.
+ *
+ * 9/15 소피 리뷰 발견 — 이 함수가 항상 TRIP_QUESTIONS(한국어 정본)에서 라벨을 읽어서
+ * 영문 모드에서도 요약 바만 한국어로 나왔다. `translations`로 id별 영문 텍스트를
+ * 받으면 그쪽 label을 우선한다(트립셋업 페이지의 `localize()`와 같은 조회 방식).
+ */
+export function summaryLabels(
+  setup: TripSetup,
+  translations?: Record<
+    string,
+    { options: Record<string, { label: string }>; toggles?: Record<string, { label: string }> }
+  >,
+): string[] {
   const labels: string[] = [];
 
   for (const question of visibleQuestions(setup)) {
+    const en = translations?.[question.id];
     const value = setup[question.key];
     const picked = Array.isArray(value) ? value : value ? [value] : [];
 
     for (const code of picked) {
-      const label = question.options.find((o) => o.value === code)?.label;
+      const label =
+        en?.options[String(code)]?.label ?? question.options.find((o) => o.value === code)?.label;
       if (label) labels.push(label);
     }
 
     for (const toggle of question.toggles ?? []) {
-      if (setup[toggle.key]) labels.push(toggle.option.label);
+      if (setup[toggle.key]) labels.push(en?.toggles?.[toggle.key]?.label ?? toggle.option.label);
     }
   }
 
