@@ -5,11 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { SaveButton } from "./SaveButton";
 import { draftPlaceType } from "@/data/placeTypeDraft";
-import {
-  districtLabel,
-  formatStayMinutes,
-  secureImageUrl,
-} from "@/lib/placeDisplay";
+import { districtLabel, secureImageUrl } from "@/lib/placeDisplay";
 import type { RecommendedPlace } from "@/types/place";
 import type { Locale } from "@/i18n/routing";
 
@@ -44,22 +40,20 @@ export function PlaceRow({ place, note, saved, onToggleSave }: PlaceRowProps) {
   const t = useTranslations("place");
 
   const reason = locale === "en" ? place.whyEn : place.whyKo;
+  // 9/15 QA 발견 — title은 그동안 locale 무관 항상 한국어였음. titleEn이 이제
+  // 채워지므로(DB_02 place_name_en) 영문 모드에서 스위치한다. 없으면 한국어로 폴백
+  const title = locale === "en" ? place.titleEn ?? place.title : place.title;
   // 시트가 비어 있는 동안만 초안에서 온다 — `placeTypeDraft.ts` 참고
   const placeType = place.placeType ?? draftPlaceType(place);
   const district = districtLabel(place.addr1);
   const hasImage = Boolean(place.firstImage);
 
   // 문장이 없으면 지표가 근거를 대신하므로 더 많이 보여준다
+  // 9/15 — crowdLevel·stayMinutes·budgetLevel은 92번 시트 잔재라 API 응답에서
+  // 빠짐(DB_01/02/03에 대응 컬럼 없음, BE-FEAT-011 리뷰) — QA 중 발견, 제거함
   const facts = [
     district,
     place.weatherType ? t(`weatherType.${place.weatherType}`) : null,
-    formatStayMinutes(place.stayMinutes, (k, v) => t(k, v)),
-    !reason && place.crowdLevel !== null
-      ? t(place.crowdLevel <= 2 ? "crowd.low" : "crowd.high")
-      : null,
-    !reason && place.budgetLevel !== null && place.budgetLevel <= 1
-      ? t("budget.low")
-      : null,
   ].filter(Boolean);
 
   return (
@@ -83,12 +77,12 @@ export function PlaceRow({ place, note, saved, onToggleSave }: PlaceRowProps) {
           <>
             <p className="ds-body-1 mt-2">{reason}</p>
             <p className="ds-caption mt-2 text-sub">
-              <b className="font-semibold text-ink">{place.title}</b>
+              <b className="font-semibold text-ink">{title}</b>
               {district ? ` · ${district}` : ""}
             </p>
           </>
         ) : (
-          <p className="ds-title-2 mt-2">{place.title}</p>
+          <p className="ds-title-2 mt-2">{title}</p>
         )}
 
         {facts.length > 0 && (
@@ -131,7 +125,7 @@ export function PlaceRow({ place, note, saved, onToggleSave }: PlaceRowProps) {
         <SaveButton
           saved={saved}
           onToggle={() => onToggleSave(place.contentId)}
-          placeName={place.title}
+          placeName={title}
           onScrim={hasImage}
           className="absolute -top-1.5 -right-1.5"
         />
