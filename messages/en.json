@@ -119,5 +119,27 @@
     "noAccount": "No account needed. Your result and saved places stay on this device.",
     "retakeQuiz": "Retake the quiz",
     "takeQuiz": "Take it"
+  },
+  "landing": {
+    "language": "Language",
+    "eyebrow": "Just arrived in Busan?",
+    "title": "Where to go now?\nSAIRO picks for you",
+    "lead": "Three quick steps and we'll guide you.",
+    "steps": {
+      "quiz": {
+        "title": "Answer 3 quick questions",
+        "body": "Takes about 30 seconds"
+      },
+      "character": {
+        "title": "Meet your travel character",
+        "body": "One of 8 types"
+      },
+      "places": {
+        "title": "Get places for right now",
+        "body": "We check the weather and time of day, too"
+      }
+    },
+    "start": "Get started",
+    "browse": "Just look around first"
   }
 }
