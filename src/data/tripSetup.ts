@@ -276,6 +276,54 @@ export const DEFAULT_TRIP_SETUP: TripSetup = {
   currentContext: [],
 };
 
+/** 문항이 허용하는 값 — 아는 값만 통과시키는 데 쓴다 */
+const ALLOWED = new Map<keyof TripSetup, Set<string>>(
+  TRIP_QUESTIONS.map((q) => [q.key, new Set(q.options.map((o) => o.value))]),
+);
+
+/** 불리언으로 저장되는 키 (CMP01 아이·반려동물 토글) */
+const TOGGLE_KEYS = new Set<keyof TripSetup>(
+  TRIP_QUESTIONS.flatMap((q) => q.toggles?.map((t) => t.key) ?? []),
+);
+
+/**
+ * 저장된 `trip_setup` 을 지금 모양으로 맞춘다.
+ *
+ * 키 이름이 바뀐 적이 있어(`walkingDifficulty`→`mobilityCare` 등) 옛 값이 남아 있으면
+ * 배열이어야 할 자리가 `undefined` 가 된다. 기본값 위에 아는 키·아는 값만 얹고
+ * 나머지는 버린다. 화면이 다시 저장하는 순간 정상 모양으로 덮인다.
+ */
+export function normalizeTripSetup(raw: unknown): TripSetup {
+  if (!raw || typeof raw !== "object") return DEFAULT_TRIP_SETUP;
+  const stored = raw as Record<string, unknown>;
+
+  const next = { ...DEFAULT_TRIP_SETUP };
+
+  for (const key of Object.keys(DEFAULT_TRIP_SETUP) as (keyof TripSetup)[]) {
+    const value = stored[key];
+
+    if (TOGGLE_KEYS.has(key)) {
+      (next[key] as boolean) = value === true;
+      continue;
+    }
+
+    const allowed = ALLOWED.get(key);
+    if (Array.isArray(DEFAULT_TRIP_SETUP[key])) {
+      (next[key] as string[]) = Array.isArray(value)
+        ? value.filter(
+            (v): v is string => typeof v === "string" && (allowed?.has(v) ?? true),
+          )
+        : [];
+      continue;
+    }
+
+    (next[key] as string | null) =
+      typeof value === "string" && (allowed?.has(value) ?? true) ? value : null;
+  }
+
+  return next;
+}
+
 /** 지금 화면에 보여야 하는 문항만 (조건부 문항 필터) */
 export function visibleQuestions(setup: TripSetup): TripQuestion[] {
   return TRIP_QUESTIONS.filter((q) => {
