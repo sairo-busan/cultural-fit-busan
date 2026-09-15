@@ -122,6 +122,9 @@
   "placeDetail": {
     "back": "뒤로",
     "photoCount": "{n} / {total}",
+    "photos": "{name} 사진",
+    "prevPhoto": "이전 사진",
+    "nextPhoto": "다음 사진",
     "fitTitle": "이 곳이 맞는 이유",
     "facts": {
       "hours": "영업시간",
