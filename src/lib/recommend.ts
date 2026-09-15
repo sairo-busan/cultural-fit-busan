@@ -1,5 +1,5 @@
 import { getDb } from "@/lib/mongodb";
-import type { RecommendedPlace, PlaceInfoItem } from "@/types/place";
+import type { RecommendedPlace, PlaceInfoItem, Place } from "@/types/place";
 
 /** places(TourAPI 정본) — contentId가 PK(_id) */
 type PlaceDoc = {
@@ -51,6 +51,10 @@ type ScoreBoardDoc = {
   eveningScore: number | null;
   indoorOutdoor: "INDOOR" | "OUTDOOR" | "MIXED" | null;
   petAllowed?: boolean | null;
+  /** 9/15 유나 추가 — 10종 체계, 옛 92번 시트 4종과 다름 */
+  placeType?: Place["placeType"];
+  /** 9/15 유나 추가 — petAllowed=false면 "동반 불가" 원문 */
+  petCondition?: string | null;
 };
 
 /** place_info(DB_02) — placeId가 PK, S10 카드 한 줄용 */
@@ -151,8 +155,8 @@ export async function getRecommendations({
       eventEndDate: place.eventEndDate ?? null,
 
       weatherType,
-      // DB_01 신규 컬럼(9/15 확정, 유나 태깅 대기) — 채워지기 전까지 null
-      placeType: null,
+      placeType: score.placeType ?? null,
+      petCondition: score.petCondition ?? null,
       whyKo: info?.placeDesc ?? null,
       // 다국어(영/한) 확정, DB_02 place_desc_en도 120곳 채워짐(9/15) — BE-FEAT-014 재적재 전까지는 undefined→null
       whyEn: info?.placeDescEn ?? null,

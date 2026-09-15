@@ -11,8 +11,9 @@
  *
  * 9/15 — 옛 92번 시트 원시 태깅 중 DB_01/02/03에 대응 컬럼이 없고 복귀 계획도 없는
  * 필드는 응답에서 뺐다(noiseLevel·crowdLevel·stayMinutes 등 30개). `placeType`만
- * 예외로 남긴다 — DB_01에 신규 컬럼으로 추가하기로 확정(9/15)됐고 유나 태깅 대기 중이라
- * "언젠가 값이 들어올 null"이지 "영구 죽은 필드"가 아니다.
+ * 예외로 남겼는데, 같은 날 유나가 DB_01에 실제로 신규 컬럼을 추가하고 120곳 다
+ * 채웠다 — 값셋은 옛 92번 시트 4종("식음형" 등)이 아니라 새 10종 체계다.
+ * `petCondition`도 같이 신설된 필드(반려동반 이용조건 원문).
  *
  * 이 필드들을 읽는 화면 쪽(main): `src/components/place/PlaceRow.tsx`(crowdLevel·
  * stayMinutes·budgetLevel), `src/app/[locale]/place/[id]/page.tsx`(나머지 대부분 —
@@ -46,8 +47,21 @@ export type Place = {
   eventEndDate: string | null;
 
   weatherType: "indoor" | "outdoor" | "mixed" | null; // mixed = 실내외 겸용(예: 자갈치시장). 정본 시트 실데이터 값 기준
-  /** DB_01 신규 컬럼(9/15 확정, 유나 태깅 대기) — 채워지기 전까지 항상 null */
-  placeType: "식음형" | "시장형" | "해양야경형" | "문화역사형" | null;
+  /** DB_01 신규 컬럼(9/15, 유나 추가·120곳 태깅 완료) */
+  placeType:
+    | "역사·문화"
+    | "전망·야경"
+    | "해변·해안"
+    | "자연·공원"
+    | "시장·먹거리"
+    | "문화·관광"
+    | "체험·시설"
+    | "종교·사찰"
+    | "휴식·웰니스"
+    | "도시·거리"
+    | null;
+  /** DB_01 신규 컬럼(9/15, 유나 추가) — petAllowed=false면 "동반 불가", true면 실제 이용조건 원문 */
+  petCondition: string | null;
   whyKo: string | null; // = DB_02.place_desc (S10 카드 한 줄, 장소 단위)
   whyEn: string | null; // = DB_02.place_desc_en
 
