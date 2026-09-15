@@ -16,6 +16,44 @@ export function districtLabel(addr1: string): string | null {
   return trimmed.length >= 2 ? trimmed : district;
 }
 
+/** 부산 16개 구·군의 영문 표기 (국어의 로마자 표기법) */
+const DISTRICT_EN: Record<string, string> = {
+  중구: "Jung-gu",
+  서구: "Seo-gu",
+  동구: "Dong-gu",
+  영도구: "Yeongdo-gu",
+  부산진구: "Busanjin-gu",
+  동래구: "Dongnae-gu",
+  남구: "Nam-gu",
+  북구: "Buk-gu",
+  해운대구: "Haeundae-gu",
+  사하구: "Saha-gu",
+  금정구: "Geumjeong-gu",
+  강서구: "Gangseo-gu",
+  연제구: "Yeonje-gu",
+  수영구: "Suyeong-gu",
+  사상구: "Sasang-gu",
+  기장군: "Gijang-gun",
+};
+
+/** "부산광역시 기장군 기장읍 …" → "Gijang-gun". 표에 없으면 null */
+export function districtLabelEn(addr1: string): string | null {
+  return DISTRICT_EN[addr1.split(" ")[1] ?? ""] ?? null;
+}
+
+/**
+ * 추천 이유가 한 줄 설명으로 시작하면 그 첫 문장을 뗀다.
+ * "가야 고분과 … 역사박물관입니다. 비교적 조용한…" → "비교적 조용한…"
+ *
+ * 이유 문장이 모두 이렇게 시작해, 제목 아래 한 줄 설명과 박스 첫 줄이 같은 말이 된다.
+ * 설명으로 시작하지 않으면 그대로 둔다.
+ */
+export function reasonWithoutLead(reason: string, lead: string | null): string {
+  if (!lead || !reason.startsWith(lead)) return reason;
+  const rest = reason.slice(lead.length).replace(/^[^.!?]*[.!?]\s*/, "");
+  return rest || reason;
+}
+
 export type Translate = (
   key: string,
   values?: Record<string, string | number>,

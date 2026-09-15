@@ -154,17 +154,27 @@ export type PlaceDetail = {
 
   /** 무장애 원문 중 값이 있는 항목. `key` 는 TourAPI `detailWithTour2` 필드명 */
   accessibility: { key: string; text: string }[];
+
+  /** TourAPI 영문 주소 + 수기 보완 */
+  addr1En: string | null;
+  weatherType: "indoor" | "outdoor" | "mixed" | null;
+  /** 시트 한글 라벨 그대로 ("역사·문화" 등). 10종 밖 값이 올 수 있다 */
+  placeType: string | null;
+  petAllowed: boolean | null;
+  /** 한국어 문구뿐이다. 동반 불가인 곳은 "동반 불가" */
+  petCondition: string | null;
 };
 
-/** `GET /api/place/nearby` 응답 한 건 (BE-FEAT-012). 영문 필드는 BE-FEAT-013 에서 추가 */
+/** `GET /api/place/nearby` 응답 한 건 (BE-FEAT-012 · BE-FEAT-013) */
 export type NearbyPlace = {
   contentId: string;
+  placeId: string;
   title: string;
   firstImage: string | null;
   placeDesc: string | null;
+  nameKo: string;
+  nameEn: string | null;
+  descEn: string | null;
   /** 두 장소 좌표 사이 직선거리 기준 도보 분 */
   distanceMin: number;
-  nameKo?: string | null;
-  nameEn?: string | null;
-  descEn?: string | null;
 };
