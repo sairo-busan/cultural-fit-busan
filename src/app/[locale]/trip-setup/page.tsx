@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { useLocale } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { useStoredState } from "@/hooks/useStoredState";
 import { AppHeader } from "@/components/common/AppHeader";
@@ -18,11 +19,13 @@ import {
   isCompanionValid,
   isUntouched,
 } from "@/data/tripSetup";
+import { TRIP_SETUP_COPY_EN, TRIP_QUESTION_TEXT_EN } from "@/data/tripSetupEn";
 import { STORAGE_KEYS, setTripSetupMode } from "@/lib/storage";
-import type { TripSetup } from "@/types/trip";
+import type { TripSetup, TripQuestion } from "@/types/trip";
 
 export function TripSetupPage() {
   const router = useRouter();
+  const locale = useLocale();
   const [stored, setSetup] = useStoredState<TripSetup>(
     STORAGE_KEYS.tripSetup,
     DEFAULT_TRIP_SETUP,
@@ -35,8 +38,34 @@ export function TripSetupPage() {
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const questions = visibleQuestions(setup);
-  const summary = summaryLabels(setup);
+  const summary = summaryLabels(setup, locale === "en" ? TRIP_QUESTION_TEXT_EN : undefined);
   const canSkip = isUntouched(setup);
+  const copy = locale === "en" ? TRIP_SETUP_COPY_EN : TRIP_SETUP_COPY;
+
+  /** 문항 하나를 영문 모드면 TRIP_QUESTION_TEXT_EN으로 치환한 뒤 돌려준다. 없으면 한국어 그대로 */
+  const localize = (question: TripQuestion): TripQuestion => {
+    if (locale !== "en") return question;
+    const en = TRIP_QUESTION_TEXT_EN[question.id];
+    if (!en) return question;
+    return {
+      ...question,
+      title: en.title,
+      helperText: en.helperText ?? question.helperText,
+      options: question.options.map((o) => ({
+        ...o,
+        label: en.options[o.value]?.label ?? o.label,
+        description: en.options[o.value]?.description ?? o.description,
+      })),
+      toggles: question.toggles?.map((t) => ({
+        ...t,
+        option: {
+          ...t.option,
+          label: en.toggles?.[t.key]?.label ?? t.option.label,
+          description: en.toggles?.[t.key]?.description ?? t.option.description,
+        },
+      })),
+    };
+  };
 
   const update = (
     key: keyof TripSetup,
@@ -91,7 +120,7 @@ export function TripSetupPage() {
         >
           {summary.length > 0
             ? summary.join(" · ")
-            : TRIP_SETUP_COPY.emptySummary}
+            : copy.emptySummary}
         </p>
         {summary.length > 0 && (
           <button
@@ -99,21 +128,22 @@ export function TripSetupPage() {
             onClick={() => setSetup(DEFAULT_TRIP_SETUP)}
             className="ds-caption -my-2 shrink-0 py-2 text-gray-600 underline underline-offset-2"
           >
-            {TRIP_SETUP_COPY.clearAll(summary.length)}
+            {copy.clearAll(summary.length)}
           </button>
         )}
       </div>
 
       <div className="flex-1 overflow-y-auto">
         <div className="flex flex-col gap-2 px-6 pt-8">
-          <h1 className="ds-headline text-ink">{TRIP_SETUP_COPY.title}</h1>
+          <h1 className="ds-headline text-ink">{copy.title}</h1>
           <p className="ds-body-1 text-gray-600">
-            {TRIP_SETUP_COPY.description}
+            {copy.description}
           </p>
         </div>
 
         <div className="flex flex-col gap-8 px-6 pt-8 pb-8">
-          {questions.map((question) => {
+          {questions.map((rawQuestion) => {
+            const question = localize(rawQuestion);
             const titleId = `${question.id}-title`;
             const invalid = flagged === question.id;
 
@@ -136,7 +166,7 @@ export function TripSetupPage() {
                     </p>
                     {!question.multiple && !question.toggles && (
                       <span className="ds-caption text-gray-600">
-                        {TRIP_SETUP_COPY.singleHint}
+                        {copy.singleHint}
                       </span>
                     )}
                   </div>
@@ -147,7 +177,7 @@ export function TripSetupPage() {
                   )}
                   {invalid && (
                     <p role="alert" className="ds-body-2 text-ds-error">
-                      {TRIP_SETUP_COPY.incompleteHint}
+                      {copy.incompleteHint}
                     </p>
                   )}
                 </div>
@@ -206,7 +236,7 @@ export function TripSetupPage() {
 
       <div className="flex shrink-0 flex-col gap-3 px-6 pt-4 pb-safe-cta">
         <p className="ds-caption text-center text-gray-600">
-          {TRIP_SETUP_COPY.fillNotice}
+          {copy.fillNotice}
         </p>
         <div className="flex gap-3">
           {canSkip && (
@@ -215,7 +245,7 @@ export function TripSetupPage() {
               onClick={handleSkip}
               className="ds-title-2 flex h-13 flex-1 items-center justify-center rounded-xl border border-gray-300 text-ink transition-all active:scale-[0.98]"
             >
-              {TRIP_SETUP_COPY.skipCta}
+              {copy.skipCta}
             </button>
           )}
           <button
@@ -223,7 +253,7 @@ export function TripSetupPage() {
             onClick={handleSubmit}
             className="ds-title-2 flex h-13 flex-1 items-center justify-center rounded-xl bg-ink text-white transition-all active:scale-[0.98]"
           >
-            {TRIP_SETUP_COPY.primaryCta}
+            {copy.primaryCta}
           </button>
         </div>
       </div>
