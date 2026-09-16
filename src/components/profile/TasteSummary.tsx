@@ -68,11 +68,21 @@ export function TasteSummary({ code, copy }: TasteSummaryProps) {
         </svg>
       </span>
 
-      <span className="mt-3 flex flex-wrap gap-2">
+      {/*
+        한 줄로 고정하고 넘치면 옆으로 민다 — 영문은 세 축이 한 줄에 들어가지 않아
+        접으면 카드 높이가 로케일마다 달라진다. 잘린 칩이 더 있다는 표시다.
+        스크롤 영역은 키보드로도 움직일 수 있어야 해서 초점을 받는다.
+      */}
+      <span
+        tabIndex={0}
+        role="group"
+        aria-label={t("yourType")}
+        className="mt-3 flex gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
         {axes.map((axis) => (
           <span
             key={axis}
-            className="ds-caption rounded-full border border-primary/30 px-3 py-1.5 font-medium text-primary"
+            className="ds-caption shrink-0 rounded-full border border-primary/30 px-3 py-1.5 font-medium whitespace-nowrap text-primary"
           >
             {axis}
           </span>
