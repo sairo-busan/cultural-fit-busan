@@ -50,7 +50,10 @@
   "nav": {
     "forYou": "For you",
     "saved": "Saved",
-    "me": "Me"
+    "me": "Me",
+    "back": "Back",
+    "close": "Close",
+    "menu": "Menu"
   },
   "feed": {
     "title": "For you, now",
