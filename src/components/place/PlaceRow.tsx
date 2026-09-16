@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { SaveButton } from "./SaveButton";
-import { districtLabel, secureImageUrl } from "@/lib/placeDisplay";
+import { districtLabel, districtLabelEn, secureImageUrl } from "@/lib/placeDisplay";
 import type { RecommendedPlace } from "@/types/place";
 import type { Locale } from "@/i18n/routing";
 
@@ -35,14 +35,17 @@ export function PlaceRow({ place, note, saved, onToggleSave }: PlaceRowProps) {
   const locale = useLocale() as Locale;
   const t = useTranslations("place");
 
-  const title = locale === "en" ? place.titleEn ?? place.title : place.title;
-  const description = locale === "en" ? place.whyEn : place.whyKo;
+  const en = locale === "en";
+  const title = en ? place.titleEn ?? place.title : place.title;
+  const description = en ? place.whyEn : place.whyKo;
   const hasImage = Boolean(place.firstImage);
 
-  const meta = [
-    districtLabel(place.addr1),
-    place.weatherType ? t(`weatherType.${place.weatherType}`) : null,
-  ].filter(Boolean);
+  // 구 이름은 로케일을 따른다 — 목록 API 에 영문 주소가 없어 표에서 만든다
+  const district = en ? districtLabelEn(place.addr1) : districtLabel(place.addr1);
+
+  // 실내외는 넣지 않는다 — 글 칸이 192px 라 영문에서 메타 줄이 두 줄로 접힌다.
+  // 카드(S10)와 상세(S20)에는 그대로 있다.
+  const meta = [district].filter(Boolean);
 
   return (
     <div className="flex items-start gap-2 px-[--gutter] py-4">

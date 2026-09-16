@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { ScreenTitle } from "@/components/common/TabScreen";
 import { PlaceRow } from "@/components/place/PlaceRow";
@@ -9,10 +9,16 @@ import { useSavedPlaces } from "@/hooks/useSavedPlaces";
 import { useStoredSnapshot } from "@/hooks/useStoredSnapshot";
 import { apiUrl } from "@/lib/apiBase";
 import { cf8FitScoreFromCode } from "@/lib/cf8Match";
-import { districtLabel, fitBand, formatSavedAt } from "@/lib/placeDisplay";
+import {
+  districtLabel,
+  districtLabelEn,
+  fitBand,
+  formatSavedAt,
+} from "@/lib/placeDisplay";
 import { readCf8Code } from "@/lib/storage";
 import { SavedSkeleton } from "./SavedSkeleton";
 import type { RecommendedPlace } from "@/types/place";
+import type { Locale } from "@/i18n/routing";
 
 type SortKey = "recent" | "fit";
 const ALL = "__all__";
@@ -43,8 +49,12 @@ type SavedEntry = {
  * 분류 체계가 아니라, 섹션으로 쪼개면 목록이 짧아 보이기만 한다.
  */
 export function SavedContent() {
+  const locale = useLocale() as Locale;
   const t = useTranslations("saved");
   const tPlace = useTranslations("place");
+
+  // 칩과 행의 구 이름은 같은 글자여야 한다 — 다르면 걸러지지 않는다
+  const en = locale === "en";
 
   const cf8Code = useStoredSnapshot(readCf8Code, null);
   const { places: saved, toggle } = useSavedPlaces();
@@ -88,11 +98,11 @@ export function SavedContent() {
           place,
           savedAt: s.savedAt,
           fit: cf8Code ? cf8FitScoreFromCode(cf8Code, place) : null,
-          district: districtLabel(place.addr1),
+          district: en ? districtLabelEn(place.addr1) : districtLabel(place.addr1),
         },
       ];
     });
-  }, [catalog, saved, cf8Code]);
+  }, [catalog, saved, cf8Code, en]);
 
   /** 저장된 곳에 실제로 있는 지역만 — 고를 수 없는 칩을 두면 목록이 없는 것처럼 보인다 */
   const districts = useMemo(() => {

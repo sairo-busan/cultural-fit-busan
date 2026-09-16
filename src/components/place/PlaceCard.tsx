@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { SaveButton } from "./SaveButton";
 import { draftPlaceType } from "@/data/placeTypeDraft";
-import { districtLabel, secureImageUrl } from "@/lib/placeDisplay";
+import { districtLabel, districtLabelEn, secureImageUrl } from "@/lib/placeDisplay";
 import type { RecommendedPlace } from "@/types/place";
 import type { Locale } from "@/i18n/routing";
 
@@ -32,14 +32,18 @@ export function PlaceCard({ place, saved, onToggleSave }: PlaceCardProps) {
   const locale = useLocale() as Locale;
   const t = useTranslations("place");
 
-  const title = locale === "en" ? place.titleEn ?? place.title : place.title;
-  const description = locale === "en" ? place.whyEn : place.whyKo;
+  const en = locale === "en";
+  const title = en ? place.titleEn ?? place.title : place.title;
+  const description = en ? place.whyEn : place.whyKo;
   // 시트가 비어 있는 동안만 초안에서 온다 — `placeTypeDraft.ts` 참고
   const placeType = place.placeType ?? draftPlaceType(place);
   const hasImage = Boolean(place.firstImage);
 
+  // 구 이름은 로케일을 따른다 — 목록 API 에 영문 주소가 없어 표에서 만든다
+  const district = en ? districtLabelEn(place.addr1) : districtLabel(place.addr1);
+
   const meta = [
-    districtLabel(place.addr1),
+    district,
     // 시트 place_type 에 10종 밖 값이 섞여 들어오면 원문 그대로 보여준다
     placeType && (t.has(`placeType.${placeType}`) ? t(`placeType.${placeType}`) : placeType),
     place.weatherType ? t(`weatherType.${place.weatherType}`) : null,
