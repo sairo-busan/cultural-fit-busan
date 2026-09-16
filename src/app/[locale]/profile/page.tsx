@@ -237,7 +237,7 @@ export function ProfilePage() {
               type="button"
               onClick={() => setRetakeOpen(true)}
               aria-label={t("retake.label")}
-              className="-mr-1.5 flex size-8 items-center justify-center text-sub transition-all active:scale-[0.95]"
+              className="-mr-3 flex size-11 items-center justify-center text-sub transition-all active:scale-[0.95]"
             >
               <RotateCcw size={20} strokeWidth={1.5} />
             </button>
