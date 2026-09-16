@@ -19,6 +19,15 @@ type PlaceInfoRow = {
   placeDescEn?: string | null;
 };
 
+/**
+ * 이 분을 넘으면 "가까운 곳"이 아니라 그냥 "덜 먼 곳"이다 — 상위 N개를 무조건
+ * 채우면 가덕도등대처럼 외곽에 있는 장소는 200분 넘게 떨어진 곳까지 나온다
+ * (9/16, #31 S20 붙이며 발견 — BE-FEAT-012 티켓 QA 때도 272분 사례가 있었는데
+ * 그때는 "정렬 자체는 맞다"로만 보고 넘어갔었다). 이 안에 아무것도 없으면
+ * 빈 배열을 주고, 화면(PlaceContent.tsx Nearby)은 비면 섹션째 안 그린다.
+ */
+const MAX_NEARBY_DISTANCE_MIN = 30;
+
 export type NearbyPlace = {
   contentId: string;
   placeId: string;
@@ -77,6 +86,7 @@ export async function getNearbyPlaces(contentId: string, limit = 3): Promise<Nea
     });
   }
 
-  candidates.sort((a, b) => a.distanceMin - b.distanceMin);
-  return candidates.slice(0, limit);
+  const nearby = candidates.filter((c) => c.distanceMin <= MAX_NEARBY_DISTANCE_MIN);
+  nearby.sort((a, b) => a.distanceMin - b.distanceMin);
+  return nearby.slice(0, limit);
 }
