@@ -71,6 +71,31 @@ async function fetchAreaList(contentTypeId?: string): Promise<TourItem[]> {
   return items;
 }
 
+/**
+ * 무장애여행 API가 필드 값 뒤에 자기 카테고리명을 밑줄로 이어붙여서 준다
+ * (예: `"장애인 전용 주차구역 있음_무장애 편의시설"`, 9/16 소피 리뷰 발견 —
+ * S20 상세 43/260건). 필드명(parking·wheelchair 등)으로 이미 구분되는 값이라
+ * 중복이라 지운다. 드물게 그 뒤에 다른 문장이 공백 없이 바로 붙기도 해서
+ * (예: `"...있음_무장애 편의시설장애인은 1시간..."`) 공백으로 치환한다.
+ */
+const ACCESSIBILITY_CATEGORY_SUFFIXES = [
+  "무장애 편의시설",
+  "시각장애인 편의시설",
+  "청각장애인 편의시설",
+  "영유아 동반가족 편의시설",
+];
+
+function cleanAccessibilityInfo(info: TourItem | null): TourItem | null {
+  if (!info) return null;
+  const pattern = new RegExp(`_?(${ACCESSIBILITY_CATEGORY_SUFFIXES.join("|")})`, "g");
+  const cleaned: TourItem = {};
+  for (const [key, value] of Object.entries(info)) {
+    cleaned[key] =
+      typeof value === "string" ? value.replace(pattern, " ").replace(/\s+/g, " ").trim() : value;
+  }
+  return cleaned;
+}
+
 async function fetchDetail(contentId: string, contentTypeId: string) {
   const [common, intro, images, info, withTour] = await Promise.all([
     callTourApi("detailCommon2", { contentId }).catch(() => null),
@@ -89,7 +114,7 @@ async function fetchDetail(contentId: string, contentTypeId: string) {
   // 있는데 필드가 전부 빈 문자열이어도 "명시적 불가"가 아니라 UNKNOWN(null).
   // 값이 하나라도 있으면 "이동약자 배려시설 있음"=true. false는 이 API 특성상 안 나온다
   // (docs/decisions/2026-09-11_DB필드_확정.md — "미등록을 false로 저장하면 안 되는 이유" 참고).
-  const accessibilityInfo: TourItem | null = withTour?.items?.item?.[0] ?? null;
+  const accessibilityInfo: TourItem | null = cleanAccessibilityInfo(withTour?.items?.item?.[0] ?? null);
   const barrierFree = accessibilityInfo
     ? Object.values(accessibilityInfo).some((v) => typeof v === "string" && v.trim() !== "")
     : null;
