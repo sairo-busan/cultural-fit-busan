@@ -2,10 +2,10 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { EmptyState } from "@/components/common/EmptyState";
-import { ScreenTitle, SectionHeader } from "@/components/common/TabScreen";
+import { ListHeader, ScreenTitle } from "@/components/common/TabScreen";
 import { WeatherIcon } from "@/components/common/WeatherIcon";
 import { TasteSummary } from "@/components/profile/TasteSummary";
-import { PlaceRow } from "@/components/place/PlaceRow";
+import { PlaceCard } from "@/components/place/PlaceCard";
 import { useRecommendations } from "@/hooks/useRecommendations";
 import { useSavedPlaces } from "@/hooks/useSavedPlaces";
 import { useStoredSnapshot } from "@/hooks/useStoredSnapshot";
@@ -21,9 +21,8 @@ import type { Locale } from "@/i18n/routing";
  * 목록이 왜 이 순서인지 화면에서 읽히게 하는 것이 이 화면의 목적이다.
  * 유형 → 상황 → 목록 순으로 "이 기준으로 골랐다" 를 먼저 선언한다.
  *
- * 날씨는 관측 사실만 적는다. 엔진이 읽는 `weatherScoreRainy` 가 DB 에 키 자체로
- * 없어 순위에 날씨가 반영되지 않으므로, "비가 와서 실내부터" 같은 인과 문구를
- * 쓰면 사실과 다르다.
+ * 날씨는 관측 사실만 적는다. 순위에서 날씨 비중은 15% 라 "비가 와서 실내부터"
+ * 같은 인과 문구는 쓰지 않는다.
  */
 export function FeedContent() {
   const locale = useLocale() as Locale;
@@ -36,41 +35,44 @@ export function FeedContent() {
 
   if (loading) return <FeedSkeleton />;
 
-  const copy = cf8Code && isCf8Code(cf8Code) ? CF8_PROFILES[locale][cf8Code] : null;
+  const code = cf8Code && isCf8Code(cf8Code) ? cf8Code : null;
+  const copy = code ? CF8_PROFILES[locale][code] : null;
 
   return (
     <>
       <ScreenTitle>{t("title")}</ScreenTitle>
 
-      {copy && (
+      {code && copy && (
         <div className="mt-4">
-          <TasteSummary copy={copy} />
+          <TasteSummary code={code} copy={copy} />
         </div>
       )}
 
-      {/* 기상청 응답이 없으면 줄 자체를 그리지 않는다. 가짜 값을 쓰지 않는다 */}
-      {weather && (
-        <div className="mt-4 flex items-center gap-2 px-[--gutter] text-sub">
-          <WeatherIcon weather={weather} />
-          {temperature !== null && (
-            <span className="ds-numeral text-ink">{Math.round(temperature)}°</span>
-          )}
-          {/*
-            시각은 조회 시각이 아니라 예보 슬롯 시각이다 — 10:18 에 받아도
-            값은 10 시 예보다. 슬롯을 못 고르면 시각만 뺀다.
-          */}
-          <span className="ds-caption font-medium">
-            {forecastSlot
-              ? t("nowIn", {
-                  weather: t(`weather.${weather}`),
-                  time: `${forecastSlot.time.slice(0, 2)}:${forecastSlot.time.slice(2)}`,
-                })
-              : t("nowInNoTime", { weather: t(`weather.${weather}`) })}
-          </span>
-        </div>
-      )}
-
-      <SectionHeader aside={t("sortByMatch")}>{t("sectionTitle")}</SectionHeader>
+      {/* 기상청 응답이 없으면 날씨를 비우고 정렬 기준만 남긴다. 가짜 값을 쓰지 않는다 */}
+      <ListHeader aside={t("sortByMatch")}>
+        {weather && (
+          <>
+            <WeatherIcon weather={weather} className="size-4 shrink-0" />
+            {temperature !== null && (
+              <span className="ds-caption font-semibold text-ink tabular-nums">
+                {Math.round(temperature)}°
+              </span>
+            )}
+            {/*
+              시각은 조회 시각이 아니라 예보 슬롯 시각이다 — 10:18 에 받아도
+              값은 10 시 예보다. 슬롯을 못 고르면 시각만 뺀다.
+            */}
+            <span className="ds-caption truncate">
+              {forecastSlot
+                ? t("nowIn", {
+                    weather: t(`weather.${weather}`),
+                    time: `${forecastSlot.time.slice(0, 2)}:${forecastSlot.time.slice(2)}`,
+                  })
+                : t("nowInNoTime", { weather: t(`weather.${weather}`) })}
+            </span>
+          </>
+        )}
+      </ListHeader>
 
       {/* 진단 전이면 추천을 만들 수 없다 — S01 로 보낸다 */}
       {error === "NEED_QUIZ" && (
@@ -107,7 +109,7 @@ export function FeedContent() {
       {error === null && (
         <div className="mt-2">
           {places.map((place) => (
-            <PlaceRow
+            <PlaceCard
               key={place.contentId}
               place={place}
               saved={savedIds.has(place.contentId)}

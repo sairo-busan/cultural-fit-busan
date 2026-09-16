@@ -50,7 +50,10 @@
   "nav": {
     "forYou": "For you",
     "saved": "Saved",
-    "me": "Me"
+    "me": "Me",
+    "back": "Back",
+    "close": "Close",
+    "menu": "Menu"
   },
   "feed": {
     "title": "For you, now",
@@ -61,7 +64,6 @@
       "cloudy": "Cloudy",
       "rainy": "Rain"
     },
-    "sectionTitle": "Good for you right now",
     "sortByMatch": "Best match",
     "needQuiz": {
       "title": "Tell us your style first",

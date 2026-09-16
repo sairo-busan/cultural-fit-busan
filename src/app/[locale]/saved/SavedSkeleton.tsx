@@ -30,8 +30,8 @@ export function SavedSkeleton() {
       </div>
 
       <div className="mt-4">
-        {[0, 1].map((i) => (
-          <PlaceRowSkeleton key={i} withNote />
+        {[0, 1, 2].map((i) => (
+          <PlaceRowSkeleton key={i} />
         ))}
       </div>
     </>

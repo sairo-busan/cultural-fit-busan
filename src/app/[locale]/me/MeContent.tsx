@@ -37,7 +37,8 @@ export function MeContent() {
   const cf8Code = useStoredSnapshot(readCf8Code, null);
   const mode = useStoredSnapshot(readMode, null);
 
-  const copy = cf8Code && isCf8Code(cf8Code) ? CF8_PROFILES[locale][cf8Code] : null;
+  const code = cf8Code && isCf8Code(cf8Code) ? cf8Code : null;
+  const copy = code ? CF8_PROFILES[locale][code] : null;
 
   return (
     <>
@@ -47,8 +48,8 @@ export function MeContent() {
       <div className="mt-4">
         {!hydrated ? (
           <TasteSummarySkeleton />
-        ) : copy ? (
-          <TasteSummary copy={copy} />
+        ) : code && copy ? (
+          <TasteSummary code={code} copy={copy} />
         ) : (
           <NotDiagnosed label={t("notDiagnosed")} action={t("takeQuiz")} />
         )}

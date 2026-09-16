@@ -50,7 +50,10 @@
   "nav": {
     "forYou": "추천",
     "saved": "저장",
-    "me": "내 정보"
+    "me": "내 정보",
+    "back": "뒤로 가기",
+    "close": "닫기",
+    "menu": "메뉴"
   },
   "feed": {
     "title": "지금 갈 만한 곳",
@@ -61,7 +64,6 @@
       "cloudy": "흐림",
       "rainy": "비"
     },
-    "sectionTitle": "지금, 이런 곳이 맞아요",
     "sortByMatch": "추천순",
     "needQuiz": {
       "title": "먼저 취향을 알려주세요",
