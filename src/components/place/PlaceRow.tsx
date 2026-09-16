@@ -9,6 +9,7 @@ import { districtLabel, secureImageUrl } from "@/lib/placeDisplay";
 import type { RecommendedPlace } from "@/types/place";
 import type { Locale } from "@/i18n/routing";
 
+
 /**
  * 추천·저장이 함께 쓰는 목록 행.
  *
