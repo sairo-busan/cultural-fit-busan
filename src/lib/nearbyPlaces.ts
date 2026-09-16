@@ -26,7 +26,7 @@ type PlaceInfoRow = {
  * 그때는 "정렬 자체는 맞다"로만 보고 넘어갔었다). 이 안에 아무것도 없으면
  * 빈 배열을 주고, 화면(PlaceContent.tsx Nearby)은 비면 섹션째 안 그린다.
  */
-const MAX_NEARBY_DISTANCE_MIN = 60;
+const MAX_NEARBY_DISTANCE_MIN = 30;
 
 export type NearbyPlace = {
   contentId: string;
