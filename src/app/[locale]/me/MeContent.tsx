@@ -104,6 +104,8 @@ export function MeContent() {
       <section className="mt-8">
         <SectionTitle>{t("about")}</SectionTitle>
         <p className="ds-body-2 mt-2 px-[--gutter] text-sub">{t("noAccount")}</p>
+
+        <SettingRow href="/privacy" label={t("privacy")} value={null} emptyLabel="" hydrated />
       </section>
     </>
   );
