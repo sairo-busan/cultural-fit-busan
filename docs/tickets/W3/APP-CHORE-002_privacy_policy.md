@@ -62,16 +62,19 @@ Google Play 는 앱 등록에 **개인정보처리방침 URL 을 필수로 요�
 | 광고 · 분석 없음 | 광고 SDK · 분석 SDK 미설치 |
 | TourAPI · 기상청 중계 | `/api/*` 가 공개 정보를 받아 전달한다 |
 
-보호책임자 · 문의 이메일은 기존 노션 문서와 동일하게 유지한다(신윤아 · yonashin11@gmail.com).
+보호책임자는 **SAIRO 팀**으로 적고 문의 메일만 남긴다(yonashin11@gmail.com).
+
+법인이 없어 스토어 개발자 계정 명의자가 사실상 운영 주체지만, 수집하는 개인정보가 없어
+문의처만 있으면 스토어 요건을 충족한다. 팀으로 두면 담당이 바뀌어도 문서를 고치지 않는다.
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] `/ko/privacy` · `/en/privacy` 가 웹 빌드에 생성된다
-- [ ] 내 정보에서 링크로 들어갈 수 있다
-- [ ] 앱 빌드(`npm run build:app`) 산출물에도 포함된다
-- [ ] `tsc --noEmit` · lint 통과
+- [x] `/ko/privacy` · `/en/privacy` 가 웹 빌드에 생성된다
+- [x] 내 정보에서 링크로 들어갈 수 있다 — 에뮬레이터 확인
+- [x] 앱 빌드(`npm run build:app`) 산출물에도 포함된다
+- [x] `tsc --noEmit` · lint 통과
 - [ ] 배포 후 `https://cultural-fit-busan.vercel.app/ko/privacy` 가 열린다
 - [ ] Play 콘솔 `앱 콘텐츠 > 개인정보처리방침` URL 교체
 - [ ] 원스토어 판매정보에도 같은 URL 반영

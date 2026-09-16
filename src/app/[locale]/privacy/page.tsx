@@ -14,8 +14,8 @@ export function generateStaticParams() {
 }
 
 const CONTACT = "yonashin11@gmail.com";
-const OFFICER_KO = "신윤아";
-const OFFICER_EN = "Yoonah Shin";
+const OFFICER_KO = "SAIRO 팀";
+const OFFICER_EN = "SAIRO team";
 const UPDATED = "2026-09-16";
 
 const KO = {
