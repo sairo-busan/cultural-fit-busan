@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
  * 저장 토글.
  *
  * 색은 **바탕이 정한다**. 사진 밝기마다 색을 달리하면 같은 저장 상태가 행마다
- * 제각각 보이므로, 사진 위는 `PlaceRow` 가 깐 스크림 덕에 밝기와 무관하게
+ * 제각각 보이므로, 사진 위는 `PlaceCard` 가 깐 스크림 덕에 밝기와 무관하게
  * 언제나 흰색이다. 사진이 없는 밝은 자리만 먹색으로 간다.
  *
  * 경우는 둘뿐이고 둘 다 확정적이다 — 사진마다 갈리지 않는다.
@@ -56,7 +56,7 @@ export function SaveButton({
       aria-pressed={saved}
       aria-label={t(saved ? "removeFromSaved" : "save", { name: placeName })}
       onClick={(event) => {
-        // 행 전체가 상세로 가는 링크라 저장이 이동을 일으키면 안 된다
+        // 사진 카드에서는 이 버튼이 링크 안에 있다 — 저장이 이동을 일으키면 안 된다
         event.preventDefault();
         event.stopPropagation();
 
