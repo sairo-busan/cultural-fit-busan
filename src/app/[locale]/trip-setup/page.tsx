@@ -398,7 +398,7 @@ export function TripSetupPage() {
           className={`ds-title-2 flex min-h-12 flex-1 items-center justify-center gap-1.5 rounded-xl transition-colors ${
             complete
               ? "bg-primary text-white active:bg-primary-press"
-              : "bg-surface text-sub"
+              : "bg-surface text-sub-on-surface"
           }`}
         >
           {complete ? (

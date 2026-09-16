@@ -68,7 +68,7 @@ export function LandingPage() {
               )}
               <span
                 aria-hidden
-                className="ds-caption grid size-7 shrink-0 place-items-center rounded-full bg-surface font-bold text-sub"
+                className="ds-caption grid size-7 shrink-0 place-items-center rounded-full bg-surface font-bold text-sub-on-surface"
               >
                 {i + 1}
               </span>
