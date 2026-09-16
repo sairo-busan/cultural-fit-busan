@@ -53,6 +53,17 @@ export function googleMapsUrl(nameKo: string): string {
 }
 
 /**
+ * 부산관광아카이브에서 받아 직접 올린 사진인지 본다. TourAPI 사진과 출처가 다르다.
+ *
+ * `imageSources.cpyrhtDivCd` 는 공공누리 유형이지 제공 기관이 아니라 이 구분에 못 쓴다 —
+ * 유형이 안 붙은 TourAPI 사진도 `null` 로 온다. `next.config.ts` 의 허용 패턴과 같은
+ * 기준이라 스토어를 다시 만들어 서브도메인이 바뀌어도 그대로 잡힌다.
+ */
+export function isArchivePhoto(url: string): boolean {
+  return url.includes("blob.vercel-storage.com");
+}
+
+/**
  * 추천 이유가 한 줄 설명으로 시작하면 그 첫 문장을 뗀다.
  * "가야 고분과 … 역사박물관입니다. 비교적 조용한…" → "비교적 조용한…"
  *

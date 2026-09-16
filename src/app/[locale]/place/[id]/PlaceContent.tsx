@@ -8,7 +8,7 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { useSavedPlaces } from "@/hooks/useSavedPlaces";
 import { useStoredSnapshot } from "@/hooks/useStoredSnapshot";
 import { Link, useRouter } from "@/i18n/navigation";
-import { districtLabel, districtLabelEn, googleMapsUrl, reasonWithoutLead, secureImageUrl } from "@/lib/placeDisplay";
+import { districtLabel, districtLabelEn, googleMapsUrl, isArchivePhoto, reasonWithoutLead, secureImageUrl } from "@/lib/placeDisplay";
 import { readCf8Code } from "@/lib/storage";
 import { PlaceSkeleton } from "./PlaceSkeleton";
 import type { Locale } from "@/i18n/routing";
@@ -124,6 +124,12 @@ export function PlaceContent() {
     : TIP_KEYS.flatMap((key) => (place.tipsKo[key] ? [{ key, text: place.tipsKo[key] }] : []));
   const access = en ? [] : place.accessibility.filter((a) => t.has(`accessibility.${a.key}`));
 
+  // 출처 — 사진만 출처가 갈린다. 둘 다 TourAPI 면 한 줄로 합치고, 사진이 없으면 사진 줄을 뺀다
+  const archivePhoto = place.images.some(isArchivePhoto);
+  const tourPhoto = place.images.some((url) => !isArchivePhoto(url));
+  const photoSource = archivePhoto ? (tourPhoto ? "photoBoth" : "photoArchive") : null;
+  const restSource = photoSource || !tourPhoto ? "rest" : "all";
+
   return (
     // 다른 장소로 넘어가면 갤러리 위치 · 근처 목록을 처음부터 다시 그린다
     <article key={place.contentId}>
@@ -213,7 +219,14 @@ export function PlaceContent() {
 
         <Nearby contentId={place.contentId} en={en} />
 
-        <p className="ds-caption mt-8 text-sub">{t("source")}</p>
+        {/* 공공누리는 제1 · 제3유형 모두 출처표시가 필수다. 라벨을 붙여 출처를 적었다는 것이 화면에서 보이게 한다 */}
+        <section aria-labelledby="source" className="mt-8">
+          <h2 id="source" className="ds-caption font-semibold text-ink">
+            {t("source.label")}
+          </h2>
+          {photoSource && <p className="ds-caption text-sub">{t(`source.${photoSource}`)}</p>}
+          <p className="ds-caption text-sub">{t(`source.${restSource}`)}</p>
+        </section>
       </div>
 
       {/* 지도는 구글맵으로 넘긴다 — 외국인 사용자에게 카카오맵은 설치돼 있지 않은 앱이다. 길찾기는 구글맵 안에서 이어간다 */}
