@@ -219,6 +219,7 @@
     "submit": "추천받기",
     "submitDone": "이대로 추천받기",
     "later": "나중에 할게요",
-    "reset": "초기화"
+    "reset": "초기화",
+    "clear": "지우기"
   }
 }

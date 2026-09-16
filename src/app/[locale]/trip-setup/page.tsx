@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { ChevronDown } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { useStoredState } from "@/hooks/useStoredState";
 import { AppHeader } from "@/components/common/AppHeader";
@@ -31,8 +32,8 @@ const SECTIONS = TRIP_QUESTIONS.reduce<TripQuestion[][]>((sections, q) => {
 /** 규칙을 설명하는 도움말만 보인다 */
 const HELP_SHOWN = new Set(["CMP01", "CHILD01"]);
 
-/** 영역 제목을 고정 제목 아래 이만큼 띄워 멈춘다 */
-const SCROLL_GAP = 16;
+/** 펼친 영역 제목을 스크롤 영역 위에서 이만큼 띄워 멈춘다 */
+const SCROLL_GAP = 12;
 
 const visible = (setup: TripSetup, q: TripQuestion) =>
   !q.showWhen || setup[q.showWhen.key] === q.showWhen.equals;
@@ -46,10 +47,11 @@ const sectionDone = (setup: TripSetup, section: TripQuestion[]) =>
   section.every((q) => !visible(setup, q) || answered(setup, q));
 
 /**
- * S03 조건 입력 — 제목은 고정하고 다섯 영역을 모두 그린다.
+ * S03 조건 입력 — 다섯 영역을 한 줄씩 접어 두고, 누른 영역만 펼친다.
  *
- * 다섯 영역을 한 화면에 늘어놓고 순서와 상관없이 고르게 둔다. 덜 채운 채
- * 추천받기를 누르면 그 영역으로 올려 보여준다.
+ * 선택지를 다 펼치면 칩이 26개라 화면이 무겁다. 접힌 줄에는 고른 값을 보여줘서
+ * 펼치지 않고도 무엇을 골랐는지 읽힌다. 고를 때 화면은 움직이지 않는다 —
+ * 여러 개 고르는 영역에서 하나만 고르고 화면이 내려가면 나머지를 고를 수 없다.
  */
 export function TripSetupPage() {
   const router = useRouter();
@@ -64,7 +66,8 @@ export function TripSetupPage() {
 
   /** 미선택으로 지적된 문항 id — 추천받기를 누른 뒤에만 표시한다 */
   const [flagged, setFlagged] = useState<string | null>(null);
-  const [tailPad, setTailPad] = useState(0);
+  /** 펼친 영역 — 한 번에 하나만 */
+  const [open, setOpen] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<(HTMLElement | null)[]>([]);
 
@@ -99,6 +102,7 @@ export function TripSetupPage() {
     };
   };
 
+  /** 펼친 영역이 화면 위로 오게 — 접힌 줄이 위에 있어 펼침이 아래로 밀린다 */
   const scrollToSection = (index: number) => {
     const scroller = scrollRef.current;
     const section = sectionRefs.current[index];
@@ -112,24 +116,9 @@ export function TripSetupPage() {
     });
   };
 
-  // 마지막 영역도 고정 제목 아래까지 올릴 수 있게 끝에 여백을 둔다
-  useEffect(() => {
-    const scroller = scrollRef.current;
-    if (!scroller) return;
-    const measure = () => {
-      const last = sectionRefs.current[SECTIONS.length - 1];
-      setTailPad(
-        Math.max(0, scroller.clientHeight - (last?.offsetHeight ?? 0) - SCROLL_GAP),
-      );
-    };
-    measure();
-    window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
-  }, []);
-
   /**
-   * 저장. 다음 영역으로 자동으로 내려가지 않는다 —
-   * 여러 개 고르는 영역에서 하나만 고르고 화면이 움직이면 나머지를 고를 수 없다.
+   * 저장. 고를 때 화면은 움직이지 않는다 — 여러 개 고르는 영역에서 하나만 고르고
+   * 화면이 내려가면 나머지를 고를 수 없다.
    */
   const commit = (next: TripSetup) => {
     setSetup(next);
@@ -153,15 +142,16 @@ export function TripSetupPage() {
     commit(next);
   };
 
-  /** 미선택 영역이 있으면 보내지 않고 그 문항으로 이동시킨다 (화면설계서 12) */
+  /** 미선택 영역이 있으면 보내지 않고 그 영역을 펼쳐 보여준다 (화면설계서 12) */
   const handleSubmit = () => {
     const pending = firstUnanswered(setup);
 
     if (pending) {
+      const index = SECTIONS.findIndex((section) => section.includes(pending));
       setFlagged(pending.id);
-      scrollToSection(
-        SECTIONS.findIndex((section) => section.includes(pending)),
-      );
+      setOpen(index);
+      // 펼쳐진 뒤 높이가 잡히면 올린다
+      requestAnimationFrame(() => scrollToSection(index));
       return;
     }
 
@@ -178,7 +168,7 @@ export function TripSetupPage() {
     }
     setSetup(DEFAULT_TRIP_SETUP);
     setFlagged(null);
-    scrollToSection(0);
+    setOpen(null);
   };
 
   const back = () => {
@@ -186,15 +176,47 @@ export function TripSetupPage() {
     else router.push("/profile");
   };
 
+  /** 접힌 줄에 보여줄 값 — 고른 게 없으면 몇 개를 고르는 영역인지 */
+  const summary = (section: TripQuestion[]) => {
+    const labels: string[] = [];
+    for (const raw of section) {
+      if (!visible(setup, raw)) continue;
+      const question = localize(raw);
+      const value = setup[question.key];
+      const picked = Array.isArray(value) ? value : value ? [value] : [];
+      for (const code of picked) {
+        const label = question.options.find((o) => o.value === code)?.label;
+        if (label) labels.push(label);
+      }
+      for (const toggle of question.toggles ?? []) {
+        if (setup[toggle.key]) labels.push(toggle.option.label);
+      }
+    }
+    return labels;
+  };
+
+  /** 이 영역에서 고른 것만 지운다 — 칩을 다시 눌러 푸는 동작이 눈에 안 보여서 함께 둔다 */
+  const clearSection = (section: TripQuestion[]) => {
+    const next = { ...setup };
+    for (const question of section) {
+      (next[question.key] as string[] | string | null) = Array.isArray(
+        setup[question.key],
+      )
+        ? []
+        : null;
+      for (const toggle of question.toggles ?? [])
+        (next[toggle.key] as boolean) = false;
+    }
+    commit(next);
+  };
+
+  const countKey = (section: TripQuestion[]) =>
+    section[0].toggles ? "companion" : section[0].multiple ? "any" : "one";
+
   const renderQuestion = (rawQuestion: TripQuestion, sub: boolean) => {
     const question = localize(rawQuestion);
     const titleId = `${question.id}-title`;
     const invalid = flagged === question.id;
-    const count = question.toggles
-      ? "companion"
-      : question.multiple
-        ? "any"
-        : "one";
 
     const chips = question.multiple ? (
       <CheckChipGroup
@@ -221,22 +243,13 @@ export function TripSetupPage() {
         key={question.id}
         className={sub ? "mt-4 border-l-2 border-hair pl-4" : ""}
       >
-        {sub ? (
+        {sub && (
           <h3 id={titleId} className="ds-body-1 font-semibold">
             {question.title}
           </h3>
-        ) : (
-          <div className="flex items-baseline justify-between gap-3">
-            <h2 id={titleId} className="ds-title-1 font-bold">
-              {question.title}
-            </h2>
-            <span className="ds-caption shrink-0 text-sub">
-              {t(`count.${count}`)}
-            </span>
-          </div>
         )}
         {question.helperText && HELP_SHOWN.has(question.id) && (
-          <p className="ds-body-2 mt-1 text-sub">{question.helperText}</p>
+          <p className="ds-caption mt-1 text-sub">{question.helperText}</p>
         )}
         {invalid && (
           <p role="alert" className="ds-body-2 mt-1 text-danger">
@@ -286,30 +299,83 @@ export function TripSetupPage() {
     <div className="flex h-dvh flex-col">
       <AppHeader onBack={back} />
 
-      <div className="screen shrink-0 pt-2 pb-2">
+      <div className="shrink-0 px-6 pt-3 pb-5">
         <h1 className="ds-display">{t("title")}</h1>
         <p className="ds-body-1 mt-2 text-sub">{t("lead")}</p>
       </div>
 
       <div ref={scrollRef} className="relative min-h-0 flex-1 overflow-y-auto">
-        <div className="screen flex flex-col gap-8 pt-6">
-          {SECTIONS.map((section, sectionIndex) => (
-            <section
-              key={section[0].id}
-              ref={(el) => {
-                sectionRefs.current[sectionIndex] = el;
-              }}
-            >
-              {section
-                .filter((q) => visible(setup, q))
-                .map((q) => renderQuestion(q, Boolean(q.showWhen)))}
-            </section>
-          ))}
+        <div className="flex flex-col px-6 pb-10">
+          {SECTIONS.map((section, sectionIndex) => {
+            const expanded = open === sectionIndex;
+            const picked = summary(section);
+            const panelId = `${section[0].id}-panel`;
+            return (
+              <section
+                key={section[0].id}
+                ref={(el) => {
+                  sectionRefs.current[sectionIndex] = el;
+                }}
+                className="border-b border-hair last:border-b-0"
+              >
+                <h2>
+                  <button
+                    type="button"
+                    aria-expanded={expanded}
+                    aria-controls={panelId}
+                    onClick={() => setOpen(expanded ? null : sectionIndex)}
+                    className="flex w-full items-center gap-4 py-6 text-left"
+                  >
+                    <span className="ds-title-1 shrink-0 font-bold">
+                      {localize(section[0]).title}
+                    </span>
+                    <span
+                      className={`ds-body-2 flex-1 truncate text-right ${
+                        picked.length > 0 ? "text-ink" : "text-sub"
+                      }`}
+                    >
+                      {picked.length > 0
+                        ? picked.join(" · ")
+                        : t(`count.${countKey(section)}`)}
+                    </span>
+                    <ChevronDown
+                      size={20}
+                      strokeWidth={1.8}
+                      aria-hidden
+                      className={`shrink-0 text-sub transition-transform duration-200 ${
+                        expanded ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+                </h2>
+                {expanded && (
+                  <div id={panelId} className="pb-4">
+                    {section
+                      .filter((q) => visible(setup, q))
+                      .map((q) => renderQuestion(q, Boolean(q.showWhen)))}
+                    {/* 자리는 늘 잡아 둔다 — 나타났다 사라질 때 아래가 밀리지 않게 */}
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => clearSection(section)}
+                        aria-hidden={picked.length === 0}
+                        tabIndex={picked.length === 0 ? -1 : undefined}
+                        className={`ds-body-2 min-h-11 px-2 font-medium text-sub underline underline-offset-4 ${
+                          picked.length === 0 ? "invisible" : ""
+                        }`}
+                      >
+                        {t("clear")}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </section>
+            );
+          })}
         </div>
-        <div aria-hidden style={{ height: tailPad }} />
       </div>
 
-      <div className="screen pb-safe-cta flex shrink-0 items-center gap-4 border-t border-hair pt-3">
+      <div className="pb-safe-cta flex shrink-0 items-center gap-4 border-t border-hair px-6 pt-4">
         {/* 두 문구 중 넓은 쪽으로 자리를 잡아 둔다 — 바뀔 때 버튼이 밀리지 않게 */}
         <button
           type="button"

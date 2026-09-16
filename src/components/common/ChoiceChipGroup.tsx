@@ -24,7 +24,9 @@ export type ChoiceOption = {
 /** 연회색 칩, 고르면 잉크 */
 const itemClass = (selected: boolean, invalid = false) =>
   `ds-body-2 inline-flex min-h-11 items-center rounded-full px-4 transition-colors active:opacity-80 ${
-    selected ? "bg-primary font-semibold text-white" : "bg-surface font-medium text-ink"
+    selected
+      ? "bg-primary font-semibold text-white"
+      : "bg-surface font-medium text-ink"
   } ${invalid && !selected ? "ring-1 ring-danger ring-inset" : ""}`;
 
 const LIST = "flex flex-wrap gap-2";

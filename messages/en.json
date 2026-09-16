@@ -219,6 +219,7 @@
     "submit": "Get my picks",
     "submitDone": "Get my picks",
     "later": "Maybe later",
-    "reset": "Reset"
+    "reset": "Reset",
+    "clear": "Clear"
   }
 }
