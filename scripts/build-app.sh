@@ -9,17 +9,13 @@
 #                   정적 export 가 지원하지 않는다. API 는 Vercel 에 그대로 남고
 #                   앱은 절대 주소로 부른다(`src/lib/apiBase.ts`).
 #
-#   src/app/[locale]/place
-#                   `/place/[id]` 가 `generateStaticParams()` 없는 동적 라우트다.
-#                   S20 은 아직 목업 값이라 이번 빌드에서는 화면 자체를 넣지 않는다.
-#                   실데이터가 붙으면(FE-FEAT-010) 이 줄을 지운다.
-#
-# 빌드 순서가 페이지 → API 라서 둘을 한꺼번에 빼지 않으면 에러가 하나씩만 보인다.
+#                   상세(`/place/[id]`)는 빌드에 넣는다 — 페이지를 장소 수만큼 미리
+#                   만든다(`place/[id]/page.tsx` 의 `generateStaticParams`).
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-EXCLUDE=(src/app/api "src/app/[locale]/place")
+EXCLUDE=(src/app/api)
 PARK="$(mktemp -d)"
 
 restore() {
@@ -48,8 +44,7 @@ for path in "${EXCLUDE[@]}"; do
 done
 
 rm -rf .next out
-# 상세 라우트를 뺐으니 목록 행도 링크를 그리지 않는다
-BUILD_TARGET=app NEXT_PUBLIC_DETAIL_ENABLED=false npx next build
+BUILD_TARGET=app npx next build
 
 # ── 루트 진입점 ─────────────────────────────────────────────────
 #

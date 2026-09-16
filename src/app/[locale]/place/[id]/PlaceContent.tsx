@@ -15,6 +15,7 @@ import type { Locale } from "@/i18n/routing";
 // 응답 타입은 API 쪽 정의를 그대로 쓴다. 타입만 가져와 서버 코드는 번들에 들어가지 않는다
 import type { NearbyPlace } from "@/lib/nearbyPlaces";
 import type { PlaceDetail } from "@/lib/placeDetail";
+import { apiUrl } from "@/lib/apiBase";
 
 /**
  * 없는 id 와 불러오기 실패를 가른다. 목록이 바뀌어 사라진 곳에 "다시 시도" 를
@@ -46,7 +47,7 @@ export function PlaceContent() {
     async function run() {
       setLoad({ status: "loading" });
       try {
-        const res = await fetch(`/api/place/${encodeURIComponent(id)}`);
+        const res = await fetch(apiUrl(`/api/place/${encodeURIComponent(id)}`));
         const next: Load =
           res.status === 404
             ? { status: "notFound" }
@@ -277,7 +278,7 @@ function Nearby({ contentId, en }: { contentId: string; en: boolean }) {
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`/api/place/nearby?contentId=${encodeURIComponent(contentId)}&limit=3`)
+    fetch(apiUrl(`/api/place/nearby?contentId=${encodeURIComponent(contentId)}&limit=3`))
       .then((res) => (res.ok ? (res.json() as Promise<NearbyPlace[]>) : []))
       .then((list) => {
         if (!cancelled) setPlaces(list);
