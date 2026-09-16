@@ -39,7 +39,7 @@ export function AppHeader({ onBack, onClose, onMenu, logo, right }: AppHeaderPro
         )}
         {logo && (
           <Link
-            href="/"
+            href="/feed"
             className="ds-title-1 font-serif tracking-tight text-ink"
           >
             Cultural Fit Busan

@@ -201,5 +201,107 @@
       "body": "연결을 확인하고 다시 시도해 주세요.",
       "action": "다시 시도"
     }
+  },
+  "landing": {
+    "language": "언어",
+    "eyebrow": "부산에 도착하셨나요?",
+    "title": "지금 갈 곳,\nSAIRO가 골라드릴게요",
+    "lead": "세 단계만 거치면 바로 안내해드릴게요",
+    "steps": {
+      "quiz": {
+        "title": "취향 질문 3개에 답해요",
+        "body": "30초면 끝나요"
+      },
+      "character": {
+        "title": "내 여행 캐릭터를 만나요",
+        "body": "8가지 유형 중 하나예요"
+      },
+      "places": {
+        "title": "지금 갈 만한 곳을 받아요",
+        "body": "날씨와 시간대까지 보고 골라요"
+      }
+    },
+    "start": "시작하기",
+    "browse": "먼저 둘러볼게요"
+  },
+  "onboarding": {
+    "later": "나중에 할게요",
+    "progress": "{current} / {total} · {axis}",
+    "axis": {
+      "atmosphere": "분위기",
+      "placeType": "장소",
+      "experience": "여행 방식"
+    },
+    "quit": {
+      "withResult": {
+        "title": "다음에 고를까요?",
+        "body": "지금 유형 그대로 추천을 볼 수 있어요. 고르던 답은 저장되지 않아요",
+        "keep": "계속 고를게요",
+        "leave": "그만할게요"
+      },
+      "noResult": {
+        "title": "지금 멈추면 추천을 볼 수 없어요",
+        "body": "추천은 세 가지 답으로 만들어요. {remaining}개만 더 고르면 돼요",
+        "keep": "계속 고를게요",
+        "leave": "그래도 둘러볼게요"
+      }
+    },
+    "toast": {
+      "unsaved": "고르던 답은 저장되지 않았어요. 처음부터 골라주세요",
+      "retake": "끝까지 고르면 새 유형으로 바뀌어요"
+    }
+  },
+  "profile": {
+    "label": "이런 여행을 좋아하시는군요",
+    "axesHeading": "내 여행 취향",
+    "poles": {
+      "atmosphere": {
+        "left": "차분",
+        "right": "활기"
+      },
+      "placeType": {
+        "left": "현지",
+        "right": "명소"
+      },
+      "experience": {
+        "left": "한 곳",
+        "right": "여러 곳"
+      }
+    },
+    "promiseTitle": "이렇게 골라드릴게요",
+    "primary": "지금 갈 곳 추천받기",
+    "secondary": "조건 넣고 추천받기",
+    "secondaryHint": "안 맞는 곳은 미리 빼드려요",
+    "more": "이런 여행 더 보기",
+    "top": "처음 화면으로",
+    "retake": {
+      "label": "다시 하기",
+      "title": "처음부터 다시 고를까요?",
+      "body": "끝까지 다시 고르기 전까지 지금 유형은 그대로예요",
+      "confirm": "다시 고르기",
+      "close": "닫기"
+    },
+    "reveal": {
+      "finding": "내 여행 캐릭터는…",
+      "found": "찾았어요!"
+    }
+  },
+  "tripSetup": {
+    "title": "오늘 여행은 어떤가요?",
+    "lead": "고른 조건에 맞는 장소를 추천해드려요",
+    "count": {
+      "one": "하나만",
+      "any": "여러 개",
+      "companion": "한 분 + 동반"
+    },
+    "empty": {
+      "one": "하나를 골라주세요",
+      "any": "해당 없으면 '없어요'를 골라주세요"
+    },
+    "submit": "추천받기",
+    "submitDone": "이대로 추천받기",
+    "later": "나중에 할게요",
+    "reset": "초기화",
+    "clear": "지우기"
   }
 }

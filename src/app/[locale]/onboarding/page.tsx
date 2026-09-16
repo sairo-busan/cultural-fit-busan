@@ -1,157 +1,187 @@
 "use client";
 
-import { useRef } from "react";
-import { useLocale } from "next-intl";
+import { useEffect, useRef, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import * as RadioGroup from "@radix-ui/react-radio-group";
 import { useRouter } from "@/i18n/navigation";
-import { useStoredState } from "@/hooks/useStoredState";
 import { AppHeader } from "@/components/common/AppHeader";
-import { RadioChipGroup } from "@/components/common/ChoiceChipGroup";
-import { QuizProgress } from "@/components/quiz/QuizProgress";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+import { useToast } from "@/contexts/ToastContext";
+import { useStoredSnapshot } from "@/hooks/useStoredSnapshot";
 import {
   QUIZ_QUESTIONS,
   QUIZ_TEXT,
   CHOICE_VALUES,
   TOTAL_QUESTIONS,
-  QUIZ_INTRO,
   DEFAULT_QUIZ_ANSWERS,
 } from "@/data/quiz";
-import { isComplete } from "@/lib/cfp";
-import { STORAGE_KEYS } from "@/lib/storage";
+import {
+  markJustDiagnosed,
+  markQuizLeft,
+  readCf8Code,
+  saveQuizAnswers,
+  takeQuizLeft,
+} from "@/lib/storage";
 import type { QuizAnswers } from "@/types/cfp";
 import type { Locale } from "@/i18n/routing";
 
+/** 고른 선택지를 보여준 뒤 다음 문항으로 넘어가기까지 */
+const ADVANCE_DELAY = 700;
+
 /**
- * S01 취향 진단.
+ * S01 취향 진단 — 한 화면에 한 문항.
  *
- * 3문항을 한 화면에 둔다 — 피그마 `S01`(1007:1661)과 화면설계서 slide1 기준.
- * 이전에는 문항당 1화면이었는데, 2지선다로 바뀌면서 화면 하나에 선택지 두 개만
- * 남아 허전했다.
- *
- * 상단 단계 표시는 첫 미응답 문항을 가리킨다. 누르면 그 문항으로 스크롤한다.
+ * 고르면 나머지 선택지가 왼쪽으로 밀리며 사라지고 다음 문항으로 넘어간다.
+ * 답은 화면 상태로만 들고 있다가 세 번째 문항을 고를 때 한 번에 저장한다 —
+ * 다시 진단 중에 나가도 이전 결과가 섞이지 않는다.
  */
 export function OnboardingPage() {
   const router = useRouter();
   const locale = useLocale() as Locale;
-  const intro = QUIZ_INTRO[locale];
-  const text = QUIZ_TEXT[locale];
-  // 9/16 QA 발견 — useLocalStorage는 첫 클라이언트 렌더부터 실제 저장값을 읽어서
-  // 서버 HTML(항상 기본값)과 어긋난다(하이드레이션 에러). useStoredState로 교체
-  // (트립셋업 페이지와 같은 패턴, useStoredState.ts 헤더 주석 참고).
-  const [answers, setAnswers] = useStoredState<QuizAnswers>(
-    STORAGE_KEYS.answers,
-    DEFAULT_QUIZ_ANSWERS,
-  );
-  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const t = useTranslations("onboarding");
+  const { show } = useToast();
+  const hasResult = useStoredSnapshot(readCf8Code, null) !== null;
 
-  const scrollTo = (id: string) =>
-    sectionRefs.current[id]?.scrollIntoView({
-      behavior: "smooth",
-      block: "center",
-    });
+  const [step, setStep] = useState(0);
+  const [answers, setAnswers] = useState<QuizAnswers>(DEFAULT_QUIZ_ANSWERS);
+  const [picked, setPicked] = useState<number | null>(null);
+  const [quitOpen, setQuitOpen] = useState(false);
 
-  const pendingIndex = QUIZ_QUESTIONS.findIndex(
-    (q) => answers[q.answerKey] === null,
-  );
-  const currentStep = pendingIndex === -1 ? TOTAL_QUESTIONS : pendingIndex + 1;
+  const question = QUIZ_QUESTIONS[step];
+  const text = QUIZ_TEXT[locale][question.id];
+  const current = answers[question.answerKey];
+  const answered = QUIZ_QUESTIONS.filter((q) => answers[q.answerKey] !== null).length;
 
-  /** 미응답이 있으면 결과로 보내지 않고 그 문항으로 이동시킨다 */
-  const handleSubmit = () => {
-    if (pendingIndex !== -1) {
-      scrollTo(QUIZ_QUESTIONS[pendingIndex].id);
-      return;
-    }
-    router.push("/profile");
+  // 나갈 때 고르던 답이 있으면 다음 진입에 한 번 알린다
+  const leftRef = useRef({ answered: 0, submitted: false });
+  useEffect(() => {
+    leftRef.current.answered = answered;
+  }, [answered]);
+
+  const toastShown = useRef(false);
+  useEffect(() => {
+    if (toastShown.current) return;
+    toastShown.current = true;
+    if (takeQuizLeft()) show(t("toast.unsaved"));
+    else if (readCf8Code()) show(t("toast.retake"));
+  }, [show, t]);
+
+  useEffect(() => {
+    const left = leftRef.current;
+    return () => {
+      if (!left.submitted && left.answered > 0) markQuizLeft();
+    };
+  }, []);
+
+  const pick = (index: number) => {
+    if (picked !== null) return;
+    const next = { ...answers, [question.answerKey]: CHOICE_VALUES[index] };
+    setAnswers(next);
+    setPicked(index);
+
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setTimeout(
+      () => {
+        if (step < TOTAL_QUESTIONS - 1) {
+          setStep(step + 1);
+          setPicked(null);
+          return;
+        }
+        leftRef.current.submitted = true;
+        saveQuizAnswers(next);
+        markJustDiagnosed();
+        router.replace("/profile");
+      },
+      reduce ? 0 : ADVANCE_DELAY,
+    );
   };
+
+  const back = () => {
+    if (picked !== null) return;
+    if (step > 0) setStep(step - 1);
+    else if (window.history.length > 1) router.back();
+    else router.push("/");
+  };
+
+  const quit = hasResult ? "withResult" : "noResult";
 
   return (
     <div className="flex flex-1 flex-col">
       <AppHeader
-        onBack={() => router.push("/")}
+        onBack={back}
         right={
           <button
             type="button"
-            onClick={() => router.push("/feed")}
-            className="ds-caption text-gray-600"
+            onClick={() => setQuitOpen(true)}
+            className="ds-body-2 -mr-2 min-h-12 px-2 font-medium text-sub"
           >
-            {intro.skipLabel}
+            {t("later")}
           </button>
         }
       />
 
-      <QuizProgress
-        currentStep={currentStep}
-        totalSteps={TOTAL_QUESTIONS}
-        labels={QUIZ_QUESTIONS.map((q) => text[q.id].stepLabel)}
-        onStepClick={(step) => scrollTo(QUIZ_QUESTIONS[step - 1].id)}
-      />
+      <div className="screen flex gap-1" aria-hidden>
+        {QUIZ_QUESTIONS.map((q, i) => (
+          <span
+            key={q.id}
+            className={`h-0.75 flex-1 rounded-full transition-colors duration-300 ${i <= step ? "bg-ink" : "bg-hair"}`}
+          />
+        ))}
+      </div>
 
-      <div className="flex-1 overflow-y-auto">
-        <div className="flex flex-col gap-2 px-6 pt-6">
-          <span className="ds-label text-gray-600">{intro.eyebrow}</span>
-          <h1 className="ds-display text-ink">{intro.title}</h1>
-          <p className="ds-body-1 text-gray-600">{intro.description}</p>
-        </div>
+      <main className="screen flex-1 pt-8">
+        <p className="ds-body-2 font-semibold text-sub">
+          {t("progress", {
+            current: step + 1,
+            total: TOTAL_QUESTIONS,
+            axis: t(`axis.${question.answerKey}`),
+          })}
+        </p>
+        <h1 id="quiz-question" className="ds-headline mt-2">
+          {text.question}
+        </h1>
 
-        <div className="flex flex-col gap-3 px-6 pt-8 pb-8">
-          {QUIZ_QUESTIONS.map((question) => {
-            const titleId = `${question.id}-title`;
-            const value = answers[question.answerKey];
-
+        <RadioGroup.Root
+          key={step}
+          aria-labelledby="quiz-question"
+          // 고르기는 누를 때만 — 값 변경으로 받으면 이미 고른 답을 다시 눌러도 넘어가지 않고,
+          // 화살표 키로 둘러보기만 해도 다음 문항으로 넘어간다
+          value={current === null ? "" : String(current)}
+          className={`mt-8 flex flex-col gap-2 ${picked !== null ? "pointer-events-none" : ""}`}
+        >
+          {text.choices.map((choice, i) => {
+            const selected = picked === null ? current === CHOICE_VALUES[i] : picked === i;
+            const leaving = picked !== null && picked !== i;
             return (
-              <div
-                key={question.id}
-                ref={(el) => {
-                  sectionRefs.current[question.id] = el;
-                }}
-                className="flex flex-col gap-3 rounded-xl border border-gray-200 px-5 py-5"
+              <RadioGroup.Item
+                key={choice.label}
+                value={String(CHOICE_VALUES[i])}
+                onClick={() => pick(i)}
+                style={leaving ? { transitionDelay: `${i * 40}ms` } : undefined}
+                className={`ds-title-2 flex min-h-15 w-full items-center rounded-2xl px-6 py-3 text-left transition-[opacity,translate,background-color,color] duration-400 ${
+                  selected ? "bg-primary text-white" : "bg-surface text-ink"
+                } ${leaving ? "-translate-x-7.5 opacity-0" : ""}`}
               >
-                <div className="flex flex-col gap-2">
-                  <span className="ds-caption text-gray-600">
-                    {text[question.id].stepLabel}
-                  </span>
-                  <p id={titleId} className="ds-title-1 text-ink">
-                    {text[question.id].question}
-                  </p>
-                </div>
-
-                <RadioChipGroup
-                  variant="row"
-                  labelledBy={titleId}
-                  options={text[question.id].choices.map((choice, i) => ({
-                    value: String(CHOICE_VALUES[i]),
-                    label: choice.label,
-                    description: choice.description,
-                  }))}
-                  value={value === null ? null : String(value)}
-                  onChange={(next) =>
-                    setAnswers({
-                      ...answers,
-                      [question.answerKey]: Number(next) as (typeof CHOICE_VALUES)[number],
-                    })
-                  }
-                />
-              </div>
+                {choice.label}
+              </RadioGroup.Item>
             );
           })}
+        </RadioGroup.Root>
+      </main>
 
-          <p className="ds-caption pt-2 text-gray-600">{intro.footnote}</p>
-        </div>
-      </div>
-
-      <div className="flex shrink-0 flex-col gap-2 px-6 pt-4 pb-safe-cta">
-        {!isComplete(answers) && (
-          <p className="ds-caption text-center text-gray-600">
-            {intro.submitHint}
-          </p>
-        )}
-        <button
-          type="button"
-          onClick={handleSubmit}
-          className="ds-title-2 flex h-13 w-full items-center justify-center rounded-xl bg-ink text-white transition-all active:scale-[0.98]"
-        >
-          {intro.submitLabel}
-        </button>
-      </div>
+      <ConfirmDialog
+        open={quitOpen}
+        title={t(`quit.${quit}.title`)}
+        body={t(`quit.${quit}.body`, { remaining: TOTAL_QUESTIONS - answered })}
+        primaryLabel={t(`quit.${quit}.keep`)}
+        secondaryLabel={t(`quit.${quit}.leave`)}
+        onPrimary={() => setQuitOpen(false)}
+        onSecondary={() => {
+          setQuitOpen(false);
+          router.push("/feed");
+        }}
+        onClose={() => setQuitOpen(false)}
+      />
     </div>
   );
 }

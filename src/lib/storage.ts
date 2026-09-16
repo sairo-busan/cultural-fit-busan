@@ -1,3 +1,5 @@
+import type { QuizAnswers } from "@/types/cfp";
+
 /**
  * localStorage 키 정의.
  *
@@ -129,4 +131,77 @@ export function toggleSaved(id: string, now = new Date()): SavedPlace[] {
 
   localStorage.setItem(STORAGE_KEYS.saved, JSON.stringify(next));
   return next;
+}
+
+/**
+ * "방금 진단을 마쳤다" 신호.
+ *
+ * S02 의 분석 연출은 결과를 처음 받아 보는 순간에만 뜻이 있다. 피드나 내 정보에서
+ * 유형 카드를 눌러 다시 들어온 사람에게는 이미 아는 결과를 2 초 동안 가리는
+ * 장막일 뿐이다.
+ *
+ * localStorage 가 아니라 sessionStorage 인 이유 — 이 신호는 이번 방문에만
+ * 유효하다. localStorage 에 두면 탭을 닫았다 열어도 남아 연출이 다시 돈다.
+ */
+const JUST_DIAGNOSED = "cfb_just_diagnosed";
+
+export function markJustDiagnosed(): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(JUST_DIAGNOSED, "1");
+  } catch {
+    // 저장이 막힌 브라우저에서는 연출만 건너뛴다. 결과는 그대로 보인다
+  }
+}
+
+/** `useStoredSnapshot` 이 렌더마다 부르므로 부수효과 없이 읽기만 한다 */
+export function readJustDiagnosed(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return sessionStorage.getItem(JUST_DIAGNOSED) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function clearJustDiagnosed(): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.removeItem(JUST_DIAGNOSED);
+  } catch {
+    // 지울 수 없으면 다음 방문에 연출이 한 번 더 돈다 — 기능은 멀쩡하다
+  }
+}
+
+/** S01 세 문항을 다 고른 순간에만 저장한다 — 중간에 나가면 이전 결과가 그대로 남는다 */
+export function saveQuizAnswers(answers: QuizAnswers): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(STORAGE_KEYS.answers, JSON.stringify(answers));
+}
+
+/**
+ * "S01 을 고르다 나갔다" 신호. 다시 들어왔을 때 답이 비어 있는 이유를 한 번 알려주려고 둔다.
+ * 이번 방문에만 뜻이 있어 sessionStorage 에 둔다.
+ */
+const QUIZ_LEFT = "cfb_quiz_left";
+
+export function markQuizLeft(): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(QUIZ_LEFT, "1");
+  } catch {
+    // 저장이 막히면 안내 토스트만 빠진다
+  }
+}
+
+/** 읽으면서 지운다 — 토스트는 한 번만 */
+export function takeQuizLeft(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const left = sessionStorage.getItem(QUIZ_LEFT) === "1";
+    sessionStorage.removeItem(QUIZ_LEFT);
+    return left;
+  } catch {
+    return false;
+  }
 }

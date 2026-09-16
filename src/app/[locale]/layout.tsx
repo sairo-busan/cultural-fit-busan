@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Instrument_Serif } from "next/font/google";
 import localFont from "next/font/local";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
@@ -21,14 +20,6 @@ const pretendard = localFont({
     { path: "../fonts/Pretendard-SemiBold.subset.woff2", weight: "600", style: "normal" },
     { path: "../fonts/Pretendard-Bold.subset.woff2", weight: "700", style: "normal" },
   ],
-});
-
-/** 숫자·브랜드 마크 전용. 한글이 없어 본문에는 쓰지 않는다. */
-const instrumentSerif = Instrument_Serif({
-  variable: "--font-serif-display",
-  subsets: ["latin"],
-  weight: ["400"],
-  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -64,7 +55,7 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
-      className={`${pretendard.variable} ${instrumentSerif.variable} h-full antialiased`}
+      className={`${pretendard.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
         <NextIntlClientProvider>

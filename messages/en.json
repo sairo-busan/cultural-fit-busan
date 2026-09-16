@@ -201,5 +201,107 @@
       "body": "Check your connection and try again.",
       "action": "Try again"
     }
+  },
+  "landing": {
+    "language": "Language",
+    "eyebrow": "Just arrived in Busan?",
+    "title": "Where to go now?\nSAIRO picks for you",
+    "lead": "Three quick steps and we'll guide you.",
+    "steps": {
+      "quiz": {
+        "title": "Answer 3 quick questions",
+        "body": "Takes about 30 seconds"
+      },
+      "character": {
+        "title": "Meet your travel character",
+        "body": "One of 8 types"
+      },
+      "places": {
+        "title": "Get places for right now",
+        "body": "We check the weather and time of day, too"
+      }
+    },
+    "start": "Get started",
+    "browse": "Just look around first"
+  },
+  "onboarding": {
+    "later": "Maybe later",
+    "progress": "{current} / {total} · {axis}",
+    "axis": {
+      "atmosphere": "Atmosphere",
+      "placeType": "Places",
+      "experience": "Pace"
+    },
+    "quit": {
+      "withResult": {
+        "title": "Finish this later?",
+        "body": "Your current type stays. Answers so far won't be saved.",
+        "keep": "Keep going",
+        "leave": "Stop for now"
+      },
+      "noResult": {
+        "title": "You won't see picks yet",
+        "body": "Picks are built from three answers. Just {remaining} more.",
+        "keep": "Keep going",
+        "leave": "Look around anyway"
+      }
+    },
+    "toast": {
+      "unsaved": "Your answers weren't saved. Let's start again.",
+      "retake": "Your type changes only when you finish"
+    }
+  },
+  "profile": {
+    "label": "So this is how you travel",
+    "axesHeading": "Your travel preferences",
+    "poles": {
+      "atmosphere": {
+        "left": "Calm",
+        "right": "Lively"
+      },
+      "placeType": {
+        "left": "Local",
+        "right": "Landmark"
+      },
+      "experience": {
+        "left": "One place",
+        "right": "Many places"
+      }
+    },
+    "promiseTitle": "Here's how we'll pick",
+    "primary": "Places to go now",
+    "secondary": "Add details first",
+    "secondaryHint": "We'll skip places that won't work",
+    "more": "See more",
+    "top": "Back to top",
+    "retake": {
+      "label": "Retake",
+      "title": "Retake the quiz?",
+      "body": "Your current type stays until you finish again.",
+      "confirm": "Retake",
+      "close": "Close"
+    },
+    "reveal": {
+      "finding": "Your travel character is…",
+      "found": "Found it!"
+    }
+  },
+  "tripSetup": {
+    "title": "What's your trip like today?",
+    "lead": "We'll recommend places that fit your choices",
+    "count": {
+      "one": "One",
+      "any": "Any",
+      "companion": "One + extras"
+    },
+    "empty": {
+      "one": "Pick one",
+      "any": "Nothing applies? Pick \"None\""
+    },
+    "submit": "Get my picks",
+    "submitDone": "Get my picks",
+    "later": "Maybe later",
+    "reset": "Reset",
+    "clear": "Clear"
   }
 }
