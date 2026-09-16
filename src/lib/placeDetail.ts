@@ -27,7 +27,13 @@ type PlaceDoc = {
   firstImage: string | null;
   /** TourAPI에 사진이 없는 곳 직접 소싱한 대체 사진(9/16, upload-place-photos.ts) */
   customImage?: string | null;
+  /** 대표 이미지(firstImage)의 공공누리 유형 — areaBasedList2 item 단위 값이라
+   * 갤러리 사진들(imageSources)과는 별도로 온다 */
+  cpyrhtDivCd?: string | null;
   images?: string[];
+  /** 사진별 출처 표기용(9/16, ingest-places.ts) — url은 images와 같은 값, 공공누리
+   * 유형(cpyrhtDivCd)만 이미지 단위로 따로 온다(장소 전체 cpyrhtDivCd와 다를 수 있음) */
+  imageSources?: { url: string; cpyrhtDivCd: string | null }[];
   operationInfo?: OperationInfo;
   accessibilityInfo?: Record<string, string> | null;
   engContentId?: string;
@@ -71,6 +77,9 @@ export type PlaceDetail = {
   mapX: number;
   mapY: number;
   images: string[];
+  /** 9/16 — 사진별 출처(공공누리 유형) 표기용. 표기 위치는 아직 미정(소피 확인 중) —
+   * 위치 정해지기 전에 데이터만 먼저 내려준다. url은 images 배열과 같은 값이 겹친다 */
+  imageSources: { url: string; cpyrhtDivCd: string | null }[];
   nameKo: string;
   nameEn: string | null;
   descKo: string | null;
@@ -166,6 +175,17 @@ export async function getPlaceDetail(contentId: string): Promise<PlaceDetail | n
     )
   ).map(toHttps);
 
+  // 이미지별 출처 — imageSources(갤러리)에서 못 찾은 URL(대개 firstImage)은
+  // 장소 단위 cpyrhtDivCd로 보충한다. 매칭은 URL로 하는데 대표 이미지가
+  // http/https만 다르게 올 때가 있어 toHttps로 맞춘 뒤 비교한다.
+  const sourceByUrl = new Map(
+    (place.imageSources ?? []).map((s) => [toHttps(s.url), s.cpyrhtDivCd])
+  );
+  const imageSources = images.map((url) => ({
+    url,
+    cpyrhtDivCd: sourceByUrl.get(url) ?? place.cpyrhtDivCd ?? null,
+  }));
+
   const accessibility = Object.entries(place.accessibilityInfo ?? {})
     .filter(([key, text]) => key !== "contentid" && typeof text === "string" && text.trim() !== "")
     .map(([key, text]) => ({ key, text }));
@@ -179,6 +199,7 @@ export async function getPlaceDetail(contentId: string): Promise<PlaceDetail | n
     mapX: place.mapX,
     mapY: place.mapY,
     images,
+    imageSources,
 
     nameKo: info?.placeName ?? place.title,
     nameEn: info?.placeNameEn ?? null,
