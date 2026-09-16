@@ -13,7 +13,7 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
-const CONTACT = "yonashin11@gmail.com";
+const CONTACT = "sairo.guide@gmail.com";
 const OFFICER_KO = "SAIRO 팀";
 const OFFICER_EN = "SAIRO team";
 const UPDATED = "2026-09-16";
