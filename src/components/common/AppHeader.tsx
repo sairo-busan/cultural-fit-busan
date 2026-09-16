@@ -16,7 +16,7 @@ export function AppHeader({ onBack, onClose, onMenu, logo, right }: AppHeaderPro
     // 상단 여백은 기기 상태바 높이를 따른다 (Capacitor Android 노치 대응).
     // pt-safe-header 가 env(safe-area-inset-top) 이고, 웹에서는 0이라 기본 여백을 더한다.
     <div className="pt-safe-header flex items-center justify-between px-5 pb-3">
-      <div className="flex items-center">
+      <div className="flex min-h-8 items-center">
         {onBack && (
           <button
             type="button"
@@ -40,9 +40,9 @@ export function AppHeader({ onBack, onClose, onMenu, logo, right }: AppHeaderPro
         {logo && (
           <Link
             href="/feed"
-            className="ds-title-1 font-serif tracking-tight text-ink"
+            className="ds-title-2 font-bold tracking-wider text-ink"
           >
-            Cultural Fit Busan
+            SAIRO
           </Link>
         )}
       </div>
