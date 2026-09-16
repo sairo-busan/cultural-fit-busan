@@ -124,6 +124,11 @@ async function fetchDetail(contentId: string, contentTypeId: string) {
     overview: commonItem?.overview ?? null,
     operationInfo: introItem ?? {},
     images: imageItems.map((img) => img.originimgurl).filter(Boolean),
+    // 9/16 — S20 사진별 출처 표기용(공공누리 유형 표시 검토, 소피 요청). images와
+    // 별도 필드로 둔다 — images: string[]를 그대로 쓰는 화면(#31 Hero 등)을 안 건드리려고.
+    imageSources: imageItems
+      .filter((img) => img.originimgurl)
+      .map((img) => ({ url: img.originimgurl, cpyrhtDivCd: img.cpyrhtDivCd || null })),
     info: infoItems
       .filter((i) => i.infotext)
       .map((i) => ({ name: i.infoname, text: i.infotext })),
