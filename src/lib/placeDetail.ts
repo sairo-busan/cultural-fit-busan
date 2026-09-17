@@ -65,7 +65,14 @@ type PlaceInfoDoc = {
   placeDesc: string | null;
   placeDescEn?: string | null;
   guideDetailKo?: string | null;
+  /** @deprecated 9/17 guideDetailEn으로 이전(migrate-guide-en-to-detail-en.ts).
+   * 소피가 PlaceContent.tsx의 place.guideEn 참조를 바꾸기 전까지 응답 하위호환용으로만 유지 */
   guideEn?: string | null;
+  /** 9/17 guideEn에서 이전 — 도슨트 구조 변경(간단히/자세히/팁 3종 영문 완성) */
+  guideDetailEn?: string | null;
+  guideSimpleKo?: string | null;
+  /** 9/17 LLM 번역 */
+  guideSimpleEn?: string | null;
   /** "관람 순서: …\n사진 포인트: …\n유의사항: …" 원문 그대로 (BE-FEAT-014) */
   guideTipsRawKo?: string | null;
   /** 9/17 LLM 번역, "Route: …\nPhoto spot: …\nCaution: …" 구조로 guideTipsRawKo와 대칭 */
@@ -98,7 +105,11 @@ export type PlaceDetail = {
   /** 9/17 영문 필드 감사 후속, LLM 번역 */
   reasonByCf8En: Record<string, string | null>;
   guideDetailKo: string | null;
+  guideSimpleKo: string | null;
+  /** @deprecated 9/17 guideDetailEn으로 이전. 소피 PR 머지 후 제거 예정 */
   guideEn: string | null;
+  guideDetailEn: string | null;
+  guideSimpleEn: string | null;
   tipsKo: { route: string | null; photo: string | null; caution: string | null };
   /** 9/17 LLM 번역, guideTipsRawEn을 영문 라벨(Route:/Photo spot:/Caution:)로 분리 */
   tipsEn: { route: string | null; photo: string | null; caution: string | null };
@@ -247,7 +258,10 @@ export async function getPlaceDetail(contentId: string): Promise<PlaceDetail | n
     reasonByCf8En,
 
     guideDetailKo: info?.guideDetailKo ?? null,
+    guideSimpleKo: info?.guideSimpleKo ?? null,
     guideEn: info?.guideEn ?? null,
+    guideDetailEn: info?.guideDetailEn ?? null,
+    guideSimpleEn: info?.guideSimpleEn ?? null,
     tipsKo: parseTips(info?.guideTipsRawKo),
     tipsEn: parseTipsEn(info?.guideTipsRawEn),
 
