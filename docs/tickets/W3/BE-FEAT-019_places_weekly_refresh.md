@@ -14,7 +14,7 @@ TourAPI 데이터 활용도를 높이기 위해 `places` 원본을 GitHub Action
 | Type | FEAT |
 | Severity | Medium |
 | Layer | CI / Script / Lib |
-| Status | Done(코드) — 시크릿 등록 대기 |
+| Status | Done — 머지 후 `workflow_dispatch` 1회 확인만 남음 |
 | Screen | S20 (장소 상세) |
 | Depends | BE-FEAT-013(placeDetail.ts) |
 | Related | 심사 기준 "데이터 활용(20점)" |
@@ -58,10 +58,9 @@ TourAPI 콜 수(120곳×4종 API 이상, 480+콜/회)를 아끼고, 장소 운�
 하루 단위로 바뀔 일이 드물어 매주로 충분하다고 판단(사용자 결정). 시간대는
 일요일 04:00 KST(=토요일 19:00 UTC) — 트래픽 가장 적은 시간대.
 
-**주의**: TourAPI(공공데이터포털) 일일 트래픽 한도가 이 리포에 문서화돼
-있지 않다(사용자 추정 "일 1,000건 정도"이나 미확인) — 공공데이터포털
-마이페이지에서 정확한 한도 확인 필요. 480+콜/회가 그 한도를 넘으면 워크플로우
-스텝이 실패할 수 있다.
+**확인 완료(9/17)**: TourAPI(공공데이터포털) 일일 트래픽 한도는 1,000건
+(일반 계정 기준). 480+콜/회는 여유 있게 안에 들어온다. 운영계정으로
+신청하면 한도가 더 늘어난다(필요 시 검토).
 
 ### `import-eng-content-id.ts`는 워크플로우에 안 넣는다
 
@@ -111,8 +110,6 @@ LLM 재번역 자체는 CI에서 안 한다(Anthropic API 연동 인프라 없�
 
 ### 제외
 
-- `TOUR_API_KEY`·`MONGODB_URI` GitHub Actions 시크릿 등록 — 권한 분류기가
-  차단, 사용자가 직접 등록 필요(아래 Implementation Notes)
 - LLM 자동 재번역(CI 내) — 사람이 이슈 보고 수동 처리
 - `place_info`·`score_board`(유나 태깅) 자동 갱신 — 스코프 아님, 수동 유지
 
@@ -125,7 +122,8 @@ LLM 재번역 자체는 CI에서 안 한다(Anthropic API 연동 인프라 없�
 3. `fill-accessibility-en.ts`: accessibilityInfoEn 43/43곳
 4. `check-stale-en-fields.ts` 로컬 실행 — stale 0건(방금 채운 값과 원본이
    아직 같으므로 정상)
-5. 워크플로우는 시크릿 등록 후 `workflow_dispatch`로 수동 1회 실행해 확인 필요
+5. 워크플로우는 main 머지 후(`workflow_dispatch`는 기본 브랜치에 파일이
+   있어야 실행 가능 — GitHub 제약) 수동 1회 실행해 확인 필요
 
 ---
 
@@ -133,12 +131,7 @@ LLM 재번역 자체는 CI에서 안 한다(Anthropic API 연동 인프라 없�
 
 ### 2026-09-17: 배치 설정 + Phase 4 데이터 적재
 
-- GitHub Actions 시크릿(`TOUR_API_KEY`, `MONGODB_URI`) 등록을 시도했으나
-  Claude Code 권한 분류기가 "Secret-Store Writes"로 차단 — **사용자가 직접
-  등록하거나, 다음에 명시적으로 승인해줘야 진행 가능**.
-  ```
-  gh secret set TOUR_API_KEY --repo sairo-busan/cultural-fit-busan
-  gh secret set MONGODB_URI --repo sairo-busan/cultural-fit-busan
-  ```
-- TourAPI 일일 트래픽 한도 미확인 — 공공데이터포털에서 확인 후 480+콜/회가
-  안전한지 재검토 필요.
+- GitHub Actions 시크릿(`TOUR_API_KEY`, `MONGODB_URI`) 등록 완료(사용자
+  승인 후).
+- TourAPI 일일 트래픽 한도 확인 완료 — 일반 계정 1,000건/일, 480+콜/회로
+  안전. 운영계정 전환 시 한도 더 늘어남(필요 시 검토).
