@@ -10,7 +10,7 @@
 | Type | FEAT |
 | Severity | High |
 | Layer | Screen |
-| Status | Todo |
+| Status | In Progress |
 | Screen | S20 장소 상세 · 내 정보(이 앱에 대해) · 사진·콘텐츠 출처(신규) |
 | Branch | `feat/image-source-credit` (워크트리 `cfb-credits`, `origin/main` 기준) |
 | Depends | Step 2 만 — 에린 `feat/image-copyright-source`(`imageSources`) 머지 |
@@ -96,12 +96,6 @@ TourAPI `cpyrhtDivCd` 가 `Type3` 인 49곳은 활용매뉴얼 v4.4 기준 **"�
 3. `object-fit: cover` 는 **CSS 표시 방식**이라 잘린 사본을 만들어 배포하지 않는다. 원본이 통째로 전달되고 브라우저가 틀 밖을 안 그릴 뿐이다
 
 > 저장 탭 1:1 은 평균 34%·최대 54% 가 잘린다. 저작권과 무관하게 사진을 알아보기 어려워지는 문제라 **디자인 개선 항목**으로 따로 둔다(이 티켓 범위 밖).
-
-### 확인 대기
-
-| 항목 | 누구 |
-|---|---|
-| `feat/image-copyright-source` 를 최신 main 위로 리베이스 (`placeDetail.ts` 충돌 1곳) | 에린 |
 
 ---
 
