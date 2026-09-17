@@ -367,7 +367,7 @@ export const CF8_PROFILES: Record<Locale, Record<Cf8Code, Cf8ProfileCopy>> = {
       },
     },
     EFV: {
-      profileName: "Popular Landmark Hopper",
+      profileName: "Landmark Hopper",
       resultIntro:
         "You like following Busan's iconic landmarks and talked-about scenes, experiencing as many sides of the city as you can.",
       recommendationPromise:
