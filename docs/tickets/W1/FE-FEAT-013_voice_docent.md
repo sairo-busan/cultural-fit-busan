@@ -18,7 +18,7 @@ S20 제목 아래 카드로 연다 — 오른쪽에서 밀려 들어오는 전�
 | Status | In Progress |
 | Screen | S20 · S23 |
 | Branch | `feat/voice-docent` (워크트리 `cfb-docent`, `origin/main` 기준) |
-| Depends | BE-FEAT-016 (PR #47 — `guideSimpleKo` · `guideSimpleEn` · `guideDetailEn`) · 시트 새 원고 DB 적재 · 음원 URL (에린 TTS) |
+| Depends | BE-FEAT-016 (PR #47 — `guideSimpleKo` · `guideSimpleEn` · `guideDetailEn`) · BE-FEAT-017 · 018 (PR #49 · #50 — `audioUrl{Simple,Detail}{Ko,En}`) |
 | Related | 피그마 `S22 · 문화 가이드`(`1067:524`) · `S23 · 음성 도슨트`(`1156:17413`) |
 
 ---
@@ -38,14 +38,15 @@ S20 에 도슨트로 들어갈 입구와 화면이 없다. 시트(DB_02)에 스�
 
 | 화면 | 시트 칸 · 평균 | DB 필드 · 평균 | 상세 API 응답 |
 |---|---|---|---|
-| `간단히` | `도슨트_간단히` 120곳 · 198자 (약 40초) | `guideSimpleKo` 119곳 · 77자 | `guideSimpleKo` (PR #47) |
-| `자세히` | `도슨트_자세히` 120곳 · 863자 (약 3분) | `guideDetailKo` 119곳 · 162자 | `guideDetailKo` |
-| 영문 간단히 | — | `guideSimpleEn` 119곳 · 193자 | `guideSimpleEn` (PR #47) |
-| 영문 자세히 | `cultureGuideText_en` 120곳 · 446자 | `guideDetailEn` · `guideEn` 119곳 · 446자 | `guideDetailEn` (PR #47) · `guideEn` 은 제거 예정 |
-| 놓치기 쉬운 것 | `놓치기 쉬운 것` 120곳 · 129자 | `guideTipsRawKo` · `guideTipsRawEn` 119곳 | `tipsKo` · `tipsEn`(PR #46) |
+| `간단히` | `도슨트_간단히` 120곳 · 198자 | `guideSimpleKo` 120곳 · 198자 | `guideSimpleKo` (PR #47) |
+| `자세히` | `도슨트_자세히` 120곳 · 863자 | `guideDetailKo` 120곳 · 863자 | `guideDetailKo` |
+| 영문 간단히 | — | `guideSimpleEn` 119곳 · 516자 | `guideSimpleEn` (PR #47) |
+| 영문 자세히 | `cultureGuideText_en` 120곳 · 446자 | `guideDetailEn` 119곳 · 2125자 | `guideDetailEn` (PR #47) · `guideEn` 은 제거 예정 |
+| 놓치기 쉬운 것 | `놓치기 쉬운 것` 120곳 · 129자 | `guideTipsRawKo` 120곳 · `guideTipsRawEn` 119곳 | `tipsKo` · `tipsEn`(PR #46) |
 
-- DB 한국어 원고는 시트의 이전 원고다. 시트 새 원고가 DB 에 들어오면 길이가 간단히 2.6배 · 자세히 5.3배가 된다
-- 영문 자세히는 이전 자세히 원고 기준이다
+- 영문 간단히 · 자세히 · 놓치기 쉬운 것은 지금 한국어 원고의 번역이다(LLM, PR #47)
+- 시트 `cultureGuideText_en` · DB `guideEn`(446자)은 이전 원고 기준이라 쓰지 않는다
+- 에스엠비 웰니스 센터 1곳은 영문 원고 · 음원이 없다
 
 ### 피그마에서 가져온 것 · 뺀 것
 
@@ -57,15 +58,20 @@ S23 의 틀에 시트에 있는 칸만 얹는다.
 | S23 쉽게 · 외국인용 칩 · 이어지는 이야기 · KO/EN 토글 | 뺀다 — 원천 없음. 언어는 앱 설정을 따른다 |
 | S22 이용 방법 01~04 · 알아두면 좋은 것(결제 · 언어 · 예의 · 시간 · 복장) | 뺀다 — 시트에 칸이 없다. 지금 구조를 유지하고, 장소별 내용을 본 뒤 합칠지 나눌지 정한다(유나) |
 
-### 음원은 없다
+### 음원 — Vercel Blob mp3 (2026-09-17 실측)
 
-TTS 로 만들어 Vercel Blob 에 올리고 상세 API 응답으로 내린다(에린). 2026-09-17 기준 칼럼 없음.
-응답 필드는 `audioUrl{Simple,Detail}{Ko,En}` 예정 — 영문 간단히 음원은 만들지 않을 수 있다.
-원고 길이(약 40초 · 약 3분)가 간단히 · 자세히 음원 길이와 맞는다.
+| 응답 필드 | 곳 | 길이 평균 (최소~최대) |
+|---|---|---|
+| `audioUrlSimpleKo` | 120 | 0:28 (0:26~0:31) |
+| `audioUrlDetailKo` | 120 | 1:58 (1:45~2:23) |
+| `audioUrlSimpleEn` | 119 | 0:31 (0:25~0:37) |
+| `audioUrlDetailEn` | 119 | 2:05 (1:46~2:31) |
+
+- edge-tts(`ko-KR-SunHiNeural` · `en-US-JennyNeural`) 48kbps. `guideSimple{Ko,En}` · `guideDetail{Ko,En}` 원고로 만든다
 
 ### 화면 설계 재검토
 
-목업은 자세히 162자 기준이다. 시트 새 원고(평균 863자, 최대 1056자)로 스크립트 영역을 한 번에 펼칠지 접을지 와이어프레임에서 다시 정한다.
+목업은 자세히 162자 기준이다. 지금 원고(평균 863자, 최대 1056자)로 스크립트 영역을 한 번에 펼칠지 접을지 와이어프레임에서 다시 정한다.
 
 ---
 
@@ -108,7 +114,7 @@ S23  ←         DOCENT
 | 2 | S23 화면 (새 파일) — 스크립트 · 놓치기 쉬운 것 · 출처. 재생 줄은 자리만 | 없음 — 지금 응답 필드로 만든다 |
 | 2-1 | 간단히 · 자세히 전환 | PR #47 머지 |
 | 3 | S20 연결 — 진입 카드 · 임시 섹션 걷어내기 · 스크롤 위치 유지 | 없음 |
-| 4 | 재생 | 음원 URL |
+| 4 | 재생 | PR #49 · #50 머지 |
 | 5 | 문구 · 대조표 · 캡처 검증 | PR #42 머지 |
 
 ---
