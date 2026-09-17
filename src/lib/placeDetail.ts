@@ -65,7 +65,8 @@ type PlaceInfoDoc = {
   placeDesc: string | null;
   placeDescEn?: string | null;
   guideDetailKo?: string | null;
-  /** @deprecated 9/17 guideDetailEn으로 이전(migrate-guide-en-to-detail-en.ts).
+  /** @deprecated 9/17 guideDetailEn으로 이전(당시 스크립트는 재번역 뒤 삭제 —
+   * 다시 돌리면 새 원고 번역이 옛 문장으로 되돌아가서 위험, PR 리뷰 발견).
    * 소피가 PlaceContent.tsx의 place.guideEn 참조를 바꾸기 전까지 응답 하위호환용으로만 유지 */
   guideEn?: string | null;
   /** 9/17 guideEn에서 이전 — 도슨트 구조 변경(간단히/자세히/팁 3종 영문 완성) */

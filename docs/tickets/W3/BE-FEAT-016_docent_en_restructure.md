@@ -101,3 +101,17 @@
 전체를 LLM으로 재번역해 덮어썼다(`scripts/refill-guide-en-new-draft.ts`,
 119/119 — 에스엠비 웰니스 센터 1곳은 스코프 제외 대상이라 시트에 남아있어도
 건너뜀). 위 "필드명 규칙 통일" 절의 값(구원고 기준)은 이걸로 대체됐다.
+
+### 2026-09-17: 정리 — 구원고 기준 스크립트 삭제, 번역 데이터 레포에 커밋
+
+소피 PR 리뷰 발견: 재번역 뒤에도 구원고 기준 스크립트가 레포에 남아있었다.
+특히 `migrate-guide-en-to-detail-en.ts`는 다시 돌리면 새 자세히 번역 119건이
+옛 문장으로 되돌아가는 위험한 상태였다. 아래 3개 삭제:
+- `scripts/migrate-guide-en-to-detail-en.ts`
+- `scripts/fill-guide-simple-en.ts`
+- `scripts/fill-guide-tips-en.ts`(BE-FEAT-015에서 만든 것 — 팁도 새 원고
+  기준으로 이미 재번역됐으므로 같이 정리)
+
+새 번역 데이터는 `/tmp`에만 있어 재현 불가능한 상태였다 —
+`scripts/data/guide_en_2026-09-17.json`으로 레포에 커밋하고,
+`refill-guide-en-new-draft.ts`가 이 경로를 읽도록 수정.
