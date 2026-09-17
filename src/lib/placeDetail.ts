@@ -80,6 +80,9 @@ type PlaceInfoDoc = {
   /** 9/17 BE-FEAT-017, edge-tts 생성 후 Vercel Blob 업로드(upload-docent-audio-ko.ts) */
   audioUrlSimpleKo?: string | null;
   audioUrlDetailKo?: string | null;
+  /** 9/17 BE-FEAT-018, en-US-JennyNeural(upload-docent-audio-en.ts) */
+  audioUrlSimpleEn?: string | null;
+  audioUrlDetailEn?: string | null;
 };
 
 type PlaceByCf8Doc = {
@@ -116,9 +119,12 @@ export type PlaceDetail = {
   tipsKo: { route: string | null; photo: string | null; caution: string | null };
   /** 9/17 LLM 번역, guideTipsRawEn을 영문 라벨(Route:/Photo spot:/Caution:)로 분리 */
   tipsEn: { route: string | null; photo: string | null; caution: string | null };
-  /** 9/17 BE-FEAT-017, 도슨트 한글 음성(간단히·자세히). 영문 음성은 아직 없음 */
+  /** 9/17 BE-FEAT-017, 도슨트 한글 음성(간단히·자세히) */
   audioUrlSimpleKo: string | null;
   audioUrlDetailKo: string | null;
+  /** 9/17 BE-FEAT-018, 도슨트 영문 음성(간단히·자세히) */
+  audioUrlSimpleEn: string | null;
+  audioUrlDetailEn: string | null;
   hours: string | null;
   closedDays: string | null;
   hoursEn: string | null;
@@ -272,6 +278,8 @@ export async function getPlaceDetail(contentId: string): Promise<PlaceDetail | n
     tipsEn: parseTipsEn(info?.guideTipsRawEn),
     audioUrlSimpleKo: info?.audioUrlSimpleKo ?? null,
     audioUrlDetailKo: info?.audioUrlDetailKo ?? null,
+    audioUrlSimpleEn: info?.audioUrlSimpleEn ?? null,
+    audioUrlDetailEn: info?.audioUrlDetailEn ?? null,
 
     hours: pickOperationValue(place.operationInfo, HOURS_KEYS),
     closedDays: pickOperationValue(place.operationInfo, CLOSED_KEYS),
