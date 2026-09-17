@@ -5,6 +5,12 @@
  * Blob에 올리고 place_info.audioUrlSimpleKo·audioUrlDetailKo에 URL을 저장한다.
  * 업로드 전 로컬에서 귀로 확인 원칙 — 이번엔 사용자 승인 후 진행.
  *
+ * addRandomSuffix: true — Blob CDN 캐시가 30일이라, 고정 경로를 덮어쓰면
+ * 원고 고쳐서 재생성해도 앱엔 최대 30일간 옛 음원이 나온다(소피 발견,
+ * BE-FEAT-019 PR 리뷰). 매번 새 URL을 받아 DB에 갱신하는 쪽으로 바꿨다 —
+ * 옛 파일이 Blob에 계속 쌓이는 트레이드오프는 있지만, 무료 한도(월 1GB)
+ * 안에서는 문제없다.
+ *
  * 실행: node --env-file=.env.local --import tsx scripts/upload-docent-audio-ko.ts
  */
 
@@ -48,8 +54,7 @@ async function main() {
         access: "public",
         token: blobToken,
         contentType: "audio/mpeg",
-        addRandomSuffix: false,
-        allowOverwrite: true,
+        addRandomSuffix: true,
       });
       await placeInfo.updateOne({ placeId }, { $set: { [field]: blob.url } });
       ok++;
