@@ -102,7 +102,6 @@ TourAPI `cpyrhtDivCd` 가 `Type3` 인 49곳은 활용매뉴얼 v4.4 기준 **"�
 | 항목 | 누구 |
 |---|---|
 | `feat/image-copyright-source` 를 최신 main 위로 리베이스 (`placeDetail.ts` 충돌 1곳) | 에린 |
-| 사진이 아직 없는 4곳 — 사진을 더 받을 수 있는지 | 유나 |
 
 ---
 
