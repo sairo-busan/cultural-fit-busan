@@ -17,7 +17,7 @@
 | Type | CHORE |
 | Severity | Critical |
 | Layer | Config / Route / Lib |
-| Status | In Progress |
+| Status | Done |
 | Screen | 전 화면 |
 | Depends | - |
 | Related | WBS `APP-012`(Capacitor 빌드) · `docs/decisions/capacitor_선택.md` · `docs/MEMORY.md` 2026-09-10 |
@@ -199,7 +199,8 @@ API 에러가 드러났다. 하나씩 고치면 두 번 헛짚는다.
 - [x] `NEXT_PUBLIC_API_BASE` 가 비면 웹이 상대 경로로 그대로 동작한다
 - [x] 앱 빌드(`npm run build:app`)가 `out/` 에 정적 파일을 만든다 — 8페이지
 - [x] 앱에서 `/` 를 열면 기기 언어에 따라 `/en` 또는 `/ko` 로 간다 (에뮬레이터 · 영어 기기)
-- [ ] 실기기에서 추천 목록이 뜨고, 저장·해제가 유지되고, 언어 전환이 된다
+- [x] 에뮬레이터에서 추천 목록 · 상세 · 저장 · 언어 전환 · 오프라인 안내 확인 (실기기 없어 에뮬레이터로 대체)
+- [x] 원스토어 업로드 — 검증 기간은 보통 1영업일, 배포 국가에 미국을 넣으면 +5영업일
 - [x] S20 상세로 들어갈 수 없다 — 앱 번들에 `/place/` 링크 0건
 - [x] 서명된 AAB · APK — `com.sairo.app` · `7 / 2.3.0` · 원스토어 업로드 키와 SHA-256 일치
 - [x] `tsc --noEmit` 통과
@@ -223,7 +224,7 @@ API 에러가 드러났다. 하나씩 고치면 두 번 헛짚는다.
 | 항목 | 값 |
 |---|---|
 | Capacitor | 8.5.2 · Node 22 · JDK 21 · compileSdk/targetSdk 36 · minSdk 24 |
-| 패키지 · 버전 | `com.sairo.app` · versionCode `7` / versionName `2.3.0` — 원스토어 `1 / 1.0`, Play 콘솔 `6 / 2.2.1` 보다 크게 |
+| 패키지 · 버전 | `com.sairo.app`. 레포는 `7 / 2.3.0`(Play 용 — Play 최신이 `6 / 2.2.1`). **원스토어 등록본은 `2 / 1.1`** — 그 콘솔 최신이 `1 / 1.0` 이라 번호를 잇는 쪽을 택했다 |
 | 서명 | `~/.android/keystores/sairo.jks` · 비밀번호는 `~/.gradle/gradle.properties` (`SAIRO_*`). 둘 다 저장소 밖 |
 | 아이콘 · 스플래시 | 원본 `assets/SAIRO_wordmark_*.png`. adaptive 전경 로고 폭 52% · 흰 배경. 스플래시는 짧은 변의 45% |
 | 빌드 | `NEXT_PUBLIC_API_BASE=https://cultural-fit-busan.vercel.app npm run build:app` → `npx cap sync android` → `./gradlew assembleRelease bundleRelease` |
