@@ -38,6 +38,12 @@ type PlaceDoc = {
   accessibilityInfo?: Record<string, string> | null;
   engContentId?: string;
   engOperationInfo?: OperationInfo;
+  /** Phase 4(9/17), engContentId 없는 49곳용 LLM 번역 — fill-hours-en-manual.ts.
+   * *SourceKo는 번역 당시 한국어 원문 스냅샷(check-stale-en-fields.ts가 매주 재적재 후 대조) */
+  hoursEnManual?: string | null;
+  hoursEnManualSourceKo?: string | null;
+  closedDaysEnManual?: string | null;
+  closedDaysEnManualSourceKo?: string | null;
 };
 
 /** 9/16 — #25 PR 리뷰 후속 요청. 유나가 그 사이 DB_01에 채운 4개 칸(score_board) */
@@ -84,6 +90,10 @@ type PlaceInfoDoc = {
   /** 9/17 BE-FEAT-018, en-US-JennyNeural(upload-docent-audio-en.ts) */
   audioUrlSimpleEn?: string | null;
   audioUrlDetailEn?: string | null;
+  /** Phase 4(9/17), TourAPI 무장애여행에 영문 서비스가 없어 LLM 직접 번역
+   * (fill-accessibility-en.ts). accessibilityInfoSourceKo는 번역 당시 원본 JSON 스냅샷 */
+  accessibilityInfoEn?: Record<string, string> | null;
+  accessibilityInfoSourceKo?: string | null;
 };
 
 type PlaceByCf8Doc = {
@@ -132,8 +142,8 @@ export type PlaceDetail = {
   closedDaysEn: string | null;
   phone: string | null;
   accessibility: { key: string; text: string }[];
-  /** BE-FEAT-019(#51) 이 채운다. 머지 전 응답에는 없다 */
-  accessibilityEn?: { key: string; text: string }[];
+  /** Phase 4(9/17), LLM 번역(소스가 없는 경우가 대부분이라 부분 커버리지) */
+  accessibilityEn: { key: string; text: string }[];
   /** DB_01(score_board) 신규 4칸(9/15 유나 추가, 9/16 상세 응답에 추가) */
   weatherType: "indoor" | "outdoor" | "mixed" | null;
   placeType: string | null;
@@ -252,6 +262,10 @@ export async function getPlaceDetail(contentId: string): Promise<PlaceDetail | n
   const accessibility = Object.entries(place.accessibilityInfo ?? {})
     .filter(([key, text]) => key !== "contentid" && typeof text === "string" && text.trim() !== "")
     .map(([key, text]) => ({ key, text }));
+  const accessibilityEn = Object.entries(info?.accessibilityInfoEn ?? {}).map(([key, text]) => ({
+    key,
+    text,
+  }));
 
   const weatherType = score?.indoorOutdoor ? INDOOR_OUTDOOR_MAP[score.indoorOutdoor] : null;
 
@@ -286,11 +300,15 @@ export async function getPlaceDetail(contentId: string): Promise<PlaceDetail | n
 
     hours: pickOperationValue(place.operationInfo, HOURS_KEYS),
     closedDays: pickOperationValue(place.operationInfo, CLOSED_KEYS),
-    hoursEn: cleanEnglishValue(pickOperationValue(place.engOperationInfo, HOURS_KEYS)),
-    closedDaysEn: cleanEnglishValue(pickOperationValue(place.engOperationInfo, CLOSED_KEYS)),
+    // engOperationInfo(TourAPI 실제 영문, 71곳)가 우선, 없으면 hoursEnManual(LLM 번역,
+    // 나머지 49곳 중 22곳 커버) 폴백. 둘 다 없으면 null — 화면이 한국어로 대신한다.
+    hoursEn: cleanEnglishValue(pickOperationValue(place.engOperationInfo, HOURS_KEYS)) ?? place.hoursEnManual ?? null,
+    closedDaysEn:
+      cleanEnglishValue(pickOperationValue(place.engOperationInfo, CLOSED_KEYS)) ?? place.closedDaysEnManual ?? null,
     phone: pickOperationValue(place.operationInfo, PHONE_KEYS),
 
     accessibility,
+    accessibilityEn,
 
     weatherType,
     placeType: score?.placeType ?? null,

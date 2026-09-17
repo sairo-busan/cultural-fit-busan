@@ -1,0 +1,51 @@
+name: Weekly places refresh
+
+# 매주 일요일 04:00 KST(=토요일 19:00 UTC) — 사람이 가장 적을 시간대.
+# TourAPI 원본(places 컬렉션)만 갱신한다. place_info·score_board(유나 태깅·큐레이션)는
+# 손대지 않는다 — 수동 큐레이션 데이터라 자동 배치가 덮어쓰면 안 된다.
+#
+# import-eng-content-id.ts는 여기서 실행하지 않는다 — 개인 조사자료 CSV
+# (docs/TourAPI_영문_연결표_71.csv)를 읽는데 그 파일은 커밋하지 않아서 CI엔 없다.
+# engContentId는 한 번 세팅되면 ingest-places.ts가 건드리지 않는 필드라 재적재해도
+# 유지된다.
+on:
+  schedule:
+    - cron: "0 19 * * 6"
+  workflow_dispatch: {}
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - run: npm ci
+
+      - name: Refresh places (TourAPI 원본)
+        env:
+          TOUR_API_KEY: ${{ secrets.TOUR_API_KEY }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: npx tsx scripts/ingest-places.ts
+
+      - name: Refresh English address (71곳)
+        env:
+          TOUR_API_KEY: ${{ secrets.TOUR_API_KEY }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: npx tsx scripts/ingest-eng-address.ts
+
+      - name: Refresh English operation info (71곳)
+        env:
+          TOUR_API_KEY: ${{ secrets.TOUR_API_KEY }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: npx tsx scripts/ingest-eng-operation-info.ts
+
+      - name: Check LLM-translated fields for staleness
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx tsx scripts/check-stale-en-fields.ts
