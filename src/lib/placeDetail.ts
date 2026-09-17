@@ -47,6 +47,8 @@ type ScoreBoardRow = {
   indoorOutdoor: "INDOOR" | "OUTDOOR" | "MIXED" | null;
   petAllowed: boolean | null;
   petCondition: string | null;
+  /** 9/17 영문 필드 감사(docs/decisions/2026-09-16_영문필드_감사.md) 후속, LLM 번역 */
+  petConditionEn: string | null;
   placeType: string | null;
 };
 
@@ -66,9 +68,17 @@ type PlaceInfoDoc = {
   guideEn?: string | null;
   /** "관람 순서: …\n사진 포인트: …\n유의사항: …" 원문 그대로 (BE-FEAT-014) */
   guideTipsRawKo?: string | null;
+  /** 9/17 LLM 번역, "Route: …\nPhoto spot: …\nCaution: …" 구조로 guideTipsRawKo와 대칭 */
+  guideTipsRawEn?: string | null;
 };
 
-type PlaceByCf8Doc = { cf8Code: string; placeId: string; recommendationReason: string | null };
+type PlaceByCf8Doc = {
+  cf8Code: string;
+  placeId: string;
+  recommendationReason: string | null;
+  /** 9/17 LLM 번역 */
+  recommendationReasonEn: string | null;
+};
 
 export type PlaceDetail = {
   contentId: string;
@@ -85,9 +95,13 @@ export type PlaceDetail = {
   descKo: string | null;
   descEn: string | null;
   reasonByCf8: Record<string, string | null>;
+  /** 9/17 영문 필드 감사 후속, LLM 번역 */
+  reasonByCf8En: Record<string, string | null>;
   guideDetailKo: string | null;
   guideEn: string | null;
   tipsKo: { route: string | null; photo: string | null; caution: string | null };
+  /** 9/17 LLM 번역, guideTipsRawEn을 영문 라벨(Route:/Photo spot:/Caution:)로 분리 */
+  tipsEn: { route: string | null; photo: string | null; caution: string | null };
   hours: string | null;
   closedDays: string | null;
   hoursEn: string | null;
@@ -99,6 +113,8 @@ export type PlaceDetail = {
   placeType: string | null;
   petAllowed: boolean | null;
   petCondition: string | null;
+  /** 9/17 영문 필드 감사 후속, LLM 번역 */
+  petConditionEn: string | null;
 };
 
 const HOURS_KEYS = ["usetime", "usetimeculture", "opentime", "usetimeleports"];
@@ -141,6 +157,23 @@ function parseTips(raw: string | null | undefined): PlaceDetail["tipsKo"] {
   };
 }
 
+/** guideTipsRawEn("Route: …\nPhoto spot: …\nCaution: …")을 같은 방식으로 분리한다. */
+function parseTipsEn(raw: string | null | undefined): PlaceDetail["tipsEn"] {
+  const empty = { route: null, photo: null, caution: null };
+  if (!raw) return empty;
+
+  const lines = raw.split("\n");
+  const pick = (label: string) => {
+    const line = lines.find((l) => l.trim().startsWith(label));
+    return line ? line.trim().slice(label.length).trim() : null;
+  };
+  return {
+    route: pick("Route:"),
+    photo: pick("Photo spot:"),
+    caution: pick("Caution:"),
+  };
+}
+
 /** http:// → https:// (secureImageUrl 동등 로직 — main의 PR#18 병합 전이라 직접 둔다) */
 function toHttps(url: string): string {
   return url.replace(/^http:\/\//, "https://");
@@ -163,7 +196,11 @@ export async function getPlaceDetail(contentId: string): Promise<PlaceDetail | n
   ]);
 
   const reasonByCf8: Record<string, string | null> = {};
-  for (const r of reasonDocs) reasonByCf8[r.cf8Code] = r.recommendationReason;
+  const reasonByCf8En: Record<string, string | null> = {};
+  for (const r of reasonDocs) {
+    reasonByCf8[r.cf8Code] = r.recommendationReason;
+    reasonByCf8En[r.cf8Code] = r.recommendationReasonEn;
+  }
 
   // customImage(9/16 직접 소싱, 11곳)는 항상 갤러리에 합친다 — 영주하늘눈전망대처럼
   // images는 있는데 firstImage만 없는 곳도 있어서, "없을 때만" 조건으로는 안 걸린다.
@@ -207,10 +244,12 @@ export async function getPlaceDetail(contentId: string): Promise<PlaceDetail | n
     descEn: info?.placeDescEn ?? null,
 
     reasonByCf8,
+    reasonByCf8En,
 
     guideDetailKo: info?.guideDetailKo ?? null,
     guideEn: info?.guideEn ?? null,
     tipsKo: parseTips(info?.guideTipsRawKo),
+    tipsEn: parseTipsEn(info?.guideTipsRawEn),
 
     hours: pickOperationValue(place.operationInfo, HOURS_KEYS),
     closedDays: pickOperationValue(place.operationInfo, CLOSED_KEYS),
@@ -224,5 +263,6 @@ export async function getPlaceDetail(contentId: string): Promise<PlaceDetail | n
     placeType: score?.placeType ?? null,
     petAllowed: score?.petAllowed ?? null,
     petCondition: score?.petCondition ?? null,
+    petConditionEn: score?.petConditionEn ?? null,
   };
 }
