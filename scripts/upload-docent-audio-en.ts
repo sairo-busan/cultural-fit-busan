@@ -5,6 +5,10 @@
  * 로컬 mp3를 Blob에 올리고 place_info.audioUrlSimpleEn·audioUrlDetailEn에
  * URL을 저장한다.
  *
+ * addRandomSuffix: true — Blob CDN 캐시 30일 + 고정 경로 덮어쓰기 조합이면
+ * 원고 재생성해도 최대 30일간 옛 음원이 나온다(소피 발견). 매번 새 URL 받아서
+ * DB 갱신.
+ *
  * 실행: node --env-file=.env.local --import tsx scripts/upload-docent-audio-en.ts
  */
 
@@ -48,8 +52,7 @@ async function main() {
         access: "public",
         token: blobToken,
         contentType: "audio/mpeg",
-        addRandomSuffix: false,
-        allowOverwrite: true,
+        addRandomSuffix: true,
       });
       await placeInfo.updateOne({ placeId }, { $set: { [field]: blob.url } });
       ok++;
