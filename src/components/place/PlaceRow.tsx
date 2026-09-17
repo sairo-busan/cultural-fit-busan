@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useLocale, useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { SaveButton } from "./SaveButton";
 import { districtLabel, districtLabelEn, secureImageUrl } from "@/lib/placeDisplay";
@@ -33,7 +33,6 @@ type PlaceRowProps = {
 
 export function PlaceRow({ place, note, saved, onToggleSave }: PlaceRowProps) {
   const locale = useLocale() as Locale;
-  const t = useTranslations("place");
 
   const en = locale === "en";
   const title = en ? place.titleEn ?? place.title : place.title;
@@ -63,7 +62,13 @@ export function PlaceRow({ place, note, saved, onToggleSave }: PlaceRowProps) {
               className="object-cover"
             />
           ) : (
-            <span className="ds-caption text-sub">{t("noPhoto")}</span>
+            <Image
+              src="/placeholder/place-1x1.svg"
+              alt=""
+              fill
+              sizes="88px"
+              className="object-cover"
+            />
           )}
         </div>
 

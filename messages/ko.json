@@ -2,7 +2,6 @@
   "place": {
     "save": "{name} 저장",
     "removeFromSaved": "{name} 저장 해제",
-    "noPhoto": "사진 없음",
     "weatherType": {
       "indoor": "실내",
       "outdoor": "야외",

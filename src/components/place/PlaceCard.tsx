@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { PhotoSwipe } from "./PhotoSwipe";
 import { SaveButton } from "./SaveButton";
 import { draftPlaceType } from "@/data/placeTypeDraft";
-import { districtLabel, districtLabelEn, secureImageUrl } from "@/lib/placeDisplay";
+import { districtLabel, districtLabelEn } from "@/lib/placeDisplay";
 import type { RecommendedPlace } from "@/types/place";
 import type { Locale } from "@/i18n/routing";
 
@@ -19,7 +19,7 @@ import type { Locale } from "@/i18n/routing";
  * 메타 줄은 상세와 같은 순서(구 · 유형)에 실내외를 덧붙인다. 카드 사이는 선이
  * 아니라 여백으로 나눈다.
  *
- * 사진을 옆으로 넘기는 것과 사진 번호는 PR #31 의 `Hero` 를 공용으로 옮긴 뒤 붙인다.
+ * 사진은 옆으로 넘긴다. 밀면 사진만 넘어가고, 탭하면 상세로 간다.
  */
 
 type PlaceCardProps = {
@@ -37,7 +37,8 @@ export function PlaceCard({ place, saved, onToggleSave }: PlaceCardProps) {
   const description = en ? place.whyEn : place.whyKo;
   // 시트가 비어 있는 동안만 초안에서 온다 — `placeTypeDraft.ts` 참고
   const placeType = place.placeType ?? draftPlaceType(place);
-  const hasImage = Boolean(place.firstImage);
+  const images = [...new Set([place.firstImage, ...place.images].filter((src): src is string => Boolean(src)))];
+  const hasImage = images.length > 0;
 
   // 구 이름은 로케일을 따른다 — 목록 API 에 영문 주소가 없어 표에서 만든다
   const district = en ? districtLabelEn(place.addr1) : districtLabel(place.addr1);
@@ -54,19 +55,13 @@ export function PlaceCard({ place, saved, onToggleSave }: PlaceCardProps) {
       href={`/place/${place.contentId}`}
       className="block px-[--gutter] py-4 transition-opacity active:opacity-70"
     >
-      <div className="relative grid aspect-[4/3] place-items-center overflow-hidden rounded-2xl bg-surface">
-        {hasImage ? (
-          <Image
-            src={secureImageUrl(place.firstImage!)}
-            alt=""
-            fill
-            sizes="(min-width: 640px) 640px, 100vw"
-            className="object-cover"
-          />
-        ) : (
-          <span className="ds-body-2 text-sub">{t("noPhoto")}</span>
-        )}
-
+      <PhotoSwipe
+        images={images}
+        name={title}
+        sizes="(min-width: 640px) 640px, 100vw"
+        className="aspect-[4/3] overflow-hidden rounded-2xl bg-surface"
+        hoverArrows
+      >
         {/* 저장 아이콘이 앉을 바탕. 사진 밝기와 무관하게 흰 아이콘 하나로 통일한다 */}
         {hasImage && (
           <span
@@ -82,7 +77,7 @@ export function PlaceCard({ place, saved, onToggleSave }: PlaceCardProps) {
           onScrim={hasImage}
           className="absolute top-1 right-1"
         />
-      </div>
+      </PhotoSwipe>
 
       {meta.length > 0 && (
         <p className="ds-caption mt-3 font-semibold text-sub">{meta.join(" · ")}</p>
