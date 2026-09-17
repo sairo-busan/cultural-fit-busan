@@ -30,13 +30,13 @@
       "해양야경형": "Coast & night",
       "문화역사형": "Culture",
       "역사·문화": "History & culture",
-      "전망·야경": "Views & night",
+      "전망·야경": "Views & nightscapes",
       "해변·해안": "Beach & coast",
       "자연·공원": "Nature & parks",
-      "시장·먹거리": "Market & food",
-      "문화·관광": "Culture & sightseeing",
-      "체험·시설": "Hands-on & facilities",
-      "종교·사찰": "Temples",
+      "시장·먹거리": "Markets & food",
+      "문화·관광": "Culture & attractions",
+      "체험·시설": "Experiences & Activities",
+      "종교·사찰": "Religion & temples",
       "휴식·웰니스": "Rest & wellness",
       "도시·거리": "City streets",
       "쇼핑": "Shopping"
@@ -56,7 +56,7 @@
   },
   "feed": {
     "title": "For you, now",
-    "yourType": "Your travel type",
+    "yourType": "Travel type",
     "nowIn": "Busan · {weather} · as of {time}",
     "weather": {
       "sunny": "Clear",
@@ -119,90 +119,90 @@
     "about": "About",
     "noAccount": "No account needed. Your result and saved places stay on this device.",
     "privacy": "Privacy policy",
-    "retakeQuiz": "Retake the quiz",
+    "retakeQuiz": "Start the quiz over",
     "takeQuiz": "Take it"
   },
   "placeDetail": {
     "back": "Back",
     "photoCount": "{n} / {total}",
-    "photos": "Photos of {name}",
-    "prevPhoto": "Previous photo",
-    "nextPhoto": "Next photo",
-    "fitTitle": "Why this fits you",
+    "photos": "{name} photos",
+    "prevPhoto": "Previous",
+    "nextPhoto": "Next",
+    "fitTitle": "Why it fits",
     "facts": {
       "hours": "Hours",
-      "closedDays": "Closed",
-      "indoorOutdoor": "Indoor or outdoor",
+      "closedDays": "Closed days",
+      "indoorOutdoor": "Indoor/outdoor",
       "pet": "Pets",
       "phone": "Phone",
       "accessibility": "Accessibility",
-      "accessibilityYes": "Facilities listed",
-      "none": "No information"
+      "accessibilityYes": "Details available",
+      "none": "Not available"
     },
     "placeType": {
       "역사·문화": "History & culture",
-      "전망·야경": "Views & night",
+      "전망·야경": "Views & nightscapes",
       "해변·해안": "Beach & coast",
       "자연·공원": "Nature & parks",
       "시장·먹거리": "Markets & food",
-      "문화·관광": "Culture & sights",
-      "체험·시설": "Activities",
-      "종교·사찰": "Temples",
+      "문화·관광": "Culture & attractions",
+      "체험·시설": "Experiences & Activities",
+      "종교·사찰": "Religion & temples",
       "휴식·웰니스": "Rest & wellness",
-      "도시·거리": "Streets",
+      "도시·거리": "City streets",
       "쇼핑": "Shopping"
     },
     "pet": {
-      "yes": "Allowed",
-      "no": "Not allowed"
+      "yes": "Pets allowed",
+      "no": "No pets"
     },
-    "guideTitle": "Culture guide",
-    "tipsTitle": "Easy to miss",
+    "guideTitle": "Cultural guide",
+    "tipsTitle": "Don't miss",
     "tips": {
-      "photo": "Photo spot",
-      "caution": "Heads-up"
+      "photo": "Photo spots",
+      "caution": "Good to know"
     },
     "accessibilityTitle": "Accessibility",
     "accessibility": {
       "parking": "Parking",
-      "wheelchair": "Wheelchair",
+      "wheelchair": "Wheelchair access",
       "exit": "Entrance",
-      "elevator": "Elevator",
-      "restroom": "Restroom",
-      "route": "Route",
-      "stroller": "Stroller",
-      "lactationroom": "Nursing room",
-      "infantsfamilyetc": "Families with infants",
-      "handicapetc": "Other mobility",
-      "publictransport": "Public transport",
+      "elevator": "Elevators",
+      "restroom": "Restrooms",
+      "route": "Accessible route",
+      "stroller": "Strollers",
+      "lactationroom": "Lactation room",
+      "infantsfamilyetc": "Infant and family facilities",
+      "handicapetc": "Additional mobility access",
+      "publictransport": "Public transit",
       "ticketoffice": "Ticket office",
-      "auditorium": "Seating",
-      "helpdog": "Assistance dogs",
-      "guidehuman": "Staff guide",
+      "auditorium": "Accessible seating",
+      "helpdog": "Service animals",
+      "guidehuman": "Staff assistance",
       "audioguide": "Audio guide",
       "braileblock": "Tactile paving",
       "brailepromotion": "Braille materials",
-      "blindhandicapetc": "Other visual",
-      "hearinghandicapetc": "Other hearing"
+      "blindhandicapetc": "Additional visual assistance",
+      "hearinghandicapetc": "Additional hearing assistance"
     },
-    "nearbyTitle": "Also worth a visit",
-    "walkAbout": "About {m} min walk",
+    "nearbyTitle": "Nearby places",
+    "walkAbout": "About {m} min on foot",
     "distanceKm": "{km} km",
-    "map": "Map",
+    "map": "View map",
     "save": "Save",
     "saved": "Saved",
-    "newWindow": "opens in a new window",
+    "newWindow": "Opens in a new window",
     "source": {
       "label": "Source",
-      "all": "Photos, hours and accessibility — Korea Tourism Organization TourAPI",
-      "photoArchive": "Photos — Busan Metropolitan City · Busan Tourism Organization",
-      "photoBoth": "Photos — Korea Tourism Organization TourAPI · Busan Metropolitan City · Busan Tourism Organization",
-      "rest": "Hours and accessibility — Korea Tourism Organization TourAPI"
+      "all": "Photos, hours, and accessibility: Korea Tourism Organization TourAPI",
+      "photoArchive": "Photos: Busan Metropolitan City and Busan Tourism Organization",
+      "photoBoth": "Photos: Korea Tourism Organization TourAPI, Busan Metropolitan City, and Busan Tourism Organization",
+      "rest": "Hours and accessibility: Korea Tourism Organization TourAPI"
     },
     "notFound": {
       "title": "Place not found",
-      "body": "The list may have changed.",
-      "action": "Back to For you"
+      "body": "This list may have changed.",
+      "action": "Back to recommendations"
     },
     "loadFailed": {
       "title": "Couldn't load this place",
@@ -265,15 +265,15 @@
     "poles": {
       "atmosphere": {
         "left": "Calm",
-        "right": "Lively"
+        "right": "Energetic"
       },
       "placeType": {
         "left": "Local",
-        "right": "Landmark"
+        "right": "Iconic"
       },
       "experience": {
         "left": "One place",
-        "right": "Many places"
+        "right": "Several places"
       }
     },
     "promiseTitle": "Here's how we'll pick",
@@ -283,10 +283,10 @@
     "more": "See more",
     "top": "Back to top",
     "retake": {
-      "label": "Retake",
-      "title": "Retake the quiz?",
+      "label": "Start over",
+      "title": "Start over?",
       "body": "Your current type stays until you finish again.",
-      "confirm": "Retake",
+      "confirm": "Start over",
       "close": "Close"
     },
     "reveal": {

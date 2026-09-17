@@ -45,7 +45,7 @@ type Cf8TypeMeta = {
 const CF8_TYPES: Record<Cf8Code, Cf8TypeMeta> = {
   CLD: {
     nameKo: "조용한 골목 산책자",
-    nameEn: "Quiet Alley Wanderer",
+    nameEn: "Quiet Alley Stroller",
     description: "조용한 로컬 장소에 충분히 머물며 깊이 경험하는 성향을 반영했어요.",
   },
   CLV: {
@@ -55,27 +55,27 @@ const CF8_TYPES: Record<Cf8Code, Cf8TypeMeta> = {
   },
   CFD: {
     nameKo: "느긋한 뷰 감상자",
-    nameEn: "Slow View Watcher",
+    nameEn: "Slow View Seeker",
     description: "부산 대표명소를 여유 있게 깊이 감상하는 성향을 반영했어요.",
   },
   CFV: {
     nameKo: "조용한 명소 수집가",
-    nameEn: "Quiet Landmark Collector",
+    nameEn: "Calm Landmark Collector",
     description: "차분한 대표명소를 다양하게 둘러보는 성향을 반영했어요.",
   },
   ELD: {
     nameKo: "시장 골목 정착자",
-    nameEn: "Market Alley Settler",
+    nameEn: "Market Alley Regular",
     description: "활기찬 로컬 공간에 머물며 현장을 깊이 경험하는 성향을 반영했어요.",
   },
   ELV: {
     nameKo: "활기찬 동네 탐험가",
-    nameEn: "Lively Local Explorer",
+    nameEn: "Lively Neighborhood Explorer",
     description: "생동감 있는 로컬 장소를 다양하게 발견하는 성향을 반영했어요.",
   },
   EFD: {
     nameKo: "활기찬 명소 감상자",
-    nameEn: "Lively Landmark Admirer",
+    nameEn: "Lively Landmark Lounger",
     description: "활기찬 부산 대표명소를 충분히 체험하는 성향을 반영했어요.",
   },
   EFV: {
