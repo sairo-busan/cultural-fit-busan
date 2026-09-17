@@ -98,52 +98,52 @@ export const QUIZ_TEXT: Record<Locale, Record<QuizId, QuizQuestionText>> = {
   en: {
     CFQ01: {
       stepLabel: "Step 1 · Atmosphere",
-      question: "Which kind of place draws you in?",
-      helperText: "Pick whichever appeals to you right now.",
+      question: "Which kind of atmosphere are you drawn to?",
+      helperText: "Choose what feels right to you.",
       choices: [
         {
           label: "Calm and unhurried",
           description:
-            "You want quiet space, taking in the scenery and the mood slowly.",
+            "Take your time in quiet, peaceful places and soak in the scenery and atmosphere.",
         },
         {
-          label: "Lively and full of movement",
+          label: "Lively and full of energy",
           description:
-            "You want people and things to look at, and the energy of a busy place.",
+            "Experience the energy of busy places, with people, sights, and plenty to explore.",
         },
       ],
     },
     CFQ02: {
-      stepLabel: "Step 2 · Finding places",
-      question: "When choosing where to go in Busan, what matters more?",
-      helperText: "Pick what matters more to you.",
+      stepLabel: "Step 2 · Discovering places",
+      question: "When exploring Busan, what are you more drawn to?",
+      helperText: "Choose what matters more to you.",
       choices: [
         {
-          label: "Where daily life happens",
+          label: "Everyday local life",
           description:
-            "Alleys, markets and neighbourhoods — the ordinary side of Busan.",
+            "Discover the alleys, markets, and neighborhoods where you can experience the everyday side of Busan.",
         },
         {
-          label: "The landmarks Busan is known for",
+          label: "Busan's iconic landmarks",
           description:
-            "The places that define the city and that a first visit shouldn't miss.",
+            "See the places that define Busan and are worth experiencing on a first visit.",
         },
       ],
     },
     CFQ03: {
-      stepLabel: "Step 3 · Itinerary",
-      question: "With no time pressure, how would you plan your trip?",
-      helperText: "Pick whichever draws you more.",
+      stepLabel: "Step 3 · Travel style",
+      question: "If you had all the time you needed, how would you like to explore?",
+      helperText: "Imagine you have plenty of time. Choose what feels right to you.",
       choices: [
         {
-          label: "One or two places, in depth",
+          label: "Take your time in one or two places",
           description:
-            "You stay long enough to take in the mood and the story of a place.",
+            "Stay awhile, soak in the atmosphere, and discover the story behind each place.",
         },
         {
-          label: "Several places, for variety",
+          label: "Explore several places",
           description:
-            "You move between places to meet different scenes and experiences.",
+            "Move from place to place and experience a variety of scenery, neighborhoods, and experiences.",
         },
       ],
     },

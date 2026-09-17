@@ -8,35 +8,35 @@
       "mixed": "Indoor & outdoor"
     },
     "crowd": {
-      "low": "Rarely busy",
-      "high": "Often busy"
+      "low": "Usually quiet",
+      "high": "Usually busy"
     },
     "budget": {
-      "low": "Free or low"
+      "low": "Free or low-cost"
     },
     "stay": {
-      "minutes": "About {m}m",
-      "hours": "About {h}h",
-      "hoursMinutes": "About {h}h {m}m"
+      "minutes": "About {m} min",
+      "hours": "About {h} hr",
+      "hoursMinutes": "About {h} hr {m} min"
     },
     "fit": {
       "great": "Great fit",
       "good": "Good fit",
-      "fair": "Fair fit"
+      "fair": "Okay fit"
     },
     "placeType": {
       "식음형": "Food",
       "시장형": "Market",
-      "해양야경형": "Coast & night",
-      "문화역사형": "Culture",
+      "해양야경형": "Sea views & night views",
+      "문화역사형": "Culture & history",
       "역사·문화": "History & culture",
-      "전망·야경": "Views & night",
+      "전망·야경": "Views & nightscapes",
       "해변·해안": "Beach & coast",
       "자연·공원": "Nature & parks",
-      "시장·먹거리": "Market & food",
-      "문화·관광": "Culture & sightseeing",
-      "체험·시설": "Hands-on & facilities",
-      "종교·사찰": "Temples",
+      "시장·먹거리": "Markets & food",
+      "문화·관광": "Culture & attractions",
+      "체험·시설": "Experiences & Activities",
+      "종교·사찰": "Religion & temples",
       "휴식·웰니스": "Rest & wellness",
       "도시·거리": "City streets",
       "쇼핑": "Shopping"
@@ -55,8 +55,8 @@
     "menu": "Menu"
   },
   "feed": {
-    "title": "For you, now",
-    "yourType": "Your travel type",
+    "title": "Places to go now",
+    "yourType": "Travel type",
     "nowIn": "Busan · {weather} · as of {time}",
     "weather": {
       "sunny": "Clear",
@@ -65,14 +65,14 @@
     },
     "sortByMatch": "Best match",
     "needQuiz": {
-      "title": "Tell us your style first",
-      "body": "Three choices, and we'll order places to fit you.",
-      "action": "Find your style"
+      "title": "Find your travel style",
+      "body": "Answer three quick questions to see places ranked for your travel style.",
+      "action": "Take the quiz"
     },
     "noResults": {
-      "title": "Nothing matches those conditions",
-      "body": "No place meets all of them. Dropping just one usually opens up a lot.",
-      "action": "Change conditions"
+      "title": "No places match your preferences",
+      "body": "No places match all your preferences. Try removing one to see more options.",
+      "action": "Edit preferences"
     },
     "nowInNoTime": "Busan · {weather}",
     "loadFailed": {
@@ -83,15 +83,15 @@
   },
   "saved": {
     "title": "Saved",
-    "count": "{count} places",
+    "count": "{count, plural, one {# place} other {# places}}",
     "empty": {
       "title": "Nothing saved yet",
-      "body": "Tap the bookmark on a place you like and it lands here. Saved on this device only.",
+      "body": "Tap the bookmark on a place to save it here. Your saved places stay on this device only.",
       "action": "Browse recommendations"
     },
     "sortLabel": "Sort by",
     "sort": {
-      "recent": "Recently saved",
+      "recent": "Most recently saved",
       "fit": "Best fit"
     },
     "filterLabel": "Filter by area",
@@ -105,104 +105,104 @@
     }
   },
   "me": {
-    "title": "You",
+    "title": "Me",
     "travelStyle": "Travel style",
-    "notDiagnosed": "Not taken",
-    "tripConditions": "Trip conditions",
+    "notDiagnosed": "Quiz not completed",
+    "tripConditions": "Trip preferences",
     "conditionsSet": "Set",
     "conditionsNone": "Not set",
     "language": "Language",
     "locale": {
-      "ko": "한국어",
+      "ko": "Korean",
       "en": "English"
     },
     "about": "About",
-    "noAccount": "No account needed. Your result and saved places stay on this device.",
+    "noAccount": "No account needed. Your quiz result and saved places are stored only on this device.",
     "privacy": "Privacy policy",
-    "retakeQuiz": "Retake the quiz",
-    "takeQuiz": "Take it"
+    "retakeQuiz": "Start the quiz over",
+    "takeQuiz": "Take the quiz"
   },
   "placeDetail": {
     "back": "Back",
     "photoCount": "{n} / {total}",
-    "photos": "Photos of {name}",
-    "prevPhoto": "Previous photo",
-    "nextPhoto": "Next photo",
-    "fitTitle": "Why this fits you",
+    "photos": "{name} photos",
+    "prevPhoto": "Previous",
+    "nextPhoto": "Next",
+    "fitTitle": "Why it fits",
     "facts": {
       "hours": "Hours",
-      "closedDays": "Closed",
-      "indoorOutdoor": "Indoor or outdoor",
+      "closedDays": "Closed days",
+      "indoorOutdoor": "Indoor/outdoor",
       "pet": "Pets",
       "phone": "Phone",
       "accessibility": "Accessibility",
-      "accessibilityYes": "Facilities listed",
-      "none": "No information"
+      "accessibilityYes": "Details available",
+      "none": "Not available"
     },
     "placeType": {
       "역사·문화": "History & culture",
-      "전망·야경": "Views & night",
+      "전망·야경": "Views & nightscapes",
       "해변·해안": "Beach & coast",
       "자연·공원": "Nature & parks",
       "시장·먹거리": "Markets & food",
-      "문화·관광": "Culture & sights",
-      "체험·시설": "Activities",
-      "종교·사찰": "Temples",
+      "문화·관광": "Culture & attractions",
+      "체험·시설": "Experiences & Activities",
+      "종교·사찰": "Religion & temples",
       "휴식·웰니스": "Rest & wellness",
-      "도시·거리": "Streets",
+      "도시·거리": "City streets",
       "쇼핑": "Shopping"
     },
     "pet": {
-      "yes": "Allowed",
-      "no": "Not allowed"
+      "yes": "Pets allowed",
+      "no": "No pets"
     },
-    "guideTitle": "Culture guide",
-    "tipsTitle": "Easy to miss",
+    "guideTitle": "Cultural guide",
+    "tipsTitle": "Don't miss",
     "tips": {
-      "photo": "Photo spot",
-      "caution": "Heads-up"
+      "photo": "Photo spots",
+      "caution": "Good to know"
     },
     "accessibilityTitle": "Accessibility",
     "accessibility": {
       "parking": "Parking",
-      "wheelchair": "Wheelchair",
+      "wheelchair": "Wheelchair access",
       "exit": "Entrance",
-      "elevator": "Elevator",
-      "restroom": "Restroom",
-      "route": "Route",
-      "stroller": "Stroller",
-      "lactationroom": "Nursing room",
-      "infantsfamilyetc": "Families with infants",
-      "handicapetc": "Other mobility",
-      "publictransport": "Public transport",
+      "elevator": "Elevators",
+      "restroom": "Restrooms",
+      "route": "Accessible route",
+      "stroller": "Strollers",
+      "lactationroom": "Lactation room",
+      "infantsfamilyetc": "Infant and family facilities",
+      "handicapetc": "Additional mobility access",
+      "publictransport": "Public transit",
       "ticketoffice": "Ticket office",
-      "auditorium": "Seating",
-      "helpdog": "Assistance dogs",
-      "guidehuman": "Staff guide",
+      "auditorium": "Accessible seating",
+      "helpdog": "Service animals",
+      "guidehuman": "Staff assistance",
       "audioguide": "Audio guide",
       "braileblock": "Tactile paving",
       "brailepromotion": "Braille materials",
-      "blindhandicapetc": "Other visual",
-      "hearinghandicapetc": "Other hearing"
+      "blindhandicapetc": "Additional visual assistance",
+      "hearinghandicapetc": "Additional hearing assistance"
     },
-    "nearbyTitle": "Also worth a visit",
-    "walkAbout": "About {m} min walk",
+    "nearbyTitle": "Nearby places",
+    "walkAbout": "About {m} min on foot",
     "distanceKm": "{km} km",
-    "map": "Map",
+    "map": "View map",
     "save": "Save",
     "saved": "Saved",
-    "newWindow": "opens in a new window",
+    "newWindow": "Opens in a new window",
     "source": {
       "label": "Source",
-      "all": "Photos, hours and accessibility — Korea Tourism Organization TourAPI",
-      "photoArchive": "Photos — Busan Metropolitan City · Busan Tourism Organization",
-      "photoBoth": "Photos — Korea Tourism Organization TourAPI · Busan Metropolitan City · Busan Tourism Organization",
-      "rest": "Hours and accessibility — Korea Tourism Organization TourAPI"
+      "all": "Photos, hours, and accessibility: Korea Tourism Organization TourAPI",
+      "photoArchive": "Photos: Busan Metropolitan City and Busan Tourism Organization",
+      "photoBoth": "Photos: Korea Tourism Organization TourAPI, Busan Metropolitan City, and Busan Tourism Organization",
+      "rest": "Hours and accessibility: Korea Tourism Organization TourAPI"
     },
     "notFound": {
       "title": "Place not found",
-      "body": "The list may have changed.",
-      "action": "Back to For you"
+      "body": "This list may have changed.",
+      "action": "Back to recommendations"
     },
     "loadFailed": {
       "title": "Couldn't load this place",
@@ -213,24 +213,24 @@
   "landing": {
     "language": "Language",
     "eyebrow": "Just arrived in Busan?",
-    "title": "Where to go now?\nSAIRO picks for you",
-    "lead": "Three quick steps and we'll guide you.",
+    "title": "Where to next?\nLet SAIRO pick for you",
+    "lead": "Find your next stop in three quick steps.",
     "steps": {
       "quiz": {
         "title": "Answer 3 quick questions",
         "body": "Takes about 30 seconds"
       },
       "character": {
-        "title": "Meet your travel character",
+        "title": "Discover your travel style",
         "body": "One of 8 types"
       },
       "places": {
-        "title": "Get places for right now",
+        "title": "Find places to go now",
         "body": "We check the weather and time of day, too"
       }
     },
     "start": "Get started",
-    "browse": "Just look around first"
+    "browse": "Browse first"
   },
   "onboarding": {
     "later": "Maybe later",
@@ -242,69 +242,69 @@
     },
     "quit": {
       "withResult": {
-        "title": "Finish this later?",
-        "body": "Your current type stays. Answers so far won't be saved.",
+        "title": "Leave the quiz?",
+        "body": "You can still see recommendations for your current travel style. Your new answers won't be saved.",
         "keep": "Keep going",
         "leave": "Stop for now"
       },
       "noResult": {
-        "title": "You won't see picks yet",
-        "body": "Picks are built from three answers. Just {remaining} more.",
+        "title": "Leave before getting your recommendations?",
+        "body": "Answer all three questions to get personalized recommendations. Answers left: {remaining}.",
         "keep": "Keep going",
-        "leave": "Look around anyway"
+        "leave": "Browse anyway"
       }
     },
     "toast": {
-      "unsaved": "Your answers weren't saved. Let's start again.",
-      "retake": "Your type changes only when you finish"
+      "unsaved": "Your answers weren't saved. Please start the quiz over.",
+      "retake": "Finish the quiz to update your travel style"
     }
   },
   "profile": {
-    "label": "So this is how you travel",
+    "label": "Here's your travel style",
     "axesHeading": "Your travel preferences",
     "poles": {
       "atmosphere": {
         "left": "Calm",
-        "right": "Lively"
+        "right": "Energetic"
       },
       "placeType": {
         "left": "Local",
-        "right": "Landmark"
+        "right": "Iconic"
       },
       "experience": {
         "left": "One place",
-        "right": "Many places"
+        "right": "Several places"
       }
     },
-    "promiseTitle": "Here's how we'll pick",
-    "primary": "Places to go now",
-    "secondary": "Add details first",
-    "secondaryHint": "We'll skip places that won't work",
+    "promiseTitle": "How we'll choose your places",
+    "primary": "See my picks",
+    "secondary": "Set trip preferences",
+    "secondaryHint": "We'll leave out places that don't fit your needs",
     "more": "See more",
     "top": "Back to top",
     "retake": {
-      "label": "Retake",
-      "title": "Retake the quiz?",
-      "body": "Your current type stays until you finish again.",
-      "confirm": "Retake",
+      "label": "Start over",
+      "title": "Start over?",
+      "body": "Your current travel style will stay the same until you finish the quiz again.",
+      "confirm": "Start over",
       "close": "Close"
     },
     "reveal": {
-      "finding": "Your travel character is…",
-      "found": "Found it!"
+      "finding": "Your travel style is…",
+      "found": "Found your style!"
     }
   },
   "tripSetup": {
     "title": "What's your trip like today?",
-    "lead": "We'll recommend places that fit your choices",
+    "lead": "We'll find places that fit your plans and needs",
     "count": {
-      "one": "One",
-      "any": "Any",
-      "companion": "One + extras"
+      "one": "Select one",
+      "any": "Select all that apply",
+      "companion": "One + kids or pets"
     },
     "empty": {
-      "one": "Pick one",
-      "any": "Nothing applies? Pick \"None\""
+      "one": "Select one",
+      "any": "If nothing applies, choose the no-preference option."
     },
     "submit": "Get my picks",
     "submitDone": "Get my picks",

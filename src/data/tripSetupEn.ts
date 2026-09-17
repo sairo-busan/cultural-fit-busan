@@ -20,80 +20,80 @@ export const TRIP_QUESTION_TEXT_EN: Record<
   }
 > = {
   CMP01: {
-    title: "Who's with you",
-    helperText: "Pick one, and add kids or pets if they're joining too.",
+    title: "Who's joining you?",
+    helperText: "Choose one main option. Add kids or pets if they're coming along.",
     options: {
       solo: { label: "Solo", description: "We'll find places that fit your own pace and plans." },
       friend_couple: {
-        label: "Friends · partner",
-        description: "We'll find places to talk and enjoy together.",
+        label: "Friends or partner",
+        description: "We'll find places to chat and spend time together.",
       },
       parents: {
         label: "Parents",
-        description: "We'll find places you can both enjoy comfortably.",
+        description: "We'll find places everyone can enjoy comfortably.",
       },
     },
     toggles: {
       childWith: {
         label: "With kids",
-        description: "We'll factor in age-appropriate safety and interest.",
+        description: "We'll consider your child's age to find suitable, engaging places.",
       },
       petWith: {
         label: "With a pet",
-        description: "We'll check whether pets are allowed and how you're carrying them.",
+        description: "We'll check pet policies and leash or carrier requirements.",
       },
     },
   },
   CHILD01: {
     title: "How old is your child?",
-    helperText: "If there's more than one, pick the youngest.",
+    helperText: "If you're bringing more than one child, choose the youngest child's age.",
     options: {
       infant: {
         label: "0–3",
-        description: "We'll prioritize strollers, nursing, restrooms, and short distances.",
+        description: "We'll look for stroller access, nursing facilities, restrooms, and shorter trips.",
       },
       preschool: {
         label: "4–7",
-        description: "We'll prioritize short, intuitive experiences in safe spaces.",
+        description: "We'll look for short, easy-to-follow activities and suitable spaces for young children.",
       },
       elementary: {
         label: "8–13",
-        description: "We'll factor in hands-on activities and learning elements.",
+        description: "We'll look for hands-on activities and chances to learn.",
       },
       teen: {
         label: "14–18",
-        description: "We'll factor in photo spots, trends, and independent experiences.",
+        description: "We'll look for photo spots, trending places, and room to explore independently.",
       },
     },
   },
   PET01: {
-    title: "How are you carrying your pet?",
-    helperText: "With a carrier, more indoor places become an option.",
+    title: "Will your pet be on a leash or in a carrier?",
+    helperText: "Some indoor places allow pets in carriers.",
     options: {
       leash: {
-        label: "Leash · harness",
-        description: "We'll check outdoor-accessible areas and entry restrictions.",
+        label: "Leash or harness",
+        description: "We'll check which outdoor areas allow pets and any entry restrictions.",
       },
       carrier: {
-        label: "Carrier bag",
-        description: "We'll check places that allow indoor entry with a carrier.",
+        label: "Pet carrier",
+        description: "We'll check which indoor places allow pets in carriers.",
       },
       both: {
         label: "Both",
-        description: "We'll check conditions for both leash and carrier.",
+        description: "We'll check both leash and carrier requirements.",
       },
     },
   },
   MOB01: {
-    title: "Walking difficulty",
+    title: "Walking & mobility",
     options: {
-      none: { label: "Nothing bothers me", description: "No walking-related conditions applied." },
+      none: { label: "No walking limitations", description: "We won't filter places by walking or mobility needs." },
       long_walk: {
         label: "Long walks are hard",
-        description: "We'll favor places with less walking and room to rest.",
+        description: "We'll prioritize places with less walking and spots to rest.",
       },
       stairs_slope: {
-        label: "Stairs · slopes are hard",
+        label: "Stairs or slopes are difficult",
         description: "We'll check for stairs, steep slopes, and alternate routes.",
       },
       stroller: {
@@ -101,81 +101,81 @@ export const TRIP_QUESTION_TEXT_EN: Record<
         description: "We'll check for stroller-friendly paths and entrances.",
       },
       wheelchair: {
-        label: "Wheelchair · mobility aid",
-        description: "We'll check confirmed accessible entrances, restrooms, and routes.",
+        label: "Wheelchair or mobility aid",
+        description: "We'll use verified information on accessible entrances, restrooms, and routes.",
       },
     },
   },
   TRN01: {
     title: "Getting around",
     options: {
-      walk: { label: "Mostly on foot", description: "We'll connect nearby places centered on walking." },
+      walk: { label: "Mostly on foot", description: "We'll link nearby places you can reach on foot." },
       transit: {
         label: "Public transit",
-        description: "We'll factor in transit access and transfer burden.",
+        description: "We'll consider transit access and how many transfers you'll need.",
       },
-      car: { label: "Car", description: "We'll factor in drive time and confirmed parking info." },
+      car: { label: "Car", description: "We'll consider driving time and verified parking information." },
     },
   },
   FOOD01: {
-    title: "Food restrictions",
-    helperText: "Tell us what you'd like to avoid.",
+    title: "Dietary needs",
+    helperText: "Tell us about your diet and any foods you avoid.",
     options: {
-      none: { label: "No food restrictions", description: "No food-related conditions applied." },
+      none: { label: "No food restrictions", description: "We won't filter places by dietary needs." },
       spicy: {
         label: "Spicy food",
-        description: "We'll exclude candidates with a confirmed spicy-food conflict.",
+        description: "We'll leave out places confirmed to be unsuitable if you avoid spicy food.",
       },
       vegan: {
-        label: "Vegetarian · vegan",
-        description: "We'll check for confirmed vegetarian/vegan options.",
+        label: "Vegetarian or vegan",
+        description: "We'll check for verified vegetarian or vegan options.",
       },
       raw_meat: {
         label: "Raw meat",
-        description: "We'll exclude candidates confirmed to serve raw meat.",
+        description: "We'll leave out places confirmed to serve raw meat.",
       },
       raw_seafood: {
         label: "Raw seafood",
-        description: "We'll exclude candidates confirmed to be raw-seafood-focused.",
+        description: "We'll leave out places known to specialize in raw seafood.",
       },
       pork: {
         label: "Pork",
         description:
-          "We'll favor places with confirmed pork-free options and exclude confirmed conflicts.",
+          "We'll prioritize places with verified pork-free options and leave out places confirmed to be unsuitable.",
       },
     },
   },
   CTX01: {
-    title: "Right now",
+    title: "Your plans right now",
     options: {
       time_flexible: {
         label: "I have plenty of time",
-        description: "We'll allow places with longer visits and a more relaxed pace.",
+        description: "We'll include places where you can spend more time and explore at a relaxed pace.",
       },
       before_meal: {
         label: "Before a meal",
-        description: "We'll place food spots earlier in the course.",
+        description: "We'll put places to eat earlier in your itinerary.",
       },
       indoor_first: {
-        label: "Indoor first",
-        description: "We'll prioritize confirmed indoor or covered places.",
+        label: "Prefer indoors",
+        description: "We'll prioritize places confirmed to be indoors or covered.",
       },
       outdoor_preferred: {
         label: "Prefer outdoors",
-        description: "We'll prioritize places centered on outdoor experiences.",
+        description: "We'll prioritize places to explore outdoors.",
       },
       available_now: {
-        label: "Somewhere I can go right now",
-        description: "We'll check current operating status and how far it is.",
+        label: "Ready to go now",
+        description: "We'll check opening hours and how far you can travel right now.",
       },
       avoid_crowd: {
         label: "Avoid crowds",
-        description: "We'll prioritize candidates with lower expected congestion (not live data).",
+        description: "We'll prioritize places expected to be less busy, based on estimates rather than live crowd data.",
       },
       none: {
         label: "Nothing in particular",
         description:
-          "No extra situational adjustment applied. Automatic weather/season/time adjustments still apply.",
+          "We won't add any extra preferences. We'll still consider the weather, season, and time of day.",
       },
     },
   },
