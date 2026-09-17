@@ -88,3 +88,16 @@
 소피에게 카톡으로 필드명 규칙("어간+언어") 안내하고 `place.guideEn` →
 `place.guideDetailEn` 변경 요청 완료. 소피 PR 머지되면 `guideEn` 필드 제거
 정리 커밋 예정.
+
+### 2026-09-17: 유나 최종본으로 재작업(같은 날 후속)
+
+유나가 이 티켓 작업 도중 구글시트 간단히/자세히/팁 원고를 전면 교체(훨씬 길고
+상세한 새 원고, 120곳). `import-db02-placeinfo.ts` 재실행으로
+`guideSimpleKo`·`guideDetailKo`·`guideTipsRawKo`는 이미 새 원고로 갱신됨.
+
+시트의 `cultureGuideText_en`(자세히 영문) 칼럼은 옛 원고 기준 그대로였다(120건 중
+1건만 새로 반영, 나머지 119건은 stale — 대조 스크립트로 확인). 그래서 이 칼럼을
+쓰지 않고, 새 한글 원고 기준으로 `guideSimpleEn`·`guideDetailEn`·`guideTipsRawEn`
+전체를 LLM으로 재번역해 덮어썼다(`scripts/refill-guide-en-new-draft.ts`,
+119/119 — 에스엠비 웰니스 센터 1곳은 스코프 제외 대상이라 시트에 남아있어도
+건너뜀). 위 "필드명 규칙 통일" 절의 값(구원고 기준)은 이걸로 대체됐다.
