@@ -16,7 +16,9 @@ export async function GET(request: NextRequest) {
 
   try {
     const results = await getRecommendations({ contentTypeId, limit });
-    return NextResponse.json(results);
+    return NextResponse.json(results, {
+      headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" },
+    });
   } catch (error) {
     return NextResponse.json(
       { error: "추천 조회 실패", detail: (error as Error).message },
