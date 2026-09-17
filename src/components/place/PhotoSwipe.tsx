@@ -133,7 +133,7 @@ function GalleryControls({
     const inside = pos >= 0 && pos < shown;
     // 창 끝에 있고 그 너머에 사진이 더 있으면 작게
     const edge = (pos === 0 && from > 0) || (pos === shown - 1 && from + shown < total);
-    const scale = !inside ? "scale-0" : edge ? "scale-[0.67]" : "scale-100";
+    const scale = !inside ? "scale-0" : edge ? "scale-67" : "scale-100";
     return (
       <span
         key={k}
