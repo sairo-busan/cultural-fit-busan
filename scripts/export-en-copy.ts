@@ -93,7 +93,7 @@ section(
 
 section("S02 결과", "`messages` `profile`", table(ns("profile")));
 
-out.push("", "## CF8 8유형", "", "`src/data/cf8Profiles.ts` — 유형명은 `src/lib/cfp.ts` 에도 같은 값이 있어 함께 고친다");
+out.push("", "## CF8 8유형", "", "`src/data/cf8Profiles.ts`");
 for (const code of Object.keys(CF8_PROFILES.en) as (keyof typeof CF8_PROFILES.en)[]) {
   out.push("", `### ${code} · ${CF8_PROFILES.ko[code].profileName}`, "");
   out.push(table(flatten(CF8_PROFILES.ko[code] as unknown as Json, CF8_PROFILES.en[code] as unknown as Json)));
