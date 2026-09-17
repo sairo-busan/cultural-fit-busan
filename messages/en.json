@@ -2,7 +2,6 @@
   "place": {
     "save": "Save {name}",
     "removeFromSaved": "Remove {name} from saved",
-    "noPhoto": "no photo",
     "weatherType": {
       "indoor": "Indoor",
       "outdoor": "Outdoor",

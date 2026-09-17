@@ -64,7 +64,14 @@ export function PlaceCard({ place, saved, onToggleSave }: PlaceCardProps) {
             className="object-cover"
           />
         ) : (
-          <span className="ds-body-2 text-sub">{t("noPhoto")}</span>
+          // 사진이 없는 곳(운영 119곳 중 4곳)은 빈 회색 판 대신 기본 그림을 둔다
+          <Image
+            src="/placeholder/place-4x3.svg"
+            alt=""
+            fill
+            sizes="(min-width: 640px) 640px, 100vw"
+            className="object-cover"
+          />
         )}
 
         {/* 저장 아이콘이 앉을 바탕. 사진 밝기와 무관하게 흰 아이콘 하나로 통일한다 */}

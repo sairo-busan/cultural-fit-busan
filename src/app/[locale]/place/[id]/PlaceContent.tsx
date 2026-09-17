@@ -406,7 +406,6 @@ function Hero({
   name: string;
 }) {
   const t = useTranslations("placeDetail");
-  const tPlace = useTranslations("place");
   const router = useRouter();
   const scroller = useRef<HTMLDivElement>(null);
 
@@ -447,9 +446,13 @@ function Hero({
           ))}
         </div>
       ) : (
-        <div className="grid size-full place-items-center">
-          <span className="ds-serif ds-body-2 italic text-sub">{tPlace("noPhoto")}</span>
-        </div>
+        <Image
+          src="/placeholder/place-4x3.svg"
+          alt=""
+          fill
+          sizes="(min-width: 640px) 640px, 100vw"
+          className="object-cover"
+        />
       )}
 
       <div className="absolute inset-x-3 top-[calc(12px+env(safe-area-inset-top,0px))] flex justify-between">
