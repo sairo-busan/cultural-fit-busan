@@ -193,7 +193,13 @@
     "save": "저장하기",
     "saved": "저장됨",
     "newWindow": "새 창에서 열림",
-    "source": "사진 · 영업 · 이동 편의 정보 — 한국관광공사 TourAPI",
+    "source": {
+      "label": "출처",
+      "all": "사진 · 영업 · 이동 편의 정보 — 한국관광공사 TourAPI",
+      "photoArchive": "사진 — 부산광역시 · 부산관광공사",
+      "photoBoth": "사진 — 한국관광공사 TourAPI · 부산광역시 · 부산관광공사",
+      "rest": "영업 · 이동 편의 정보 — 한국관광공사 TourAPI"
+    },
     "notFound": {
       "title": "장소를 찾을 수 없어요",
       "body": "목록이 바뀌었을 수 있어요.",

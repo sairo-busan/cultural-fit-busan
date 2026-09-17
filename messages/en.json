@@ -193,7 +193,13 @@
     "save": "Save",
     "saved": "Saved",
     "newWindow": "opens in a new window",
-    "source": "Photos, hours and accessibility — Korea Tourism Organization TourAPI",
+    "source": {
+      "label": "Source",
+      "all": "Photos, hours and accessibility — Korea Tourism Organization TourAPI",
+      "photoArchive": "Photos — Busan Metropolitan City · Busan Tourism Organization",
+      "photoBoth": "Photos — Korea Tourism Organization TourAPI · Busan Metropolitan City · Busan Tourism Organization",
+      "rest": "Hours and accessibility — Korea Tourism Organization TourAPI"
+    },
     "notFound": {
       "title": "Place not found",
       "body": "The list may have changed.",
