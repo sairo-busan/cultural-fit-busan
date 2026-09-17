@@ -134,7 +134,7 @@ export function SavedContent() {
       <>
         <ScreenTitle>{t("title")}</ScreenTitle>
         <div className="flex flex-col items-center gap-4 px-[--gutter] py-16 text-center">
-          <span className="grid size-14 place-items-center rounded-full bg-surface text-sub">
+          <span className="grid size-14 place-items-center rounded-full bg-surface text-sub-on-surface">
             <svg
               viewBox="0 0 24 24"
               fill="none"

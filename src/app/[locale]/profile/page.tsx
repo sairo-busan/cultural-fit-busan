@@ -355,7 +355,7 @@ export function ProfilePage() {
           </div>
 
           <div {...rise(4, "rounded-2xl bg-surface p-5")}>
-            <p className="ds-body-2 font-semibold text-sub">
+            <p className="ds-body-2 font-medium text-sub-on-surface">
               {t("promiseTitle")}
             </p>
             <p className="ds-body-1 mt-1 font-semibold">
