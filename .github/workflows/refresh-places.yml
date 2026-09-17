@@ -6,8 +6,15 @@ name: Weekly places refresh
 #
 # import-eng-content-id.ts는 여기서 실행하지 않는다 — 개인 조사자료 CSV
 # (docs/TourAPI_영문_연결표_71.csv)를 읽는데 그 파일은 커밋하지 않아서 CI엔 없다.
-# engContentId는 한 번 세팅되면 ingest-places.ts가 건드리지 않는 필드라 재적재해도
+# engContentId는 한 번 세팅되면 재적재 스크립트가 건드리지 않는 필드라 재적재해도
 # 유지된다.
+#
+# ingest-places.ts(부산 전체 2,239곳, 1회 11,000+콜)는 여기서 쓰지 않는다 —
+# refresh-curated-places.ts(추천 119곳, 480+콜)로 범위를 좁혔다. 9/14 실제로
+# ingest-places.ts를 전체 재실행하다 TourAPI 일일 한도(1,000건)를 넘겨서 그
+# 뒤 처리된 장소 59곳의 영업시간·소개가 빈 값으로 덮인 사고가 있었다(소피
+# 발견, BE-FEAT-019 PR 리뷰) — refresh-curated-places.ts는 상세 호출 실패 시
+# 그 장소를 건드리지 않고 건너뛰어 같은 사고를 막는다.
 on:
   schedule:
     - cron: "0 19 * * 6"
@@ -26,11 +33,11 @@ jobs:
 
       - run: npm ci
 
-      - name: Refresh places (TourAPI 원본)
+      - name: Refresh curated places (추천 119곳, TourAPI 원본)
         env:
           TOUR_API_KEY: ${{ secrets.TOUR_API_KEY }}
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
-        run: npx tsx scripts/ingest-places.ts
+        run: npx tsx scripts/refresh-curated-places.ts
 
       - name: Refresh English address (71곳)
         env:
