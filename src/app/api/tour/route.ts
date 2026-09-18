@@ -49,15 +49,22 @@ export async function GET(request: NextRequest) {
 
   const upstreamUrl = `${TOUR_API_BASE}/${op}?${upstreamParams.toString()}`;
 
-  const upstreamResponse = await fetch(upstreamUrl, { cache: "no-store" });
-  const body = await upstreamResponse.json();
+  try {
+    const upstreamResponse = await fetch(upstreamUrl, { cache: "no-store" });
+    const body = await upstreamResponse.json();
 
-  if (!upstreamResponse.ok || body.response?.header?.resultCode !== "0000") {
+    if (!upstreamResponse.ok || body.response?.header?.resultCode !== "0000") {
+      return NextResponse.json(
+        { error: "TourAPI 호출 실패", detail: body },
+        { status: 502 }
+      );
+    }
+
+    return NextResponse.json(body.response.body);
+  } catch (error) {
     return NextResponse.json(
-      { error: "TourAPI 호출 실패", detail: body },
+      { error: "TourAPI 호출 실패", detail: (error as Error).message },
       { status: 502 }
     );
   }
-
-  return NextResponse.json(body.response.body);
 }

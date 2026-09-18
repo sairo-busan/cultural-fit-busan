@@ -18,12 +18,12 @@ type PlaceDoc = {
   _id: string;
   contentTypeId: string;
   title: string;
-  addr1: string;
+  addr1: string | null;
   /** TourAPI 영문판(EngService2 detailCommon2) 있는 71곳은 그대로, 나머지 49곳은
    * 개정 로마자 표기법으로 직접 옮김(9/16, ingest-eng-address.ts/fill-addr-en-llm.ts) */
   addrEn?: string | null;
-  mapX: number;
-  mapY: number;
+  mapX: number | null;
+  mapY: number | null;
   firstImage: string | null;
   /** TourAPI에 사진이 없는 곳 직접 소싱한 대체 사진(9/16, upload-place-photos.ts) */
   customImage?: string | null;
@@ -38,6 +38,12 @@ type PlaceDoc = {
   accessibilityInfo?: Record<string, string> | null;
   engContentId?: string;
   engOperationInfo?: OperationInfo;
+  /** Phase 4(9/17), engContentId 없는 49곳용 LLM 번역 — fill-hours-en-manual.ts.
+   * *SourceKo는 번역 당시 한국어 원문 스냅샷(check-stale-en-fields.ts가 매주 재적재 후 대조) */
+  hoursEnManual?: string | null;
+  hoursEnManualSourceKo?: string | null;
+  closedDaysEnManual?: string | null;
+  closedDaysEnManualSourceKo?: string | null;
 };
 
 /** 9/16 — #25 PR 리뷰 후속 요청. 유나가 그 사이 DB_01에 채운 4개 칸(score_board) */
@@ -65,10 +71,6 @@ type PlaceInfoDoc = {
   placeDesc: string | null;
   placeDescEn?: string | null;
   guideDetailKo?: string | null;
-  /** @deprecated 9/17 guideDetailEn으로 이전(당시 스크립트는 재번역 뒤 삭제 —
-   * 다시 돌리면 새 원고 번역이 옛 문장으로 되돌아가서 위험, PR 리뷰 발견).
-   * 소피가 PlaceContent.tsx의 place.guideEn 참조를 바꾸기 전까지 응답 하위호환용으로만 유지 */
-  guideEn?: string | null;
   /** 9/17 guideEn에서 이전 — 도슨트 구조 변경(간단히/자세히/팁 3종 영문 완성) */
   guideDetailEn?: string | null;
   guideSimpleKo?: string | null;
@@ -84,6 +86,10 @@ type PlaceInfoDoc = {
   /** 9/17 BE-FEAT-018, en-US-JennyNeural(upload-docent-audio-en.ts) */
   audioUrlSimpleEn?: string | null;
   audioUrlDetailEn?: string | null;
+  /** Phase 4(9/17), TourAPI 무장애여행에 영문 서비스가 없어 LLM 직접 번역
+   * (fill-accessibility-en.ts). accessibilityInfoSourceKo는 번역 당시 원본 JSON 스냅샷 */
+  accessibilityInfoEn?: Record<string, string> | null;
+  accessibilityInfoSourceKo?: string | null;
 };
 
 type PlaceByCf8Doc = {
@@ -96,10 +102,10 @@ type PlaceByCf8Doc = {
 
 export type PlaceDetail = {
   contentId: string;
-  addr1: string;
+  addr1: string | null;
   addr1En: string | null;
-  mapX: number;
-  mapY: number;
+  mapX: number | null;
+  mapY: number | null;
   images: string[];
   /** 9/16 — 사진별 출처(공공누리 유형) 표기용. 표기 위치는 아직 미정(소피 확인 중) —
    * 위치 정해지기 전에 데이터만 먼저 내려준다. url은 images 배열과 같은 값이 겹친다 */
@@ -113,8 +119,6 @@ export type PlaceDetail = {
   reasonByCf8En: Record<string, string | null>;
   guideDetailKo: string | null;
   guideSimpleKo: string | null;
-  /** @deprecated 9/17 guideDetailEn으로 이전. 소피 PR 머지 후 제거 예정 */
-  guideEn: string | null;
   guideDetailEn: string | null;
   guideSimpleEn: string | null;
   tipsKo: { route: string | null; photo: string | null; caution: string | null };
@@ -132,8 +136,8 @@ export type PlaceDetail = {
   closedDaysEn: string | null;
   phone: string | null;
   accessibility: { key: string; text: string }[];
-  /** BE-FEAT-019(#51) 이 채운다. 머지 전 응답에는 없다 */
-  accessibilityEn?: { key: string; text: string }[];
+  /** Phase 4(9/17), LLM 번역(소스가 없는 경우가 대부분이라 부분 커버리지) */
+  accessibilityEn: { key: string; text: string }[];
   /** DB_01(score_board) 신규 4칸(9/15 유나 추가, 9/16 상세 응답에 추가) */
   weatherType: "indoor" | "outdoor" | "mixed" | null;
   placeType: string | null;
@@ -210,9 +214,15 @@ export async function getPlaceDetail(contentId: string): Promise<PlaceDetail | n
 
   const place = await db.collection<PlaceDoc>("places").findOne({ _id: contentId });
   if (!place) return null;
+  // 문서는 있어도 핵심 필드가 null이면(TourAPI 원본 소실·재적재 실패 등) "찾을 수 없음" —
+  // 9/18 사고(addr1 null로 FE 크래시) 재발 방지, recommend.ts와 동일 가드
+  if (!place.title || !place.addr1 || place.mapX == null || place.mapY == null) return null;
 
   const score = await db.collection<ScoreBoardRow>("score_board").findOne({ contentId });
-  const placeId = score?.placeId;
+  // score_board(큐레이션 118곳) 밖이면 TourAPI엔 있어도 "찾을 수 없음" —
+  // 큐레이션이 곧 서비스 대상의 정의(9/18, TourAPI 원본 없는 곳 제외 확정)
+  if (!score) return null;
+  const placeId = score.placeId;
 
   const [info, reasonDocs] = await Promise.all([
     placeId ? db.collection<PlaceInfoDoc>("place_info").findOne({ placeId }) : Promise.resolve(null),
@@ -252,6 +262,10 @@ export async function getPlaceDetail(contentId: string): Promise<PlaceDetail | n
   const accessibility = Object.entries(place.accessibilityInfo ?? {})
     .filter(([key, text]) => key !== "contentid" && typeof text === "string" && text.trim() !== "")
     .map(([key, text]) => ({ key, text }));
+  const accessibilityEn = Object.entries(info?.accessibilityInfoEn ?? {}).map(([key, text]) => ({
+    key,
+    text,
+  }));
 
   const weatherType = score?.indoorOutdoor ? INDOOR_OUTDOOR_MAP[score.indoorOutdoor] : null;
 
@@ -274,7 +288,6 @@ export async function getPlaceDetail(contentId: string): Promise<PlaceDetail | n
 
     guideDetailKo: info?.guideDetailKo ?? null,
     guideSimpleKo: info?.guideSimpleKo ?? null,
-    guideEn: info?.guideEn ?? null,
     guideDetailEn: info?.guideDetailEn ?? null,
     guideSimpleEn: info?.guideSimpleEn ?? null,
     tipsKo: parseTips(info?.guideTipsRawKo),
@@ -286,11 +299,15 @@ export async function getPlaceDetail(contentId: string): Promise<PlaceDetail | n
 
     hours: pickOperationValue(place.operationInfo, HOURS_KEYS),
     closedDays: pickOperationValue(place.operationInfo, CLOSED_KEYS),
-    hoursEn: cleanEnglishValue(pickOperationValue(place.engOperationInfo, HOURS_KEYS)),
-    closedDaysEn: cleanEnglishValue(pickOperationValue(place.engOperationInfo, CLOSED_KEYS)),
+    // engOperationInfo(TourAPI 실제 영문, 71곳)가 우선, 없으면 hoursEnManual(LLM 번역,
+    // 나머지 49곳 중 22곳 커버) 폴백. 둘 다 없으면 null — 화면이 한국어로 대신한다.
+    hoursEn: cleanEnglishValue(pickOperationValue(place.engOperationInfo, HOURS_KEYS)) ?? place.hoursEnManual ?? null,
+    closedDaysEn:
+      cleanEnglishValue(pickOperationValue(place.engOperationInfo, CLOSED_KEYS)) ?? place.closedDaysEnManual ?? null,
     phone: pickOperationValue(place.operationInfo, PHONE_KEYS),
 
     accessibility,
+    accessibilityEn,
 
     weatherType,
     placeType: score?.placeType ?? null,
