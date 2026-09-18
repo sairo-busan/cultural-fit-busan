@@ -159,7 +159,6 @@
       "yes": "Pets allowed",
       "no": "No pets"
     },
-    "guideTitle": "Cultural guide",
     "tipsTitle": "Don't miss",
     "tips": {
       "photo": "Photo spots",
@@ -212,6 +211,32 @@
       "body": "Check your connection and try again.",
       "action": "Try again"
     }
+  },
+  "docent": {
+    "close": "Close audio guide",
+    "eyebrow": "AUDIO GUIDE",
+    "lengthGroup": "Length",
+    "length": {
+      "simple": "Short",
+      "detail": "Full"
+    },
+    "play": "Play {length}",
+    "pause": "Pause {length}",
+    "source": {
+      "script": "Text — written from public sources, translated with AI",
+      "audio": "Audio — AI speech synthesis",
+      "photoTour": "Photos — Korea Tourism Organization TourAPI"
+    },
+    "entry": {
+      "title": "Audio guide",
+      "body": "What to notice here, and why"
+    },
+    "playCard": "Resume audio guide",
+    "pauseCard": "Pause audio guide",
+    "stopCard": "Stop audio guide",
+    "openCard": "Open audio guide",
+    "nowScript": "See the script you're hearing",
+    "replayCard": "Replay audio guide"
   },
   "landing": {
     "language": "Language",

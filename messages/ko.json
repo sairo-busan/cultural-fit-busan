@@ -159,7 +159,6 @@
       "yes": "동반 가능",
       "no": "동반 불가"
     },
-    "guideTitle": "문화 가이드",
     "tipsTitle": "놓치기 쉬운 것",
     "tips": {
       "photo": "사진 포인트",
@@ -212,6 +211,32 @@
       "body": "연결을 확인하고 다시 시도해 주세요.",
       "action": "다시 시도"
     }
+  },
+  "docent": {
+    "close": "오디오 가이드 닫기",
+    "eyebrow": "오디오 가이드",
+    "lengthGroup": "설명 길이",
+    "length": {
+      "simple": "간단히",
+      "detail": "자세히"
+    },
+    "play": "{length} 재생",
+    "pause": "{length} 일시정지",
+    "source": {
+      "script": "설명 — 공개 자료를 바탕으로 작성",
+      "audio": "음성 — AI 음성 합성",
+      "photoTour": "사진 — 한국관광공사 TourAPI"
+    },
+    "entry": {
+      "title": "오디오 가이드",
+      "body": "이 장소를 어떻게 보면 좋은지 알려드려요"
+    },
+    "playCard": "오디오 가이드 이어 듣기",
+    "pauseCard": "오디오 가이드 일시정지",
+    "stopCard": "오디오 가이드 정지",
+    "openCard": "오디오 가이드 열기",
+    "nowScript": "지금 듣는 원고 보기",
+    "replayCard": "오디오 가이드 다시 듣기"
   },
   "landing": {
     "language": "언어",

@@ -7,6 +7,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { AppHeader } from "@/components/common/AppHeader";
 import { EmptyState } from "@/components/common/EmptyState";
 import { PhotoSwipe } from "@/components/place/PhotoSwipe";
+import { Docent, PlayIcon, clock, progressWidth } from "./Docent";
+import { useDocentAudio } from "./useDocentAudio";
 import { useSavedPlaces } from "@/hooks/useSavedPlaces";
 import { useStoredSnapshot } from "@/hooks/useStoredSnapshot";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -36,8 +38,13 @@ export function PlaceContent() {
   const t = useTranslations("placeDetail");
   // 실내 · 야외 문구는 목록 행과 같은 것을 쓴다
   const tPlace = useTranslations("place");
+  const tDocent = useTranslations("docent");
 
   const { ids: savedIds, toggle } = useSavedPlaces();
+  // 음원은 도슨트가 아니라 이 화면이 들고 있다 — 도슨트를 닫아도 이어서 들린다
+  const player = useDocentAudio();
+  // 다른 장소 상세로 넘어가도 이 화면은 그대로 남는다 — 앞 장소 음원이 조작할 곳 없이 들리지 않게 멈춘다
+  useEffect(() => player.stop, [id, player.stop]);
   const cf8Code = useStoredSnapshot(readCf8Code, null);
   const router = useRouter();
 
@@ -73,6 +80,27 @@ export function PlaceContent() {
 
   // 링크를 직접 열고 들어오면 돌아갈 기록이 없다
   const back = () => (window.history.length > 1 ? router.back() : router.push("/feed"));
+
+  // 도슨트는 주소의 `#docent` 로 열고 닫는다 — 뒤로 가기(앱의 안드로이드 뒤로 포함)가 도슨트만 닫는다
+  const [docentOpen, setDocentOpen] = useState(false);
+  useEffect(() => {
+    const sync = () => setDocentOpen(window.location.hash === DOCENT_HASH);
+    // 링크를 직접 열고 들어오면 도슨트 앞에 이 화면 기록이 없다. 상세 → 도슨트로 다시 쌓아
+    // 뒤로 가기가 페이지를 떠나지 않고 도슨트만 닫게 한다
+    if (window.location.hash === DOCENT_HASH) {
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      window.history.pushState(null, "", DOCENT_HASH);
+    }
+    sync();
+    window.addEventListener("hashchange", sync);
+    return () => window.removeEventListener("hashchange", sync);
+  }, []);
+
+  const openDocent = useCallback(() => {
+    window.history.pushState(null, "", DOCENT_HASH);
+    setDocentOpen(true);
+  }, []);
+  const closeDocent = useCallback(() => window.history.back(), []);
 
   if (load.status === "loading") return <PlaceSkeleton />;
 
@@ -130,11 +158,16 @@ export function PlaceContent() {
   // 둘 중 하나라도 길면 둘 다 한 줄 전체를 쓴다. 한쪽만 펴면 짝이 반 칸에 혼자 남는다
   const wideHours = [hours, closedDays].some((v) => (v?.length ?? 0) > WIDE_AT);
 
-  const guide = en ? place.guideEn : place.guideDetailKo;
-  // 놓치기 쉬운 것 · 무장애 원문은 한국어뿐이다
-  const tips = en
-    ? []
-    : TIP_KEYS.flatMap((key) => (place.tipsKo[key] ? [{ key, text: place.tipsKo[key] }] : []));
+  // 카드가 재생 상태를 보여준다 — 이 장소의 음원이 돌고 있을 때만
+  const playingLength =
+    player.src === (en ? place.audioUrlDetailEn : place.audioUrlDetailKo)
+      ? "detail"
+      : player.src === (en ? place.audioUrlSimpleEn : place.audioUrlSimpleKo)
+        ? "simple"
+        : null;
+  const playingHere = playingLength !== null;
+  const listening = playingHere && !player.ended;
+  // 무장애 원문은 한국어뿐이다
   const access = en ? [] : place.accessibility.filter((a) => t.has(`accessibility.${a.key}`));
 
   // 출처 — 사진만 출처가 갈린다. 둘 다 TourAPI 면 한 줄로 합치고, 사진이 없으면 사진 줄을 뺀다
@@ -159,6 +192,44 @@ export function PlaceContent() {
         <h1 className="ds-headline mt-2">{name}</h1>
         {desc && <p className="ds-body-1 mt-2">{desc}</p>}
         <p className="ds-body-2 mt-2 font-medium text-sub">{en ? (place.addr1En ?? place.addr1) : place.addr1}</p>
+
+        {/* 사진 위에는 두지 않는다 — 입구가 둘이면 같은 일을 두 번 배운다.
+            듣는 동안 카드는 입구로 남아 "원고 보기" 만 말한다. 길이 · 시간 · 조작은 하단 바에 있다 */}
+        <button
+          type="button"
+          onClick={openDocent}
+          className="mt-5 flex w-full items-center gap-3 rounded-xl border border-line p-4 text-left active:bg-surface"
+        >
+          {/* 듣는 중에도 카드 면은 그대로 — 아래 "맞는 이유" 박스와 같은 회색이 되면 한 덩어리로 보인다 */}
+          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary-tint text-ink">
+            {listening ? (
+              <Equalizer moving={player.playing} />
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" className="size-5" aria-hidden>
+                <path d="M4 14v-2a8 8 0 0 1 16 0v2" />
+                <path d="M4 14a2 2 0 0 1 2-2h1v6H6a2 2 0 0 1-2-2z" />
+                <path d="M20 14a2 2 0 0 0-2-2h-1v6h1a2 2 0 0 0 2-2z" />
+                <path d="M17 18v1a3 3 0 0 1-3 3h-2" />
+              </svg>
+            )}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="ds-title-2 block">{tDocent("entry.title")}</span>
+            <span className="ds-caption mt-0.5 block text-sub">{tDocent(listening ? "nowScript" : "entry.body")}</span>
+          </span>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.8}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="size-5 shrink-0 text-sub"
+            aria-hidden
+          >
+            <path d="M9 18l6-6-6-6" />
+          </svg>
+        </button>
 
         {reason && (
           <div className="mt-4 rounded-xl bg-primary-tint p-4">
@@ -189,32 +260,6 @@ export function PlaceContent() {
           />
         </dl>
 
-        {guide && (
-          <section className="mt-6 border-t border-hair pt-6">
-            <h2 className="ds-title-1">{t("guideTitle")}</h2>
-            {guide.split(/\n\s*\n/).map((para, i) => (
-              <p key={i} className="ds-body-2 mt-3 whitespace-pre-line">
-                {para}
-              </p>
-            ))}
-          </section>
-        )}
-
-        {tips.length > 0 && (
-          <section className="mt-6">
-            <h3 className="ds-title-2">{t("tipsTitle")}</h3>
-            {tips.map(({ key, text }) => (
-              <div key={key} className="mt-3 flex gap-3">
-                <span className="w-0.75 shrink-0 rounded-full bg-primary" aria-hidden />
-                <div>
-                  <p className="ds-caption font-semibold text-sub">{t(`tips.${key}`)}</p>
-                  <p className="ds-body-2 mt-0.5">{text}</p>
-                </div>
-              </div>
-            ))}
-          </section>
-        )}
-
         {access.length > 0 && (
           <section className="mt-6 border-t border-hair pt-6">
             <h2 id="accessibility" tabIndex={-1} className="ds-title-1 scroll-mt-6 outline-none">
@@ -242,9 +287,53 @@ export function PlaceContent() {
           <p className="ds-caption text-sub">{t(`source.${restSource}`)}</p>
         </section>
       </div>
+      {/* 하단 고정 영역 — 도슨트를 닫고 들을 때는 재생 줄이 버튼 줄 위에 같은 면으로 붙는다.
+          도슨트가 열려 있으면 그 안의 재생 줄이 맡는다 */}
+      <div className="sticky bottom-0 mt-6 border-t border-hair bg-page">
+        {playingHere && !docentOpen && (
+          <div className="screen flex items-center gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => player.toggle(player.src!)}
+              aria-label={tDocent(player.ended ? "replayCard" : player.playing ? "pauseCard" : "playCard")}
+              className="grid size-11 shrink-0 place-items-center rounded-full bg-primary text-white active:bg-primary-press"
+            >
+              {player.ended ? (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="size-4" aria-hidden>
+                  <path d="M3 12a9 9 0 1 0 3-6.7" />
+                  <path d="M3 4v5h5" />
+                </svg>
+              ) : (
+                <PlayIcon paused={!player.playing} />
+              )}
+            </button>
+            <button type="button" onClick={openDocent} aria-label={tDocent("openCard")} className="min-w-0 flex-1 px-1 text-left">
+              <span className="flex items-center gap-2">
+                <span className="ds-caption min-w-0 flex-1 truncate font-semibold">{`${name} · ${tDocent(`length.${playingLength}`)}`}</span>
+                <span className="ds-caption shrink-0 text-sub tabular-nums">
+                  {clock(player.at)} / {player.total > 0 ? clock(player.total) : "--:--"}
+                </span>
+              </span>
+              {/* 옅은 막대 — 표시만 한다. 위치 옮기기는 원고 화면에서 */}
+              <span className="mt-1.5 block h-0.5 rounded-full bg-hair" aria-hidden>
+                <span className="block h-full rounded-full bg-sub" style={{ width: progressWidth(player) }} />
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={player.stop}
+              aria-label={tDocent("stopCard")}
+              className="grid size-11 shrink-0 place-items-center rounded-full text-sub active:bg-surface"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" className="size-4" aria-hidden>
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            </button>
+          </div>
+        )}
 
-      {/* 지도는 구글맵으로 넘긴다 — 외국인 사용자에게 카카오맵은 설치돼 있지 않은 앱이다. 길찾기는 구글맵 안에서 이어간다 */}
-      <div className="screen sticky bottom-0 mt-6 flex gap-3 border-t border-hair bg-page pt-3 pb-[calc(12px+env(safe-area-inset-bottom,0px))]">
+        {/* 지도는 구글맵으로 넘긴다 — 외국인 사용자에게 카카오맵은 설치돼 있지 않은 앱이다. 길찾기는 구글맵 안에서 이어간다 */}
+        <div className="screen flex gap-3 pt-3 pb-[calc(12px+env(safe-area-inset-bottom,0px))]">
         <a
           href={googleMapsUrl(place.nameKo)}
           target="_blank"
@@ -278,13 +367,30 @@ export function PlaceContent() {
           </svg>
           {t(saved ? "saved" : "save")}
         </button>
+        </div>
       </div>
+
+      <Docent place={place} open={docentOpen} onClose={closeDocent} audio={player} />
     </article>
   );
 }
 
-/** 관람 순서는 뺀다 — 120곳 중 119곳이 도슨트 자세히 본문의 문장과 같아 바로 위 문단을 되풀이한다 */
-const TIP_KEYS = ["photo", "caution"] as const;
+const DOCENT_HASH = "#docent";
+
+/** 재생 표시 — 막대 세 개. 일시정지하면 멈춘 채 흐려진다 */
+function Equalizer({ moving }: { moving: boolean }) {
+  return (
+    <span className={`flex h-3 items-end gap-0.5 ${moving ? "" : "opacity-45"}`} aria-hidden>
+      {[0.4, 1, 0.65].map((h, i) => (
+        <span
+          key={i}
+          className={`w-0.75 rounded-full bg-primary ${moving ? "eq-bar" : ""}`}
+          style={{ height: `${h * 100}%` }}
+        />
+      ))}
+    </span>
+  );
+}
 
 /** 이 분 수까지는 걸어갈 거리로 적는다. 넘으면 직선거리 km — 도보 40분을 권하지 않는다 */
 const WALK_MAX_MIN = 20;
