@@ -17,7 +17,7 @@
 | Type | BUG |
 | Severity | High (한 곳의 데이터 이상이 화면 전체를 멈춘다) |
 | Layer | Screen · Component |
-| Status | In Progress |
+| Status | Review |
 | Screen | 모든 화면 · S10 추천 · 저장 · S20 함께 둘러볼 곳 |
 | Branch | `fix/error-boundary` (워크트리 `cfb-error-boundary`, `origin/main` 기준) |
 | Depends | — |
@@ -114,12 +114,12 @@ FE-BUG-004 가 실제 사례다 — 주소 없는 장소 1곳의 카드가 터�
 
 ## Acceptance Criteria
 
-- [ ] 추천 목록에서 카드 하나가 터지면 그 카드만 빠지고 나머지 카드는 보인다
-- [ ] 저장 목록 · 함께 둘러볼 곳도 같다
-- [ ] 화면이 터지면 오류 화면이 뜨고, 다시 시도로 다시 그리거나 뒤로가기로 나갈 수 있다
-- [ ] 레이아웃까지 터지면 한 · 영 안내와 새로고침이 뜬다
-- [ ] 오류는 콘솔에 남는다
-- [ ] 앱 빌드(정적 export)에서도 같다
+- [x] 추천 목록에서 카드 하나가 터지면 그 카드만 빠지고 나머지 카드는 보인다
+- [x] 저장 목록 · 함께 둘러볼 곳도 같다
+- [x] 화면이 터지면 오류 화면이 뜨고, 다시 시도로 다시 그리거나 뒤로가기로 나갈 수 있다
+- [x] 레이아웃까지 터지면 한 · 영 안내와 새로고침이 뜬다
+- [x] 오류는 콘솔에 남는다
+- [ ] 앱 빌드(정적 export)에서도 같다 — 빌드 통과, 기기 확인은 다음 원스토어 빌드에서
 
 ---
 
@@ -136,4 +136,4 @@ FE-BUG-004 가 실제 사례다 — 주소 없는 장소 1곳의 카드가 터�
 
 강제 예외는 확인용 임시 코드로 넣고 커밋하지 않는다.
 
-`npx tsc --noEmit` · `npm run lint` · `npm run build` · `BUILD_TARGET=app npm run build`
+`npx tsc --noEmit` · `npm run lint` · `npm run build` · `npm run build:app`

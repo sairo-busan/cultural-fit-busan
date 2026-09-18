@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { AppHeader } from "@/components/common/AppHeader";
 import { EmptyState } from "@/components/common/EmptyState";
+import { ItemBoundary } from "@/components/common/ItemBoundary";
 import { PhotoSwipe } from "@/components/place/PhotoSwipe";
 import { Docent, PlayIcon, clock, progressWidth } from "./Docent";
 import { useDocentAudio } from "./useDocentAudio";
@@ -428,31 +429,38 @@ function Nearby({ contentId, en }: { contentId: string; en: boolean }) {
     <section className="mt-6 border-t border-hair pt-6">
       <h2 className="ds-title-1">{t("nearbyTitle")}</h2>
       <ul className="mt-2">
-        {places.map((p) => {
-          const line = en ? p.descEn : p.placeDesc;
-          return (
-            <li key={p.contentId} className="border-b border-hair last:border-0">
-              <Link href={`/place/${p.contentId}`} className="flex min-h-12 items-center gap-3 py-3 active:bg-surface">
-                <span className="relative size-13 shrink-0 overflow-hidden rounded bg-surface">
-                  {p.firstImage && (
-                    <Image src={secureImageUrl(p.firstImage)} alt="" fill sizes="52px" className="object-cover" />
-                  )}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="ds-body-2 block font-semibold">{en ? (p.nameEn ?? p.nameKo) : p.nameKo}</span>
-                  {line && <span className="ds-caption mt-0.5 block truncate text-sub">{line}</span>}
-                </span>
-                <span className="ds-caption shrink-0 font-bold text-ink tabular-nums">
-                  {p.distanceMin <= WALK_MAX_MIN
-                    ? t("walkAbout", { m: p.distanceMin })
-                    : t("distanceKm", { km: ((p.distanceMin * 80) / 1000).toFixed(1) })}
-                </span>
-              </Link>
-            </li>
-          );
-        })}
+        {places.map((p) => (
+          <ItemBoundary key={p.contentId}>
+            <NearbyRow p={p} en={en} />
+          </ItemBoundary>
+        ))}
       </ul>
     </section>
+  );
+}
+
+function NearbyRow({ p, en }: { p: NearbyPlace; en: boolean }) {
+  const t = useTranslations("placeDetail");
+  const line = en ? p.descEn : p.placeDesc;
+  return (
+    <li className="border-b border-hair last:border-0">
+      <Link href={`/place/${p.contentId}`} className="flex min-h-12 items-center gap-3 py-3 active:bg-surface">
+        <span className="relative size-13 shrink-0 overflow-hidden rounded bg-surface">
+          {p.firstImage && (
+            <Image src={secureImageUrl(p.firstImage)} alt="" fill sizes="52px" className="object-cover" />
+          )}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="ds-body-2 block font-semibold">{en ? (p.nameEn ?? p.nameKo) : p.nameKo}</span>
+          {line && <span className="ds-caption mt-0.5 block truncate text-sub">{line}</span>}
+        </span>
+        <span className="ds-caption shrink-0 font-bold text-ink tabular-nums">
+          {p.distanceMin <= WALK_MAX_MIN
+            ? t("walkAbout", { m: p.distanceMin })
+            : t("distanceKm", { km: ((p.distanceMin * 80) / 1000).toFixed(1) })}
+        </span>
+      </Link>
+    </li>
   );
 }
 

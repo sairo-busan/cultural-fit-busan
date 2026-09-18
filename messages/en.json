@@ -54,6 +54,11 @@
     "close": "Close",
     "menu": "Menu"
   },
+  "screenError": {
+    "title": "Something went wrong",
+    "body": "Please try again in a moment",
+    "action": "Try again"
+  },
   "feed": {
     "title": "Places to go now",
     "yourType": "Travel type",
