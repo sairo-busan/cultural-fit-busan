@@ -31,7 +31,7 @@ export type EngineContext = {
   cf8Code: string;
   mode: TripSetupMode;
   tripSetup: TripSetupLike | null;
-  weather: Weather;
+  weather: Weather | null;
   now?: Date; // 테스트용 주입 지점, 생략하면 현재 시각
 };
 

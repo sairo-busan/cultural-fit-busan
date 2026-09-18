@@ -89,8 +89,9 @@ const WEATHER_FIELD: Record<Weather, keyof PlaceSituationalScores> = {
   cloudy: "cloudyScore",
 };
 
-export function selectWeatherScore(place: PlaceSituationalScores, weather: Weather): number | null {
-  return place[WEATHER_FIELD[weather]] ?? null;
+/** 날씨를 모르면(조회 실패) null — 날씨 축을 빼고 R031 로 재정규화된다 */
+export function selectWeatherScore(place: PlaceSituationalScores, weather: Weather | null): number | null {
+  return weather ? place[WEATHER_FIELD[weather]] ?? null : null;
 }
 
 const SEASON_FIELD: Record<Season, keyof PlaceSituationalScores> = {
