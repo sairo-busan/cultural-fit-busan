@@ -76,6 +76,8 @@
       "action": "Edit preferences"
     },
     "nowInNoTime": "Busan · {weather}",
+    "weatherFailed": "Couldn't load weather",
+    "reloadWeather": "Reload weather",
     "loadFailed": {
       "title": "Couldn't load places",
       "body": "Check your connection and try again.",

@@ -76,6 +76,8 @@
       "action": "조건 다시 고르기"
     },
     "nowInNoTime": "부산 · {weather}",
+    "weatherFailed": "날씨를 불러오지 못했어요",
+    "reloadWeather": "날씨 다시 불러오기",
     "loadFailed": {
       "title": "목록을 불러오지 못했어요",
       "body": "연결을 확인한 뒤 다시 시도해주세요.",

@@ -1,7 +1,9 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
+import { RotateCw } from "lucide-react";
 import { EmptyState } from "@/components/common/EmptyState";
+import { Skeleton } from "@/components/common/Skeleton";
 import { ListHeader, ScreenTitle } from "@/components/common/TabScreen";
 import { WeatherIcon } from "@/components/common/WeatherIcon";
 import { TasteSummary } from "@/components/profile/TasteSummary";
@@ -26,8 +28,19 @@ export function FeedContent() {
   const locale = useLocale() as Locale;
   const t = useTranslations("feed");
 
-  const { places, loading, error, code, retry, weather, temperature, forecastSlot } =
-    useRecommendations();
+  const {
+    places,
+    loading,
+    error,
+    code,
+    retry,
+    weather,
+    temperature,
+    forecastSlot,
+    weatherFailed,
+    weatherLoading,
+    reloadWeather,
+  } = useRecommendations();
   const { ids: savedIds, toggle } = useSavedPlaces();
 
   if (loading) return <FeedSkeleton hasTaste={code !== null} />;
@@ -48,7 +61,10 @@ export function FeedContent() {
             {code && copy ? <TasteSummary code={code} copy={copy} /> : <QuizPrompt />}
           </div>
 
-          {/* 기상청 응답이 없으면 날씨를 비우고 정렬 기준만 남긴다. 가짜 값을 쓰지 않는다 */}
+          {/*
+            기상청 응답이 없으면 가짜 값 대신 안내와 다시 불러오기를 둔다.
+            훅이 이미 한 번 더 요청한 뒤라 여기까지 온 건 실제로 안 되는 경우다.
+          */}
           <ListHeader aside={t(code ? "sortByMatch" : "sortByLandmark")}>
             {weather && (
               <>
@@ -70,6 +86,26 @@ export function FeedContent() {
                       })
                     : t("nowInNoTime", { weather: t(`weather.${weather}`) })}
                 </span>
+              </>
+            )}
+            {!weather && weatherLoading && (
+              <>
+                <Skeleton className="size-4 rounded-full" />
+                <Skeleton className="h-3 w-28" />
+              </>
+            )}
+            {!weather && !weatherLoading && weatherFailed && (
+              <>
+                <span className="ds-caption truncate">{t("weatherFailed")}</span>
+                {/* 아이콘은 글자 크기, 누르는 영역은 44px */}
+                <button
+                  type="button"
+                  onClick={reloadWeather}
+                  aria-label={t("reloadWeather")}
+                  className="-my-3.5 grid size-11 shrink-0 place-items-center text-ink"
+                >
+                  <RotateCw size={16} strokeWidth={2} aria-hidden />
+                </button>
               </>
             )}
           </ListHeader>
