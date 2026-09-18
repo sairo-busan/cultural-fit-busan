@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
+import { AppHeader } from "@/components/common/AppHeader";
 import { EmptyState } from "@/components/common/EmptyState";
 import { PhotoSwipe } from "@/components/place/PhotoSwipe";
 import { useSavedPlaces } from "@/hooks/useSavedPlaces";
@@ -38,6 +39,7 @@ export function PlaceContent() {
 
   const { ids: savedIds, toggle } = useSavedPlaces();
   const cf8Code = useStoredSnapshot(readCf8Code, null);
+  const router = useRouter();
 
   const [load, setLoad] = useState<Load>({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
@@ -69,31 +71,41 @@ export function PlaceContent() {
 
   const retry = useCallback(() => setAttempt((n) => n + 1), []);
 
+  // 링크를 직접 열고 들어오면 돌아갈 기록이 없다
+  const back = () => (window.history.length > 1 ? router.back() : router.push("/feed"));
+
   if (load.status === "loading") return <PlaceSkeleton />;
 
+  // 실패 화면엔 사진이 없어 흰 원 대신 헤더 뒤로 버튼을 쓴다
   if (load.status === "notFound") {
     return (
-      <div className="screen pt-safe-header">
-        <EmptyState
-          title={t("notFound.title")}
-          body={t("notFound.body")}
-          actionHref="/feed"
-          actionLabel={t("notFound.action")}
-        />
-      </div>
+      <>
+        <AppHeader onBack={back} />
+        <div className="screen">
+          <EmptyState
+            title={t("notFound.title")}
+            body={t("notFound.body")}
+            actionHref="/feed"
+            actionLabel={t("notFound.action")}
+          />
+        </div>
+      </>
     );
   }
 
   if (load.status === "failed") {
     return (
-      <div className="screen pt-safe-header">
-        <EmptyState
-          title={t("loadFailed.title")}
-          body={t("loadFailed.body")}
-          onAction={retry}
-          actionLabel={t("loadFailed.action")}
-        />
-      </div>
+      <>
+        <AppHeader onBack={back} />
+        <div className="screen">
+          <EmptyState
+            title={t("loadFailed.title")}
+            body={t("loadFailed.body")}
+            onAction={retry}
+            actionLabel={t("loadFailed.action")}
+          />
+        </div>
+      </>
     );
   }
 
@@ -137,6 +149,7 @@ export function PlaceContent() {
       <Hero
         images={place.images}
         name={name}
+        onBack={back}
       />
 
       <div className="screen">
@@ -402,22 +415,20 @@ function Fact({
 function Hero({
   images,
   name,
+  onBack,
 }: {
   images: string[];
   name: string;
+  onBack: () => void;
 }) {
   const t = useTranslations("placeDetail");
-  const router = useRouter();
-
-  // 링크를 직접 열고 들어오면 돌아갈 기록이 없다
-  const back = () => (window.history.length > 1 ? router.back() : router.push("/feed"));
 
   return (
     <PhotoSwipe images={images} name={name} sizes="100vw" className="aspect-[4/3] w-full bg-surface">
       <div className="absolute inset-x-3 top-[calc(12px+env(safe-area-inset-top,0px))] flex justify-between">
         <button
           type="button"
-          onClick={back}
+          onClick={onBack}
           aria-label={t("back")}
           className="grid size-12 place-items-center rounded-full bg-white/95 text-ink transition-transform active:scale-95"
         >
