@@ -132,6 +132,8 @@ export type PlaceDetail = {
   closedDaysEn: string | null;
   phone: string | null;
   accessibility: { key: string; text: string }[];
+  /** BE-FEAT-019(#51) 이 채운다. 머지 전 응답에는 없다 */
+  accessibilityEn?: { key: string; text: string }[];
   /** DB_01(score_board) 신규 4칸(9/15 유나 추가, 9/16 상세 응답에 추가) */
   weatherType: "indoor" | "outdoor" | "mixed" | null;
   placeType: string | null;

@@ -150,9 +150,9 @@ export function PlaceContent() {
       ? t.has(`placeType.${place.placeType}`) ? t(`placeType.${place.placeType}`) : null
       : place.placeType
     : null;
-  // 이유 문장은 한국어뿐이다. 영문 화면에 한국어 문장을 섞지 않는다
-  const rawReason = !en && cf8Code ? place.reasonByCf8[cf8Code] : null;
-  const reason = rawReason ? reasonWithoutLead(rawReason, place.descKo) : null;
+  // 영문 값이 없으면 한국어로 대신하지 않고 숨긴다
+  const rawReason = cf8Code ? (en ? place.reasonByCf8En : place.reasonByCf8)[cf8Code] : null;
+  const reason = rawReason ? reasonWithoutLead(rawReason, en ? place.descEn : place.descKo) : null;
 
   const hours = en ? (place.hoursEn ?? place.hours) : place.hours;
   const closedDays = en ? (place.closedDaysEn ?? place.closedDays) : place.closedDays;
@@ -168,8 +168,10 @@ export function PlaceContent() {
         : null;
   const playingHere = playingLength !== null;
   const listening = playingHere && !player.ended;
-  // 무장애 원문은 한국어뿐이다
-  const access = en ? [] : place.accessibility.filter((a) => t.has(`accessibility.${a.key}`));
+  // 영문 무장애(accessibilityEn)는 응답에 없을 수 있다 — 들어오면 앱 업데이트 없이 보인다
+  const access = (en ? (place.accessibilityEn ?? []) : place.accessibility).filter((a) =>
+    t.has(`accessibility.${a.key}`),
+  );
 
   // 출처 — 사진만 출처가 갈린다. 둘 다 TourAPI 면 한 줄로 합치고, 사진이 없으면 사진 줄을 뺀다
   const archivePhoto = place.images.some(isArchivePhoto);
@@ -250,12 +252,12 @@ export function PlaceContent() {
           <Fact
             label={t("facts.pet")}
             value={place.petAllowed === null ? null : t(place.petAllowed ? "pet.yes" : "pet.no")}
-            note={!en && place.petAllowed ? place.petCondition : null}
+            note={place.petAllowed ? (en ? place.petConditionEn : place.petCondition) : null}
           />
-          <Fact label={t("facts.phone")} value={place.phone} tel={telNumber(place.phone)} />
+          <Fact label={t("facts.phone")} value={phoneLabel(place.phone, en)} tel={telNumber(place.phone)} />
           <Fact
             label={t("facts.accessibility")}
-            value={place.accessibility.length > 0 ? t("facts.accessibilityYes") : null}
+            value={access.length > 0 ? t("facts.accessibilityYes") : null}
             // 목록이 가이드 아래라 "안내 있음" 만 보고 내용을 못 찾는다. 해시를 쓰면 뒤로 가기가 이 페이지에 한 번 더 걸린다
             onPress={access.length > 0 ? () => scrollToSection("accessibility") : undefined}
           />
@@ -464,9 +466,22 @@ function NearbyRow({ p, en }: { p: NearbyPlace; en: boolean }) {
   );
 }
 
+const PHONE = /0\d{1,2}-\d{3,4}-\d{4}|1\d{3}-\d{4}/g;
+
 /** "부산종합관광안내소 051-253-8253" → "051-253-8253". 번호 모양이 없으면 전화 걸기를 붙이지 않는다 */
 function telNumber(text: string | null): string | null {
-  return text?.match(/0\d{1,2}-\d{3,4}-\d{4}|1\d{3}-\d{4}/)?.[0] ?? null;
+  return text?.match(PHONE)?.[0] ?? null;
+}
+
+/**
+ * 영문 화면은 번호만 보인다 — 원문 앞의 부서명(한국어)을 뗀다. 번호가 여럿이면 줄을 나눈다.
+ * 번호 모양이 없는데 한국어가 남으면 숨긴다.
+ */
+function phoneLabel(text: string | null, en: boolean): string | null {
+  if (!text || !en) return text;
+  const numbers = text.match(PHONE);
+  if (numbers) return numbers.join("\n");
+  return /[가-힣]/.test(text) ? null : text;
 }
 
 /** 이 글자 수를 넘는 영업시간 · 휴무일은 반 칸에 넣으면 여러 줄로 길어진다 */
