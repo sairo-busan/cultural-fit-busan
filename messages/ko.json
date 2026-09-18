@@ -64,10 +64,11 @@
       "rainy": "비"
     },
     "sortByMatch": "추천순",
+    "sortByLandmark": "대표 명소순",
     "needQuiz": {
       "title": "먼저 취향을 알려주세요",
-      "body": "세 가지만 고르면 나에게 맞는 순서로 골라드려요.",
-      "action": "취향 진단하기"
+      "body": "세 가지만 고르면 나에게 맞는 장소를 추천해드려요.",
+      "action": "맞춤 추천받기"
     },
     "noResults": {
       "title": "조건에 맞는 곳을 찾지 못했어요",
@@ -75,6 +76,8 @@
       "action": "조건 다시 고르기"
     },
     "nowInNoTime": "부산 · {weather}",
+    "weatherFailed": "날씨를 불러오지 못했어요",
+    "reloadWeather": "날씨 다시 불러오기",
     "loadFailed": {
       "title": "목록을 불러오지 못했어요",
       "body": "연결을 확인한 뒤 다시 시도해주세요.",

@@ -64,10 +64,11 @@
       "rainy": "Rain"
     },
     "sortByMatch": "Best match",
+    "sortByLandmark": "Top landmarks",
     "needQuiz": {
       "title": "Find your travel style",
-      "body": "Answer three quick questions to see places ranked for your travel style.",
-      "action": "Take the quiz"
+      "body": "Answer three quick questions and we'll recommend places that suit you.",
+      "action": "Get my picks"
     },
     "noResults": {
       "title": "No places match your preferences",
@@ -75,6 +76,8 @@
       "action": "Edit preferences"
     },
     "nowInNoTime": "Busan · {weather}",
+    "weatherFailed": "Couldn't load weather",
+    "reloadWeather": "Reload weather",
     "loadFailed": {
       "title": "Couldn't load places",
       "body": "Check your connection and try again.",
