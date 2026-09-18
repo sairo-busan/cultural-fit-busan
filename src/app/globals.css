@@ -161,6 +161,37 @@ body {
   animation: slide-down 0.3s ease-in forwards;
 }
 
+/* 재생 표시 — 막대 세 개가 서로 다른 박자로 오르내린다. 동작 줄이기 설정에서는
+   아래 전역 규칙이 시간을 0 으로 만들어 높이가 다른 막대 셋으로 멈춘다 */
+.eq-bar {
+  animation: eq 0.9s ease-in-out infinite;
+  transform-origin: bottom;
+}
+
+.eq-bar:nth-child(1) { animation-delay: -0.2s; }
+.eq-bar:nth-child(2) { animation-delay: -0.5s; }
+
+@keyframes eq {
+  0%, 100% { transform: scaleY(0.4); }
+  50% { transform: scaleY(1); }
+}
+
+/* 오른쪽에서 밀려 들어오고 닫을 때 같은 길로 나간다 — dialog 의 표시 전환(allow-discrete)을
+   쓰면 열기 · 닫기를 한 곳에서 맞출 수 있다. 동작 줄이기 설정은 아래 전역 규칙이 시간을 0으로 만든다 */
+.slide-panel {
+  transform: translateX(100%);
+  transition:
+    transform 0.3s cubic-bezier(0.2, 0, 0, 1),
+    overlay 0.3s allow-discrete,
+    display 0.3s allow-discrete;
+}
+
+.slide-panel[open] { transform: translateX(0); }
+
+@starting-style {
+  .slide-panel[open] { transform: translateX(100%); }
+}
+
 @keyframes sheet-up {
   from {
     transform: translateY(100%);
