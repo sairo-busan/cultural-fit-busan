@@ -72,8 +72,10 @@ export function isArchivePhoto(url: string): boolean {
  */
 export function reasonWithoutLead(reason: string, lead: string | null): string {
   if (!lead || !reason.startsWith(lead)) return reason;
-  const rest = reason.slice(lead.length).replace(/^[^.!?]*[.!?]\s*/, "");
-  return rest || reason;
+  const rest = reason.slice(lead.length);
+  // 설명이 마침표로 끝나면 문장이 이미 닫혔다 — 한국어는 "…전망대" 뒤에 "입니다." 가 붙어 한 번 더 뗀다
+  const body = /[.!?]$/.test(lead.trim()) ? rest : rest.replace(/^[^.!?]*[.!?]/, "");
+  return body.trim() || reason;
 }
 
 export type Translate = (
