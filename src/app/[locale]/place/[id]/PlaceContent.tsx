@@ -254,7 +254,7 @@ export function PlaceContent() {
             value={place.petAllowed === null ? null : t(place.petAllowed ? "pet.yes" : "pet.no")}
             note={place.petAllowed ? (en ? place.petConditionEn : place.petCondition) : null}
           />
-          <Fact label={t("facts.phone")} value={place.phone} tel={telNumber(place.phone)} />
+          <Fact label={t("facts.phone")} value={phoneLabel(place.phone, en)} tel={telNumber(place.phone)} />
           <Fact
             label={t("facts.accessibility")}
             value={access.length > 0 ? t("facts.accessibilityYes") : null}
@@ -466,9 +466,22 @@ function NearbyRow({ p, en }: { p: NearbyPlace; en: boolean }) {
   );
 }
 
+const PHONE = /0\d{1,2}-\d{3,4}-\d{4}|1\d{3}-\d{4}/g;
+
 /** "부산종합관광안내소 051-253-8253" → "051-253-8253". 번호 모양이 없으면 전화 걸기를 붙이지 않는다 */
 function telNumber(text: string | null): string | null {
-  return text?.match(/0\d{1,2}-\d{3,4}-\d{4}|1\d{3}-\d{4}/)?.[0] ?? null;
+  return text?.match(PHONE)?.[0] ?? null;
+}
+
+/**
+ * 영문 화면은 번호만 보인다 — 원문 앞의 부서명(한국어)을 뗀다. 번호가 여럿이면 줄을 나눈다.
+ * 번호 모양이 없는데 한국어가 남으면 숨긴다.
+ */
+function phoneLabel(text: string | null, en: boolean): string | null {
+  if (!text || !en) return text;
+  const numbers = text.match(PHONE);
+  if (numbers) return numbers.join("\n");
+  return /[가-힣]/.test(text) ? null : text;
 }
 
 /** 이 글자 수를 넘는 영업시간 · 휴무일은 반 칸에 넣으면 여러 줄로 길어진다 */
