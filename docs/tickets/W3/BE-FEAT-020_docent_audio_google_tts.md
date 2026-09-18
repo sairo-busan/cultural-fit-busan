@@ -46,10 +46,12 @@ edge-tts(비공식 클라이언트) 라이선스 리스크로 Google Cloud TTS�
    (Claude Code가 대신 못 함, 결정 문서에 요청 내용 있음)
 2. `generate-docent-audio-ko.ts`/`generate-docent-audio-en.ts`를 Google
    Cloud TTS SDK 기반으로 재작성
-3. 문장 단위 분리 → 개별 합성 → 실측 길이(`music-metadata`) → 누적
-   `startSec` 계산 → `ffmpeg` 이어붙이기
+3. 문장 단위 분리 → 개별 합성(`LINEAR16`/wav, mp3 아님 — 클립 인코더
+   여백으로 인한 밀림 방지) → wav 헤더로 실측 길이 계산 → 누적 `startSec`
+   계산 → `ffmpeg`로 wav 이어붙인 뒤 한 번만 mp3 인코딩
 4. `place_info.audioMarksSimpleKo`·`audioMarksDetailKo`·
-   `audioMarksSimpleEn`·`audioMarksDetailEn`(`{ startSec, text }[]`) 신규
+   `audioMarksSimpleEn`·`audioMarksDetailEn`(`{ startSec, text }[]`,
+   `text`는 원고 원문 부분 문자열 그대로·정규화 안 함) 신규
 5. 기존 edge-tts 478개 mp3 전량 재생성·재업로드(`addRandomSuffix: true`,
    이미 반영됨)
 6. `placeDetail.ts` 응답에 `audioMarks*` 추가
