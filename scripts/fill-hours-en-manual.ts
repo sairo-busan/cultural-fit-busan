@@ -12,14 +12,20 @@
  * 실행: node --env-file=.env.local --import tsx scripts/fill-hours-en-manual.ts
  */
 
+import path from "node:path";
 import { readFileSync } from "node:fs";
 import { MongoClient } from "mongodb";
 
 const mongoUri = process.env.MONGODB_URI;
 if (!mongoUri) throw new Error("MONGODB_URI가 설정되지 않았습니다");
 
+const DATA_PATH = path.join(__dirname, "data", "hours_closed_en_2026-09-17.json");
+
 const HOURS_KEYS = ["usetime", "usetimeculture", "opentime", "usetimeleports"];
 const CLOSED_KEYS = ["restdate", "restdateculture", "restdateshopping", "restdateleports"];
+
+type ScoreBoardRow = { contentId: string };
+type PlaceWithOperationInfo = { _id: string; operationInfo?: Record<string, string> };
 
 function pickOperationValue(info: Record<string, string> | undefined, keys: string[]): string | null {
   if (!info) return null;
@@ -31,7 +37,7 @@ function pickOperationValue(info: Record<string, string> | undefined, keys: stri
 }
 
 async function main() {
-  const { hours, closedDays } = JSON.parse(readFileSync("/tmp/hours_closed_en.json", "utf-8")) as {
+  const { hours, closedDays } = JSON.parse(readFileSync(DATA_PATH, "utf-8")) as {
     hours: Record<string, string>;
     closedDays: Record<string, string>;
   };
@@ -41,22 +47,25 @@ async function main() {
   const db = client.db("cultural_fit_busan");
 
   const contentIds = (
-    await db.collection("score_board").find({}, { projection: { _id: 0, contentId: 1 } }).toArray()
+    await db
+      .collection<ScoreBoardRow>("score_board")
+      .find({}, { projection: { _id: 0, contentId: 1 } })
+      .toArray()
   )
-    .map((d: any) => d.contentId)
+    .map((d) => d.contentId)
     .filter(Boolean);
 
   const gapPlaces = await db
-    .collection("places")
+    .collection<PlaceWithOperationInfo>("places")
     .find({ _id: { $in: contentIds }, engContentId: { $exists: false } }, { projection: { operationInfo: 1 } })
     .toArray();
 
-  const places = db.collection("places");
+  const places = db.collection<{ _id: string }>("places");
   let hoursSet = 0;
   let closedSet = 0;
-  let unmatched: string[] = [];
+  const unmatched: string[] = [];
 
-  for (const p of gapPlaces as any[]) {
+  for (const p of gapPlaces) {
     const currentHours = pickOperationValue(p.operationInfo, HOURS_KEYS);
     const currentClosed = pickOperationValue(p.operationInfo, CLOSED_KEYS);
     const update: Record<string, string> = {};

@@ -42,6 +42,22 @@ function pickOperationValue(info: Record<string, string> | undefined, keys: stri
 
 type Flag = { placeId: string; title: string; field: string };
 
+type ScoreBoardRow = { placeId: string; contentId: string };
+type PlaceWithManualHours = {
+  _id: string;
+  title: string;
+  operationInfo?: Record<string, string>;
+  hoursEnManual?: string | null;
+  hoursEnManualSourceKo?: string | null;
+  closedDaysEnManual?: string | null;
+  closedDaysEnManualSourceKo?: string | null;
+};
+type PlaceInfoWithAccessEn = {
+  placeId: string;
+  accessibilityInfoEn?: Record<string, string> | null;
+  accessibilityInfoSourceKo?: string | null;
+};
+
 async function main() {
   const client = new MongoClient(mongoUri!);
   await client.connect();
@@ -51,24 +67,26 @@ async function main() {
 
   // ── hours/closedDays (score_board.contentId로 places 역참조) ──────────────
   const scoreBoardDocs = await db
-    .collection("score_board")
+    .collection<ScoreBoardRow>("score_board")
     .find({}, { projection: { _id: 0, placeId: 1, contentId: 1 } })
     .toArray();
-  const contentIdByPlaceId = new Map(scoreBoardDocs.map((d: any) => [d.placeId, d.contentId]));
+  const contentIdByPlaceId = new Map(scoreBoardDocs.map((d) => [d.placeId, d.contentId]));
 
   const placesWithManualHours = await db
-    .collection("places")
+    .collection<PlaceWithManualHours>("places")
     .find(
       { $or: [{ hoursEnManual: { $ne: null } }, { closedDaysEnManual: { $ne: null } }] },
       { projection: { _id: 1, title: 1, operationInfo: 1, hoursEnManual: 1, hoursEnManualSourceKo: 1, closedDaysEnManual: 1, closedDaysEnManualSourceKo: 1 } }
     )
     .toArray();
 
-  const placesCol = db.collection("places");
-  for (const p of placesWithManualHours as any[]) {
+  const placesCol = db.collection<{ _id: string; title: string; accessibilityInfo?: Record<string, string> }>(
+    "places"
+  );
+  for (const p of placesWithManualHours) {
     const currentHours = pickOperationValue(p.operationInfo, HOURS_KEYS);
     const currentClosed = pickOperationValue(p.operationInfo, CLOSED_KEYS);
-    const unset: Record<string, string> = {};
+    const unset: Record<string, ""> = {};
 
     if (p.hoursEnManual && currentHours !== p.hoursEnManualSourceKo) {
       unset.hoursEnManual = "";
@@ -87,7 +105,7 @@ async function main() {
 
   // ── accessibilityInfoEn (place_info, places.accessibilityInfo가 원본) ─────
   const placeInfoWithAccessEn = await db
-    .collection("place_info")
+    .collection<PlaceInfoWithAccessEn>("place_info")
     .find(
       { accessibilityInfoEn: { $exists: true, $ne: null } },
       { projection: { placeId: 1, accessibilityInfoEn: 1, accessibilityInfoSourceKo: 1 } }
@@ -95,7 +113,7 @@ async function main() {
     .toArray();
 
   const placeInfoCol = db.collection("place_info");
-  for (const info of placeInfoWithAccessEn as any[]) {
+  for (const info of placeInfoWithAccessEn) {
     const contentId = contentIdByPlaceId.get(info.placeId);
     if (!contentId) continue;
     const place = await placesCol.findOne({ _id: contentId }, { projection: { accessibilityInfo: 1, title: 1 } });

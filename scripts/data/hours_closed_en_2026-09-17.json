@@ -1,0 +1,26 @@
+{
+  "hours": {
+    "08:00~20:00": "8:00 AM–8:00 PM",
+    "상시 개방": "Open 24 hr",
+    "09:00~18:00": "9:00 AM–6:00 PM",
+    "09:00~18:00 (입장 마감 17:00)": "9:00 AM–6:00 PM (last entry 5:00 PM)",
+    "06:00~11:00": "6:00 AM–11:00 AM",
+    "시설 별로 상이함": "Varies by facility",
+    "09:30~17:30 (입장 마감 17:00)": "9:30 AM–5:30 PM (last entry 5:00 PM)",
+    "09:30~17:00": "9:30 AM–5:00 PM",
+    "상시개방": "Open 24 hr",
+    "08:00~19:00": "8:00 AM–7:00 PM"
+  },
+  "closedDays": {
+    "※ 점포마다 상이함": "Varies by shop",
+    "연중무휴": "Open every day",
+    "매주 월요일 (단, 공휴일이 월요일인 경우 그 다음 평일 휴관) / 1월 1일 / 설·추석 당일": "Mondays (or the next weekday if Monday is a public holiday), January 1, and the days of Lunar New Year and Chuseok",
+    "매주 월요일 (단, 월요일이 공휴일인 경우 그 다음날 휴관) / 1월 1일": "Mondays (or the next day if Monday is a public holiday), and January 1",
+    "점포별 상이": "Varies by shop",
+    "시설 별로 상이함": "Varies by facility",
+    "매주 월요일 (단, 월요일이 공휴일인 경우 그 다음 날) / 1월 1일 / 설·추석 당일": "Mondays (or the next day if Monday is a public holiday), January 1, and the days of Lunar New Year and Chuseok",
+    "매주 월요일": "Mondays",
+    "매주 월요일 (단, 월요일이 공휴일시 정상운영, 다음날 휴무)": "Mondays (open as normal if Monday is a public holiday, closed the following day instead)",
+    "매주 월요일 (단, 월요일이 공휴일인 경우 그 다음날) / 1월 1일": "Mondays (or the next day if Monday is a public holiday), and January 1"
+  }
+}

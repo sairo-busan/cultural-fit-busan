@@ -84,6 +84,14 @@ async function fetchDetail(contentId: string, contentTypeId: string) {
   ]);
 
   const commonItem: TourItem | undefined = common?.items?.item?.[0];
+  // detailCommon2가 resultCode 0000(성공)이면서 item이 없는 경우가 있다(9/18, 소피
+  // 발견 — 2721157 영주하늘눈전망대). callTourApi는 resultCode 실패만 throw하고
+  // "성공했지만 빈 응답"은 그대로 통과시켜서, title/addr1/mapX/mapY가 undefined로
+  // $set 돼 기존 좋은 값을 null로 덮어썼다. title은 장소의 정체성 자체라 없으면
+  // 이 장소를 통째로 건너뛴다(기존 DB 값 보존).
+  if (!commonItem?.title) {
+    throw new Error("detailCommon2 응답에 item 없음(빈 성공 응답) — 이 장소 스킵");
+  }
   const introItem: TourItem | undefined = intro?.items?.item?.[0];
   const imageItems: TourItem[] = images?.items === "" || !images ? [] : images.items.item;
   const infoItems: TourItem[] = info?.items === "" || !info ? [] : info.items.item;
@@ -116,16 +124,34 @@ async function fetchDetail(contentId: string, contentTypeId: string) {
   };
 }
 
+/** undefined 값을 가진 키를 통째로 제거한다 — MongoDB 드라이버가 undefined를
+ * null로 직렬화해서 $set에 그대로 넘기면 기존 값을 지워버린다(9/18 사고 원인).
+ * TourAPI가 일부 필드만 빠뜨려 응답하는 경우에도 그 필드는 건드리지 않고
+ * 기존 DB 값을 보존하기 위한 범용 안전장치. */
+function omitUndefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
+  const result: Partial<T> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) (result as Record<string, unknown>)[key] = value;
+  }
+  return result;
+}
+
+type ScoreBoardRow = { contentId: string };
+type PlaceTarget = { _id: string; contentTypeId?: string };
+
 async function main() {
   const client = new MongoClient(mongoUri!);
   await client.connect();
   const db = client.db("cultural_fit_busan");
-  const places = db.collection("places");
+  const places = db.collection<PlaceTarget>("places");
 
   const contentIds = (
-    await db.collection("score_board").find({}, { projection: { _id: 0, contentId: 1 } }).toArray()
+    await db
+      .collection<ScoreBoardRow>("score_board")
+      .find({}, { projection: { _id: 0, contentId: 1 } })
+      .toArray()
   )
-    .map((d: any) => d.contentId)
+    .map((d) => d.contentId)
     .filter(Boolean);
   console.log(`대상 ${contentIds.length}곳`);
 
@@ -137,7 +163,7 @@ async function main() {
   let skipped = 0;
   const skippedIds: string[] = [];
 
-  for (const t of targets as any[]) {
+  for (const t of targets) {
     if (!t.contentTypeId) {
       skipped++;
       skippedIds.push(`${t._id} (contentTypeId 없음)`);
@@ -145,7 +171,7 @@ async function main() {
     }
     try {
       const detail = await fetchDetail(t._id, t.contentTypeId);
-      await places.updateOne({ _id: t._id }, { $set: detail });
+      await places.updateOne({ _id: t._id }, { $set: omitUndefined(detail) });
       ok++;
     } catch (err) {
       skipped++;

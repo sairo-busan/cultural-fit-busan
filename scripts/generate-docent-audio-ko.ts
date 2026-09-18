@@ -45,7 +45,9 @@ async function main() {
   await client.connect();
   const db = client.db("cultural_fit_busan");
   const docs = await db
-    .collection("place_info")
+    .collection<{ placeId: string; guideSimpleKo: string | null; guideDetailKo: string | null }>(
+      "place_info"
+    )
     .find(
       { $or: [{ guideSimpleKo: { $ne: null } }, { guideDetailKo: { $ne: null } }] },
       { projection: { _id: 0, placeId: 1, guideSimpleKo: 1, guideDetailKo: 1 } }
@@ -54,7 +56,7 @@ async function main() {
   console.log(`대상 ${docs.length}곳 (간단히·자세히 합쳐 최대 ${docs.length * 2}개 파일)`);
 
   const jobs: { placeId: string; kind: "simple" | "detail"; text: string }[] = [];
-  for (const d of docs as any[]) {
+  for (const d of docs) {
     if (d.guideSimpleKo) jobs.push({ placeId: d.placeId, kind: "simple", text: d.guideSimpleKo });
     if (d.guideDetailKo) jobs.push({ placeId: d.placeId, kind: "detail", text: d.guideDetailKo });
   }

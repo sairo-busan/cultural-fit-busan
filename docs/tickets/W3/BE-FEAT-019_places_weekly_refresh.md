@@ -135,3 +135,40 @@ LLM 재번역 자체는 CI에서 안 한다(Anthropic API 연동 인프라 없�
   승인 후).
 - TourAPI 일일 트래픽 한도 확인 완료 — 일반 계정 1,000건/일, 480+콜/회로
   안전. 운영계정 전환 시 한도 더 늘어남(필요 시 검토).
+
+### 2026-09-18: 복구 스크립트 자체 버그 — 2721157 title·주소·좌표 null (소피 발견)
+
+`refresh-curated-places.ts`의 "실패 시 스킵" 로직에 허점이 있었다:
+`callTourApi`는 TourAPI가 `resultCode` 에러를 줄 때만 throw하는데,
+`detailCommon2`가 **성공(resultCode 0000)하면서 item이 없는** 경우엔
+throw가 안 걸려서 `commonItem`이 `undefined`가 되고 `title`/`addr1`/
+`mapX`/`mapY`가 전부 `undefined`인 채로 `$set`에 들어갔다. MongoDB
+드라이버가 undefined 필드를 null로 직렬화해서, 2721157(영주하늘눈전망대)
+장소의 이름·주소·좌표가 전부 null로 손상됐다.
+
+**수정**:
+1. `fetchDetail`에서 `commonItem.title`이 없으면 명시적으로 throw해서
+   이 장소를 스킵(장소의 정체성 자체가 없으면 "실패"로 취급)
+2. 범용 안전장치로 `omitUndefined()` 헬퍼 추가 — `$set` 페이로드에서
+   undefined 값을 가진 키를 아예 제거. TourAPI가 다른 필드를 부분적으로
+   빠뜨려도 같은 사고가 재발하지 않는다
+3. 2721157 복구: `place_info`(유나 원고)의 이름으로 title 복구, 웹 검색으로
+   확인한 주소로 addr1 복구, 정확한 지번 좌표를 못 구해 OpenStreetMap
+   Nominatim으로 **동 단위 근사 좌표**만 넣고 `coordApprox: true` 플래그
+   남김 — 나중에 정확한 좌표로 교체 필요
+4. 재실행해서 이번엔 안전하게 스킵되는지 확인(118곳 갱신, 1곳 스킵) — 통과
+
+### 2026-09-18: any 타입 lint 에러 정리(소피 발견)
+
+`fill-recommendation-reason-en.ts`·`generate-docent-audio-ko.ts`·
+`generate-docent-audio-en.ts`의 `any` 캐스팅을 전부 MongoDB 컬렉션
+제네릭 타입으로 교체. 같이 작업하던 `check-stale-en-fields.ts`·
+`fill-accessibility-en.ts`·`fill-hours-en-manual.ts`·
+`refresh-curated-places.ts`도 같은 패턴이라 함께 정리. 번역 데이터
+파일도 `/tmp`에서 `scripts/data/`로 옮겨 레포에 커밋(재현 가능하게).
+
+재검증 겸 세 fill 스크립트를 다시 돌려보니, 오늘 재적재로 TourAPI 원본이
+살짝 바뀌어서 매칭 커버리지가 늘었다(hoursEnManual 22→36건,
+accessibilityInfoEn 43→52곳) — 사전에 없는 새 문구는 매칭 실패로 남아
+있지만(화면은 한국어로 폴백), 안전 장치가 잘 작동함을 재확인했다.
+`check-stale-en-fields.ts` 최종 실행 — stale 0건.

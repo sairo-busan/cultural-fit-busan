@@ -12,28 +12,34 @@
  * 실행: node --env-file=.env.local --import tsx scripts/fill-accessibility-en.ts
  */
 
+import path from "node:path";
 import { readFileSync } from "node:fs";
 import { MongoClient } from "mongodb";
 
 const mongoUri = process.env.MONGODB_URI;
 if (!mongoUri) throw new Error("MONGODB_URI가 설정되지 않았습니다");
 
+const DATA_PATH = path.join(__dirname, "data", "accessibility_en_2026-09-17.json");
+
+type ScoreBoardRow = { placeId: string; contentId: string };
+type PlaceWithAccess = { _id: string; accessibilityInfo: Record<string, string> | null };
+
 async function main() {
-  const dict = JSON.parse(readFileSync("/tmp/access_all_en.json", "utf-8")) as Record<string, string>;
+  const dict = JSON.parse(readFileSync(DATA_PATH, "utf-8")) as Record<string, string>;
 
   const client = new MongoClient(mongoUri!);
   await client.connect();
   const db = client.db("cultural_fit_busan");
 
   const scoreBoardDocs = await db
-    .collection("score_board")
+    .collection<ScoreBoardRow>("score_board")
     .find({}, { projection: { _id: 0, placeId: 1, contentId: 1 } })
     .toArray();
-  const placeIdByContentId = new Map(scoreBoardDocs.map((d: any) => [d.contentId, d.placeId]));
+  const placeIdByContentId = new Map(scoreBoardDocs.map((d) => [d.contentId, d.placeId]));
 
   const contentIds = Array.from(placeIdByContentId.keys());
   const withAccess = await db
-    .collection("places")
+    .collection<PlaceWithAccess>("places")
     .find(
       { _id: { $in: contentIds }, accessibilityInfo: { $exists: true, $ne: null } },
       { projection: { accessibilityInfo: 1 } }
@@ -44,9 +50,9 @@ async function main() {
   let ok = 0;
   const unmatched: string[] = [];
 
-  for (const p of withAccess as any[]) {
+  for (const p of withAccess) {
     const placeId = placeIdByContentId.get(p._id);
-    if (!placeId) continue;
+    if (!placeId || !p.accessibilityInfo) continue;
 
     const entries = Object.entries(p.accessibilityInfo).filter(
       ([k, v]) => k !== "contentid" && typeof v === "string" && v.trim() !== ""

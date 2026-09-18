@@ -78,13 +78,16 @@ function splitMiddle(middle: string): { a: string; b: string; c: string } | null
   return { a: CLAUSE_A[aKey], b: CLAUSE_B[bKey], c: CLAUSE_C[cKey] };
 }
 
+type ReasonRow = { placeId: string; cf8Code: string; recommendationReason: string | null };
+type PlaceInfoRow = { placeId: string; placeDesc: string | null; placeDescEn: string | null };
+
 async function main() {
   const client = new MongoClient(mongoUri!);
   await client.connect();
   const db = client.db("cultural_fit_busan");
 
   const reasons = await db
-    .collection("place_by_cf8")
+    .collection<ReasonRow>("place_by_cf8")
     .find(
       { recommendationReason: { $ne: null } },
       { projection: { _id: 0, placeId: 1, cf8Code: 1, recommendationReason: 1 } }
@@ -92,29 +95,31 @@ async function main() {
     .toArray();
 
   const placeInfos = await db
-    .collection("place_info")
+    .collection<PlaceInfoRow>("place_info")
     .find({}, { projection: { _id: 0, placeId: 1, placeDesc: 1, placeDescEn: 1 } })
     .toArray();
-  const infoByPlaceId = new Map(placeInfos.map((p: any) => [p.placeId, p]));
+  const infoByPlaceId = new Map(placeInfos.map((p) => [p.placeId, p]));
 
   const writes: { updateOne: { filter: object; update: object } }[] = [];
   const failed: { placeId: string; cf8Code: string; reason: string }[] = [];
 
-  for (const r of reasons as any[]) {
+  for (const r of reasons) {
     const info = infoByPlaceId.get(r.placeId);
-    const desc: string | undefined = info?.placeDesc;
-    const descEn: string | undefined = info?.placeDescEn;
+    const desc: string | null | undefined = info?.placeDesc;
+    const descEn: string | null | undefined = info?.placeDescEn;
     if (!desc || !descEn) {
       failed.push({ placeId: r.placeId, cf8Code: r.cf8Code, reason: "descEn 없음" });
       continue;
     }
 
+    // find()의 { recommendationReason: { $ne: null } } 필터로 null이 아님이 보장된다
+    const recommendationReason: string = r.recommendationReason!;
     const prefix = `${desc}입니다.`;
-    if (!r.recommendationReason.startsWith(prefix)) {
+    if (!recommendationReason.startsWith(prefix)) {
       failed.push({ placeId: r.placeId, cf8Code: r.cf8Code, reason: "prefix 불일치" });
       continue;
     }
-    const rest = r.recommendationReason.slice(prefix.length).trim();
+    const rest = recommendationReason.slice(prefix.length).trim();
     const closingIdx = rest.indexOf("이런 점 때문에");
     if (closingIdx === -1) {
       failed.push({ placeId: r.placeId, cf8Code: r.cf8Code, reason: "마무리 문장 없음" });
