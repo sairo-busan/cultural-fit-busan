@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { apiUrl } from "@/lib/apiBase";
 import { isCf8Code } from "@/lib/cfp";
+import { useStoredSnapshot } from "@/hooks/useStoredSnapshot";
 import { STORAGE_KEYS, readCf8Code } from "@/lib/storage";
 import { rankPlaces, type EnginePlaceInput, type RankedPlace } from "@/lib/recommendEngine";
 import {
@@ -14,6 +15,7 @@ import {
 } from "@/lib/kma";
 import type { TripSetupLike, TripSetupMode } from "@/lib/tripSetupMode";
 import type { RecommendedPlace } from "@/types/place";
+import type { Cf8Code } from "@/types/cfp";
 
 /** 대표 명소 점수 내림차순. 같은 점수는 넘겨받은 순서(상황 점수)를 그대로 둔다 */
 function byLandmark<T extends { landmarkScore: number | null }>(ranked: T[]): T[] {
@@ -41,8 +43,8 @@ export type UseRecommendationsResult = {
   places: EngineOutput[];
   loading: boolean;
   error: FeedError | null;
-  /** 진단을 마쳤는가. 화면이 박스·정렬 라벨을 이 값 하나로 가른다 */
-  hasTaste: boolean;
+  /** 진단 결과. 없거나 깨진 값이면 null — 화면은 박스 · 정렬 라벨 · 로딩 모양을 이 값 하나로 가른다 */
+  code: Cf8Code | null;
   /** 네트워크 실패에서 다시 불러온다 */
   retry: () => void;
   /** 화면에도 날씨를 보여줘야 해서 점수 보정에 쓴 값을 그대로 내준다 */
@@ -61,7 +63,10 @@ export type UseRecommendationsResult = {
  */
 export function useRecommendations(): UseRecommendationsResult {
   const [places, setPlaces] = useState<EngineOutput[]>([]);
-  const [hasTaste, setHasTaste] = useState(false);
+  // 저장값이 깨졌으면(구 CFP16 코드 · 빈 문자열) 진단 전과 같게 본다.
+  // 판정을 여기서만 하고 화면에 넘겨야 목록 순서와 머리말이 어긋나지 않는다.
+  const stored = useStoredSnapshot(readCf8Code, null);
+  const code = stored && isCf8Code(stored) ? stored : null;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<FeedError | null>(null);
   const [attempt, setAttempt] = useState(0);
@@ -79,11 +84,7 @@ export function useRecommendations(): UseRecommendationsResult {
       setError(null);
 
       try {
-        // 저장값이 깨졌으면(구 CFP16 코드 · 빈 문자열) 진단 전과 같게 본다.
-        // 판정을 여기서만 하고 화면에 넘겨야 목록 순서와 머리말이 어긋나지 않는다.
-        const stored = readCf8Code();
-        const cf8Code = stored && isCf8Code(stored) ? stored : "";
-        if (!cancelled) setHasTaste(cf8Code !== "");
+        const cf8Code = code ?? "";
 
         const modeRaw = localStorage.getItem(STORAGE_KEYS.tripSetupMode);
         const mode: TripSetupMode = modeRaw === "CUSTOM" ? "CUSTOM" : "QUICK";
@@ -141,7 +142,7 @@ export function useRecommendations(): UseRecommendationsResult {
     return () => {
       cancelled = true;
     };
-  }, [attempt]);
+  }, [attempt, code]);
 
   const retry = useCallback(() => setAttempt((n) => n + 1), []);
 
@@ -149,7 +150,7 @@ export function useRecommendations(): UseRecommendationsResult {
     places,
     loading,
     error,
-    hasTaste,
+    code,
     retry,
     weather: weatherState,
     temperature,

@@ -8,11 +8,9 @@ import { TasteSummary } from "@/components/profile/TasteSummary";
 import { PlaceCard } from "@/components/place/PlaceCard";
 import { useRecommendations } from "@/hooks/useRecommendations";
 import { useSavedPlaces } from "@/hooks/useSavedPlaces";
-import { useStoredSnapshot } from "@/hooks/useStoredSnapshot";
 import { CF8_PROFILES } from "@/data/cf8Profiles";
-import { isCf8Code } from "@/lib/cfp";
-import { readCf8Code } from "@/lib/storage";
 import { FeedSkeleton } from "./FeedSkeleton";
+import { QuizPrompt } from "./QuizPrompt";
 import type { Locale } from "@/i18n/routing";
 
 /**
@@ -28,51 +26,55 @@ export function FeedContent() {
   const locale = useLocale() as Locale;
   const t = useTranslations("feed");
 
-  const { places, loading, error, retry, weather, temperature, forecastSlot } =
+  const { places, loading, error, code, retry, weather, temperature, forecastSlot } =
     useRecommendations();
-  const cf8Code = useStoredSnapshot(readCf8Code, null);
   const { ids: savedIds, toggle } = useSavedPlaces();
 
-  if (loading) return <FeedSkeleton />;
+  if (loading) return <FeedSkeleton hasTaste={code !== null} />;
 
-  const code = cf8Code && isCf8Code(cf8Code) ? cf8Code : null;
   const copy = code ? CF8_PROFILES[locale][code] : null;
 
   return (
     <>
       <ScreenTitle>{t("title")}</ScreenTitle>
 
-      {code && copy && (
-        <div className="mt-4">
-          <TasteSummary code={code} copy={copy} />
-        </div>
-      )}
+      {/*
+        목록을 못 받았으면 박스 · 정렬 라벨을 숨기고 재시도만 남긴다 — 보여줄 목록이
+        없는데 "맞는 곳부터" 를 약속할 수 없고, 검은 버튼 둘이 겹친다.
+      */}
+      {error === null && (
+        <>
+          <div className="mt-4">
+            {code && copy ? <TasteSummary code={code} copy={copy} /> : <QuizPrompt />}
+          </div>
 
-      {/* 기상청 응답이 없으면 날씨를 비우고 정렬 기준만 남긴다. 가짜 값을 쓰지 않는다 */}
-      <ListHeader aside={t("sortByMatch")}>
-        {weather && (
-          <>
-            <WeatherIcon weather={weather} className="size-4 shrink-0" />
-            {temperature !== null && (
-              <span className="ds-caption font-semibold text-ink tabular-nums">
-                {Math.round(temperature)}°
-              </span>
+          {/* 기상청 응답이 없으면 날씨를 비우고 정렬 기준만 남긴다. 가짜 값을 쓰지 않는다 */}
+          <ListHeader aside={t(code ? "sortByMatch" : "sortByLandmark")}>
+            {weather && (
+              <>
+                <WeatherIcon weather={weather} className="size-4 shrink-0" />
+                {temperature !== null && (
+                  <span className="ds-caption font-semibold text-ink tabular-nums">
+                    {Math.round(temperature)}°
+                  </span>
+                )}
+                {/*
+                  시각은 조회 시각이 아니라 예보 슬롯 시각이다 — 10:18 에 받아도
+                  값은 10 시 예보다. 슬롯을 못 고르면 시각만 뺀다.
+                */}
+                <span className="ds-caption truncate">
+                  {forecastSlot
+                    ? t("nowIn", {
+                        weather: t(`weather.${weather}`),
+                        time: `${forecastSlot.time.slice(0, 2)}:${forecastSlot.time.slice(2)}`,
+                      })
+                    : t("nowInNoTime", { weather: t(`weather.${weather}`) })}
+                </span>
+              </>
             )}
-            {/*
-              시각은 조회 시각이 아니라 예보 슬롯 시각이다 — 10:18 에 받아도
-              값은 10 시 예보다. 슬롯을 못 고르면 시각만 뺀다.
-            */}
-            <span className="ds-caption truncate">
-              {forecastSlot
-                ? t("nowIn", {
-                    weather: t(`weather.${weather}`),
-                    time: `${forecastSlot.time.slice(0, 2)}:${forecastSlot.time.slice(2)}`,
-                  })
-                : t("nowInNoTime", { weather: t(`weather.${weather}`) })}
-            </span>
-          </>
-        )}
-      </ListHeader>
+          </ListHeader>
+        </>
+      )}
 
       {error === "LOAD_FAILED" && (
         <EmptyState

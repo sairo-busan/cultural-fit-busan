@@ -64,10 +64,11 @@
       "rainy": "비"
     },
     "sortByMatch": "추천순",
+    "sortByLandmark": "대표 명소순",
     "needQuiz": {
       "title": "먼저 취향을 알려주세요",
-      "body": "세 가지만 고르면 나에게 맞는 순서로 골라드려요.",
-      "action": "취향 진단하기"
+      "body": "세 가지만 고르면 나에게 맞는 장소를 추천해드려요.",
+      "action": "맞춤 추천받기"
     },
     "noResults": {
       "title": "조건에 맞는 곳을 찾지 못했어요",
