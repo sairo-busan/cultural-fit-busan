@@ -46,6 +46,16 @@ async function callApi(base: string, op: string, params: Record<string, string>)
 
 const callTourApi = (op: string, params: Record<string, string>) => callApi(TOUR_API_BASE, op, params);
 
+/** undefined 값을 가진 키를 통째로 제거 — 드라이버가 undefined를 null로 직렬화해서
+ * 그대로 $set하면 기존 값을 지운다(9/18 사고 원인, refresh-curated-places.ts와 동일 원칙). */
+function omitUndefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
+  const result: Partial<T> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) (result as Record<string, unknown>)[key] = value;
+  }
+  return result;
+}
+
 type TourItem = Record<string, string>;
 
 /**
@@ -207,20 +217,25 @@ async function main() {
     const contentTypeId = item.contenttypeid;
     const detail = await fetchDetail(item.contentid, contentTypeId);
     const dates = festivalDates?.get(item.contentid);
+    const mapX = parseFloat(item.mapx);
+    const mapY = parseFloat(item.mapy);
 
+    // 재적재(이미 있는 장소)에서 TourAPI 응답이 부분 실패해도(9/18 사고 —
+    // detailCommon2가 성공했는데 item 없이 옴) 기존 좋은 값을 undefined→null로
+    // 덮어쓰지 않는다. omitUndefined로 undefined 키를 통째로 뺀다.
     await places.updateOne(
       // TourAPI contentId를 그대로 _id(PK)로 사용 — mongodb 타입 정의가 string _id를 기본으로 안 받아줘서 캐스팅
       { _id: item.contentid as unknown as never },
       {
-        $set: {
+        $set: omitUndefined({
           contentTypeId,
           title: item.title,
           addr1: item.addr1,
           addr2: item.addr2,
           areaCode: item.areacode,
           sigunguCode: item.sigungucode,
-          mapX: parseFloat(item.mapx),
-          mapY: parseFloat(item.mapy),
+          mapX: Number.isFinite(mapX) ? mapX : undefined,
+          mapY: Number.isFinite(mapY) ? mapY : undefined,
           firstImage: item.firstimage || null,
           firstImage2: item.firstimage2 || null,
           cpyrhtDivCd: item.cpyrhtDivCd || null,
@@ -237,7 +252,7 @@ async function main() {
           petFriendlyApi: petFriendlyIds.has(item.contentid) ? true : null,
           ...(dates ?? {}),
           syncedAt: new Date(),
-        },
+        }),
       },
       { upsert: true }
     );

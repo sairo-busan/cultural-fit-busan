@@ -18,12 +18,12 @@ type PlaceDoc = {
   _id: string;
   contentTypeId: string;
   title: string;
-  addr1: string;
+  addr1: string | null;
   /** TourAPI 영문판(EngService2 detailCommon2) 있는 71곳은 그대로, 나머지 49곳은
    * 개정 로마자 표기법으로 직접 옮김(9/16, ingest-eng-address.ts/fill-addr-en-llm.ts) */
   addrEn?: string | null;
-  mapX: number;
-  mapY: number;
+  mapX: number | null;
+  mapY: number | null;
   firstImage: string | null;
   /** TourAPI에 사진이 없는 곳 직접 소싱한 대체 사진(9/16, upload-place-photos.ts) */
   customImage?: string | null;
@@ -106,10 +106,10 @@ type PlaceByCf8Doc = {
 
 export type PlaceDetail = {
   contentId: string;
-  addr1: string;
+  addr1: string | null;
   addr1En: string | null;
-  mapX: number;
-  mapY: number;
+  mapX: number | null;
+  mapY: number | null;
   images: string[];
   /** 9/16 — 사진별 출처(공공누리 유형) 표기용. 표기 위치는 아직 미정(소피 확인 중) —
    * 위치 정해지기 전에 데이터만 먼저 내려준다. url은 images 배열과 같은 값이 겹친다 */
