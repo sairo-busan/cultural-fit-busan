@@ -150,9 +150,9 @@ export function PlaceContent() {
       ? t.has(`placeType.${place.placeType}`) ? t(`placeType.${place.placeType}`) : null
       : place.placeType
     : null;
-  // 이유 문장은 한국어뿐이다. 영문 화면에 한국어 문장을 섞지 않는다
-  const rawReason = !en && cf8Code ? place.reasonByCf8[cf8Code] : null;
-  const reason = rawReason ? reasonWithoutLead(rawReason, place.descKo) : null;
+  // 영문 값이 없으면 한국어로 대신하지 않고 숨긴다
+  const rawReason = cf8Code ? (en ? place.reasonByCf8En : place.reasonByCf8)[cf8Code] : null;
+  const reason = rawReason ? reasonWithoutLead(rawReason, en ? place.descEn : place.descKo) : null;
 
   const hours = en ? (place.hoursEn ?? place.hours) : place.hours;
   const closedDays = en ? (place.closedDaysEn ?? place.closedDays) : place.closedDays;
@@ -168,8 +168,10 @@ export function PlaceContent() {
         : null;
   const playingHere = playingLength !== null;
   const listening = playingHere && !player.ended;
-  // 무장애 원문은 한국어뿐이다
-  const access = en ? [] : place.accessibility.filter((a) => t.has(`accessibility.${a.key}`));
+  // 영문 무장애(accessibilityEn)는 응답에 없을 수 있다 — 들어오면 앱 업데이트 없이 보인다
+  const access = (en ? (place.accessibilityEn ?? []) : place.accessibility).filter((a) =>
+    t.has(`accessibility.${a.key}`),
+  );
 
   // 출처 — 사진만 출처가 갈린다. 둘 다 TourAPI 면 한 줄로 합치고, 사진이 없으면 사진 줄을 뺀다
   const archivePhoto = place.images.some(isArchivePhoto);
@@ -250,12 +252,12 @@ export function PlaceContent() {
           <Fact
             label={t("facts.pet")}
             value={place.petAllowed === null ? null : t(place.petAllowed ? "pet.yes" : "pet.no")}
-            note={!en && place.petAllowed ? place.petCondition : null}
+            note={place.petAllowed ? (en ? place.petConditionEn : place.petCondition) : null}
           />
           <Fact label={t("facts.phone")} value={place.phone} tel={telNumber(place.phone)} />
           <Fact
             label={t("facts.accessibility")}
-            value={place.accessibility.length > 0 ? t("facts.accessibilityYes") : null}
+            value={access.length > 0 ? t("facts.accessibilityYes") : null}
             // 목록이 가이드 아래라 "안내 있음" 만 보고 내용을 못 찾는다. 해시를 쓰면 뒤로 가기가 이 페이지에 한 번 더 걸린다
             onPress={access.length > 0 ? () => scrollToSection("accessibility") : undefined}
           />
