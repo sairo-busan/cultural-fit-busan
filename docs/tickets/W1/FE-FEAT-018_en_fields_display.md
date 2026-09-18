@@ -10,7 +10,7 @@
 | Type | FEAT |
 | Severity | Medium |
 | Layer | Screen |
-| Status | Todo |
+| Status | In Progress |
 | Screen | S20 장소 상세 (en) |
 | Branch | `feat/en-fields-display` (워크트리 `cfb-en-fields`, `origin/main` 기준) |
 | Depends | BE-FEAT-015 (PR #46 — `reasonByCf8En` · `petConditionEn` · `tipsEn`) · BE-FEAT-016 (PR #47 — `guideDetailEn`) · BE-FEAT-019 (PR #51 — `accessibilityEn`) |
@@ -54,7 +54,7 @@ PR #46 · #47 · #51 로 영문 값이 응답에 들어온다. 조건만 풀면 
 
 `reasonWithoutLead(reason, lead)` 는 사유가 설명문으로 시작하면 설명문 문장을 뗀다. 영문 사유 952건 모두 `placeDescEn` 으로 시작한다.
 
-영문 설명문 119곳 중 **6곳은 마침표로 끝난다**. 지금 함수는 설명문을 뗀 뒤 다음 마침표까지 한 번 더 지워서, 이 6곳은 사유 본문 한 문장이 사라지고 마무리 문장만 남는다.
+영문 설명문 119곳 중 **6곳은 마침표로 끝난다** — 사유로는 48건(6곳 × 8유형). 지금 함수는 설명문을 뗀 뒤 다음 마침표까지 한 번 더 지워서, 이 6곳은 사유 본문 한 문장이 사라지고 마무리 문장만 남는다.
 
 ```
 설명문  A history museum where you can encounter Busan as the temporary capital during the Korean War.
@@ -72,10 +72,11 @@ PR #46 · #47 · #51 로 영문 값이 응답에 들어온다. 조건만 풀면 
 
 - 추천사유 — `en ? reasonByCf8En : reasonByCf8`, 앞머리 기준은 `en ? descEn : descKo`
 - 반려동물 조건 — `en ? petConditionEn : petCondition`
-- 놓치기 쉬운 것 — `en ? tipsEn : tipsKo`
-- 무장애 — `en ? accessibilityEn : accessibility`. 요약 칸의 "있음" 과 목록 이동도 같은 배열 기준
+- ~~놓치기 쉬운 것 — `en ? tipsEn : tipsKo`~~ → FE-FEAT-013(#54)에서 S23 로 옮기며 해결. S23 이 `tipsEn` 을 읽는다
+- 무장애 — `en ? (accessibilityEn ?? []) : accessibility`. 요약 칸의 "있음" 과 목록 이동도 같은 배열 기준
+  - `accessibilityEn` 은 #51 이 응답에 추가한다(`{ key, text }[]`, 한국어와 같은 모양). 화면이 먼저 읽어 두면 #51 머지 · 배포 후 **앱 업데이트 없이** 영문 무장애가 보인다. 그 전에는 영문 화면에서 지금처럼 숨는다
 - `reasonWithoutLead` — 설명문이 마침표로 끝나면 추가로 지우지 않는다
-- 영문 가이드 — `place.guideEn` → `place.guideDetailEn`. 머지 후 에린이 응답의 `guideEn` 을 지운다
+- ~~영문 가이드 — `place.guideEn` → `place.guideDetailEn`~~ → 문화 가이드가 S23 로 옮겨가며 해결. S23 이 `guideSimpleEn` · `guideDetailEn` 을 읽는다. S20 은 `guideEn` 을 더 읽지 않는다
 - "한국어뿐이다" 주석 정리
 
 ### 제외
@@ -84,20 +85,21 @@ PR #46 · #47 · #51 로 영문 값이 응답에 들어온다. 조건만 풀면 
 |---|---|
 | 문구 (`messages/*.json`) | 라벨 `tips.photo` · `tips.caution` · `accessibility.*` 영문이 이미 있다 |
 | 영업시간 영문 폴백 | #51 이 `hoursEn` 응답에서 처리한다. 화면은 이미 `hoursEn ?? hours` |
+| 전화 칸 한국어 부서명 | TourAPI 원문 그대로다(예: `부산 중구청 문화관광과 051-600-4046`). 영문 화면 확인 중 발견, 따로 다룬다 |
 
 ---
 
 ## Acceptance Criteria
 
-- [ ] 영문 화면에 추천사유가 보이고, 설명문 문장이 되풀이되지 않는다
-- [ ] 설명문이 마침표로 끝나는 6곳도 사유 본문 문장이 남는다
+- [x] 영문 화면에 추천사유가 보이고, 설명문 문장이 되풀이되지 않는다 — 952건 중 되풀이 0 · 빈 결과 0 (DB 실측)
+- [x] 설명문이 마침표로 끝나는 6곳도 사유 본문 문장이 남는다 — 48건 모두 본문 첫 문장부터 남음
 - [ ] 반려동물 가능 장소의 영문 화면에 조건이 영문으로 보인다
-- [ ] 영문 화면에 놓치기 쉬운 것(사진 포인트 · 유의사항)이 영문으로 보인다
+- [x] 영문 화면에 놓치기 쉬운 것(사진 포인트 · 유의사항)이 영문으로 보인다 — S23(#54)
 - [ ] 영문 화면 어디에도 한국어 문장이 섞이지 않는다
-- [ ] 영문 화면에 무장애 정보가 영문으로 보이고, 요약 칸을 누르면 목록으로 간다
+- [ ] 영문 화면에 무장애 정보가 영문으로 보이고, 요약 칸을 누르면 목록으로 간다 — #51 머지 후 확인
 - [ ] 영문 값이 없는 칸은 한국어로 대신하지 않고 숨긴다
-- [ ] 영문 화면의 문화 가이드가 한국어 화면과 같은 원고의 번역이다 (`guideDetailEn`)
-- [ ] 한국어 화면은 그대로다
+- [x] 영문 화면의 문화 가이드가 한국어 화면과 같은 원고의 번역이다 (`guideDetailEn`) — S23(#54)
+- [ ] 한국어 화면은 그대로다 — 한국어 사유 952건 결과 변화 0 (DB 실측), 화면 확인 남음
 
 ---
 
