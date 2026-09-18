@@ -8,8 +8,8 @@
  * "부산광역시 해운대구 우동" → "해운대".
  * 접미사를 떼면 한 글자만 남는 곳(중구·서구·동구)은 그대로 둔다.
  */
-export function districtLabel(addr1: string): string | null {
-  const district = addr1.split(" ")[1];
+export function districtLabel(addr1: string | null): string | null {
+  const district = addr1?.split(" ")[1];
   if (!district) return null;
 
   const trimmed = district.replace(/[구군]$/, "");
@@ -37,8 +37,8 @@ const DISTRICT_EN: Record<string, string> = {
 };
 
 /** "부산광역시 기장군 기장읍 …" → "Gijang-gun". 표에 없으면 null */
-export function districtLabelEn(addr1: string): string | null {
-  return DISTRICT_EN[addr1.split(" ")[1] ?? ""] ?? null;
+export function districtLabelEn(addr1: string | null): string | null {
+  return DISTRICT_EN[addr1?.split(" ")[1] ?? ""] ?? null;
 }
 
 /**
