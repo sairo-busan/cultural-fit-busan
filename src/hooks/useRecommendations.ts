@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { apiUrl } from "@/lib/apiBase";
+import { isCf8Code } from "@/lib/cfp";
 import { STORAGE_KEYS, readCf8Code } from "@/lib/storage";
 import { rankPlaces, type EnginePlaceInput, type RankedPlace } from "@/lib/recommendEngine";
 import {
@@ -13,6 +14,11 @@ import {
 } from "@/lib/kma";
 import type { TripSetupLike, TripSetupMode } from "@/lib/tripSetupMode";
 import type { RecommendedPlace } from "@/types/place";
+
+/** 대표 명소 점수 내림차순. 같은 점수는 넘겨받은 순서(상황 점수)를 그대로 둔다 */
+function byLandmark<T extends { landmarkScore: number | null }>(ranked: T[]): T[] {
+  return [...ranked].sort((a, b) => (b.landmarkScore ?? -1) - (a.landmarkScore ?? -1));
+}
 
 /**
  * 날씨 조회 기준점 — 부산시청.
@@ -28,17 +34,16 @@ const BUSAN_CITY_HALL = { lat: 35.1796, lng: 129.0756 };
 
 type EngineOutput = RankedPlace<RecommendedPlace & EnginePlaceInput>;
 
-/**
- * 실패의 종류. 문구를 섞으면 화면이 구분하지 못한다 — 오프라인인 사람에게
- * "진단이 필요해요" 를 띄우면 이미 답한 3문항을 다시 풀게 만든다.
- */
-export type FeedError = "NEED_QUIZ" | "LOAD_FAILED";
+/** 목록을 못 받은 경우. 진단 여부와 무관하다 */
+export type FeedError = "LOAD_FAILED";
 
 export type UseRecommendationsResult = {
   places: EngineOutput[];
   loading: boolean;
   error: FeedError | null;
-  /** 네트워크 실패에서 다시 불러온다. 진단이 없는 경우에는 눌러도 달라지지 않는다 */
+  /** 진단을 마쳤는가. 화면이 박스·정렬 라벨을 이 값 하나로 가른다 */
+  hasTaste: boolean;
+  /** 네트워크 실패에서 다시 불러온다 */
   retry: () => void;
   /** 화면에도 날씨를 보여줘야 해서 점수 보정에 쓴 값을 그대로 내준다 */
   weather: WeatherBucket | null;
@@ -56,6 +61,7 @@ export type UseRecommendationsResult = {
  */
 export function useRecommendations(): UseRecommendationsResult {
   const [places, setPlaces] = useState<EngineOutput[]>([]);
+  const [hasTaste, setHasTaste] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<FeedError | null>(null);
   const [attempt, setAttempt] = useState(0);
@@ -73,14 +79,11 @@ export function useRecommendations(): UseRecommendationsResult {
       setError(null);
 
       try {
-        const cf8Code = readCf8Code();
-        if (!cf8Code) {
-          if (!cancelled) {
-            setError("NEED_QUIZ");
-            setLoading(false);
-          }
-          return;
-        }
+        // 저장값이 깨졌으면(구 CFP16 코드 · 빈 문자열) 진단 전과 같게 본다.
+        // 판정을 여기서만 하고 화면에 넘겨야 목록 순서와 머리말이 어긋나지 않는다.
+        const stored = readCf8Code();
+        const cf8Code = stored && isCf8Code(stored) ? stored : "";
+        if (!cancelled) setHasTaste(cf8Code !== "");
 
         const modeRaw = localStorage.getItem(STORAGE_KEYS.tripSetupMode);
         const mode: TripSetupMode = modeRaw === "CUSTOM" ? "CUSTOM" : "QUICK";
@@ -123,7 +126,10 @@ export function useRecommendations(): UseRecommendationsResult {
           tripSetup,
           weather,
         });
-        if (!cancelled) setPlaces(ranked);
+
+        // 진단 전에는 CF8 점수가 없어 rankPlaces 가 상황 점수만으로 매긴다.
+        // 그 순서를 동점 기준으로 두고 대표 명소 점수를 앞세운다.
+        if (!cancelled) setPlaces(cf8Code ? ranked : byLandmark(ranked));
       } catch {
         if (!cancelled) setError("LOAD_FAILED");
       } finally {
@@ -143,6 +149,7 @@ export function useRecommendations(): UseRecommendationsResult {
     places,
     loading,
     error,
+    hasTaste,
     retry,
     weather: weatherState,
     temperature,

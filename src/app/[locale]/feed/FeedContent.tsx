@@ -74,20 +74,6 @@ export function FeedContent() {
         )}
       </ListHeader>
 
-      {/* 진단 전이면 추천을 만들 수 없다 — S01 로 보낸다 */}
-      {error === "NEED_QUIZ" && (
-        <EmptyState
-          title={t("needQuiz.title")}
-          body={t("needQuiz.body")}
-          actionHref="/onboarding"
-          actionLabel={t("needQuiz.action")}
-        />
-      )}
-
-      {/*
-        네트워크 실패를 진단 안내로 덮으면 안 된다 — 진단은 이미 마친 사람이라
-        S01 로 보내면 답한 문항을 다시 풀게 된다. 여기서 필요한 건 재시도다.
-      */}
       {error === "LOAD_FAILED" && (
         <EmptyState
           title={t("loadFailed.title")}
