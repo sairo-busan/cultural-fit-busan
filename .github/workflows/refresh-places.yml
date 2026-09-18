@@ -56,3 +56,9 @@ jobs:
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx tsx scripts/check-stale-en-fields.ts
+
+      - name: Check for places excluded by server guard
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx tsx scripts/check-broken-places.ts
