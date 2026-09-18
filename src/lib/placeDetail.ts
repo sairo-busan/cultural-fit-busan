@@ -71,10 +71,6 @@ type PlaceInfoDoc = {
   placeDesc: string | null;
   placeDescEn?: string | null;
   guideDetailKo?: string | null;
-  /** @deprecated 9/17 guideDetailEn으로 이전(당시 스크립트는 재번역 뒤 삭제 —
-   * 다시 돌리면 새 원고 번역이 옛 문장으로 되돌아가서 위험, PR 리뷰 발견).
-   * 소피가 PlaceContent.tsx의 place.guideEn 참조를 바꾸기 전까지 응답 하위호환용으로만 유지 */
-  guideEn?: string | null;
   /** 9/17 guideEn에서 이전 — 도슨트 구조 변경(간단히/자세히/팁 3종 영문 완성) */
   guideDetailEn?: string | null;
   guideSimpleKo?: string | null;
@@ -123,8 +119,6 @@ export type PlaceDetail = {
   reasonByCf8En: Record<string, string | null>;
   guideDetailKo: string | null;
   guideSimpleKo: string | null;
-  /** @deprecated 9/17 guideDetailEn으로 이전. 소피 PR 머지 후 제거 예정 */
-  guideEn: string | null;
   guideDetailEn: string | null;
   guideSimpleEn: string | null;
   tipsKo: { route: string | null; photo: string | null; caution: string | null };
@@ -222,7 +216,10 @@ export async function getPlaceDetail(contentId: string): Promise<PlaceDetail | n
   if (!place) return null;
 
   const score = await db.collection<ScoreBoardRow>("score_board").findOne({ contentId });
-  const placeId = score?.placeId;
+  // score_board(큐레이션 118곳) 밖이면 TourAPI엔 있어도 "찾을 수 없음" —
+  // 큐레이션이 곧 서비스 대상의 정의(9/18, TourAPI 원본 없는 곳 제외 확정)
+  if (!score) return null;
+  const placeId = score.placeId;
 
   const [info, reasonDocs] = await Promise.all([
     placeId ? db.collection<PlaceInfoDoc>("place_info").findOne({ placeId }) : Promise.resolve(null),
@@ -288,7 +285,6 @@ export async function getPlaceDetail(contentId: string): Promise<PlaceDetail | n
 
     guideDetailKo: info?.guideDetailKo ?? null,
     guideSimpleKo: info?.guideSimpleKo ?? null,
-    guideEn: info?.guideEn ?? null,
     guideDetailEn: info?.guideDetailEn ?? null,
     guideSimpleEn: info?.guideSimpleEn ?? null,
     tipsKo: parseTips(info?.guideTipsRawKo),
