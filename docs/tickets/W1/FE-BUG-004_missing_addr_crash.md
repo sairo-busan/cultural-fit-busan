@@ -17,7 +17,7 @@
 | Type | BUG |
 | Severity | **High** (운영 화면 정지) |
 | Layer | Lib · Type |
-| Status | In Progress |
+| Status | Done |
 | Screen | S10 추천 · 저장 · S20 |
 | Depends | — |
 | Related | FE-FEAT-017 (발견 경위) · BE-FEAT-019 PR #51 (재적재가 빈 값으로 덮는 문제) |
@@ -112,12 +112,12 @@ Uncaught TypeError: Cannot read properties of null (reading 'split')
 
 ## Acceptance Criteria
 
-- [ ] 추천 탭이 119곳을 그린다 (주소 없는 곳 포함)
-- [ ] 주소 없는 곳의 카드는 메타 줄에서 구 이름만 빠지고 나머지는 그대로다
-- [ ] 저장 탭에 그 장소를 저장해도 화면이 그려진다
-- [ ] 그 장소의 상세(S20)가 열린다
-- [ ] 좌표 없는 곳이 근처 장소 목록에 거리와 함께 나오지 않는다
-- [ ] `tsc --noEmit` · `lint` · `build` 통과
+- [x] 추천 탭이 119곳을 그린다 (주소 없는 곳 포함)
+- [x] 주소 없는 곳의 카드는 메타 줄에서 구 이름만 빠지고 나머지는 그대로다
+- [x] 저장 탭에 그 장소를 저장해도 화면이 그려진다
+- [x] 그 장소의 상세(S20)가 열린다
+- [x] 좌표 없는 곳이 근처 장소 목록에 거리와 함께 나오지 않는다 (코드 확인)
+- [x] `tsc --noEmit` · `lint` · `build` 통과
 
 ---
 
@@ -133,4 +133,28 @@ Uncaught TypeError: Cannot read properties of null (reading 'split')
 
 ## Implementation Notes
 
-(구현 후 작성)
+### 커밋 (`fix/place-missing-addr` · PR #52)
+
+| 커밋 | 내용 |
+|---|---|
+| `31d6ee2` | `districtLabel` · `districtLabelEn` 가드 · `addr1` · `mapX` · `mapY` 타입 정정 · 근처 장소에서 좌표 없는 곳 제외 |
+| `d7df513` | 티켓 |
+| `6a717d6` | 전후 캡처 |
+
+### 검증
+
+같은 브라우저로 수정 전(main 기준) · 후를 나란히 확인.
+
+| 화면 | 전 | 후 |
+|---|---|---|
+| 추천 탭 | 카드 0 · 화면 정지 | 카드 119 |
+| 저장 탭 (그 장소 저장) | 화면 정지 | 정상 |
+| S20 그 장소 | 화면 정지 | 열림 · 메타 줄 `전망·야경` |
+| 영문 추천 · 저장 · 상세 | — | 정상 |
+| 근처 장소 (정상 장소) | — | 3곳 그대로 |
+
+FE-FEAT-017 진단 전 목록에서도 그 장소가 그려지는 것을 확인했다.
+
+### 남은 것
+
+- 데이터 — `영주하늘눈전망대` 주소 · 좌표는 담당자 확인 중
