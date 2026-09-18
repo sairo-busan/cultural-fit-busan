@@ -32,10 +32,10 @@ export type Place = {
   contentId: string;
   contentTypeId: string;
   title: string;
-  addr1: string;
+  addr1: string | null;
   addr2: string;
-  mapX: number;
-  mapY: number;
+  mapX: number | null;
+  mapY: number | null;
   firstImage: string | null;
   images: string[];
   homepage: string | null;

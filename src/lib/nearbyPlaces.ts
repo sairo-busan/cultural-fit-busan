@@ -10,7 +10,8 @@ import { getDb } from "@/lib/mongodb";
 import { distanceMinutes } from "@/lib/distance";
 
 type ScoreBoardRow = { placeId: string; contentId: string | null };
-type PlaceRow = { _id: string; title: string; mapX: number; mapY: number; firstImage: string | null };
+// 적재가 좌표를 비워 둔 곳이 있다(2026-09-18 운영 1곳) — 거리를 못 재므로 후보에서 뺀다
+type PlaceRow = { _id: string; title: string; mapX: number | null; mapY: number | null; firstImage: string | null };
 type PlaceInfoRow = {
   placeId: string;
   placeName: string | null;
@@ -64,13 +65,13 @@ export async function getNearbyPlaces(contentId: string, limit = 3): Promise<Nea
   const infoByPlaceId = new Map(infoDocs.map((i) => [i.placeId, i]));
 
   const origin = placesByContentId.get(contentId);
-  if (!origin) return [];
+  if (!origin || origin.mapX == null || origin.mapY == null) return [];
 
   const candidates: NearbyPlace[] = [];
   for (const score of scoreBoards) {
     if (!score.contentId || score.contentId === contentId) continue;
     const place = placesByContentId.get(score.contentId);
-    if (!place) continue;
+    if (!place || place.mapX == null || place.mapY == null) continue;
 
     const info = infoByPlaceId.get(score.placeId);
     candidates.push({
