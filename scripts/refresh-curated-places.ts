@@ -57,6 +57,14 @@ const ACCESSIBILITY_CATEGORY_SUFFIXES = [
   "영유아 동반가족 편의시설",
 ];
 
+/** TourAPI 원문이 틀렸다고 확인되어 사람이 직접 고친 값 — 재적재해도 되돌아가면 안 된다.
+ * 2385666(국립부산과학관): 전화가 TourAPI 원문 "1422-23"인데 걸리지 않아, 비짓부산
+ * 공식 번호로 교체(소피, PR #59). 원문이 실제로 틀린 건지는 API 측 문의 필요 —
+ * 맞는 걸로 확인되면 이 항목을 지운다. */
+const MANUAL_OPERATION_OVERRIDES: Record<string, TourItem> = {
+  "2385666": { infocenterculture: "051-750-2300" },
+};
+
 function cleanAccessibilityInfo(info: TourItem | null): TourItem | null {
   if (!info) return null;
   const pattern = new RegExp(`_?(${ACCESSIBILITY_CATEGORY_SUFFIXES.join("|")})`, "g");
@@ -70,7 +78,11 @@ function cleanAccessibilityInfo(info: TourItem | null): TourItem | null {
 
 /**
  * common/intro/info는 실패하면 그대로 throw해서 이 장소 전체를 건너뛰게 한다.
- * images/withTour는 장소에 따라 정상적으로 없을 수 있어 null 허용(기존 원칙 유지).
+ * images/withTour는 장소에 따라 정상적으로 없을 수도 있고(성공+빈 응답), 호출
+ * 자체가 실패할 수도 있다(9/18, 소피 리뷰) — 이 둘을 구분해야 한다. 실패를
+ * "없음"으로 다루면 일시 오류 한 번에 사진·무장애가 빈 값으로 덮이고, 그 뒤
+ * check-stale-en-fields.ts가 영문 무장애까지 지운다. 호출 실패면 해당 필드를
+ * $set에서 아예 빼서(undefined → omitUndefined) 기존 DB 값을 보존한다.
  */
 async function fetchDetail(contentId: string, contentTypeId: string) {
   const [common, intro, info] = await Promise.all([
@@ -78,10 +90,14 @@ async function fetchDetail(contentId: string, contentTypeId: string) {
     callTourApi("detailIntro2", { contentId, contentTypeId }),
     callTourApi("detailInfo2", { contentId, contentTypeId }),
   ]);
-  const [images, withTour] = await Promise.all([
-    callTourApi("detailImage2", { contentId, imageYN: "Y" }).catch(() => null),
-    callApi(KOR_WITH_API_BASE, "detailWithTour2", { contentId }).catch(() => null),
+  const [imagesResult, withTourResult] = await Promise.allSettled([
+    callTourApi("detailImage2", { contentId, imageYN: "Y" }),
+    callApi(KOR_WITH_API_BASE, "detailWithTour2", { contentId }),
   ]);
+  const images = imagesResult.status === "fulfilled" ? imagesResult.value : null;
+  const imagesFailed = imagesResult.status === "rejected";
+  const withTour = withTourResult.status === "fulfilled" ? withTourResult.value : null;
+  const withTourFailed = withTourResult.status === "rejected";
 
   const commonItem: TourItem | undefined = common?.items?.item?.[0];
   // detailCommon2가 resultCode 0000(성공)이면서 item이 없는 경우가 있다(9/18, 소피
@@ -110,16 +126,16 @@ async function fetchDetail(contentId: string, contentTypeId: string) {
     cpyrhtDivCd: commonItem?.cpyrhtDivCd1 || null,
     homepage: commonItem?.homepage?.replace(/<[^>]*>/g, "") ?? null,
     overview: commonItem?.overview ?? null,
-    operationInfo: introItem ?? {},
-    images: imageItems.map((img) => img.originimgurl).filter(Boolean),
-    imageSources: imageItems
-      .filter((img) => img.originimgurl)
-      .map((img) => ({ url: img.originimgurl, cpyrhtDivCd: img.cpyrhtDivCd || null })),
+    operationInfo: { ...(introItem ?? {}), ...MANUAL_OPERATION_OVERRIDES[contentId] },
+    images: imagesFailed ? undefined : imageItems.map((img) => img.originimgurl).filter(Boolean),
+    imageSources: imagesFailed
+      ? undefined
+      : imageItems.filter((img) => img.originimgurl).map((img) => ({ url: img.originimgurl, cpyrhtDivCd: img.cpyrhtDivCd || null })),
     info: infoItems
       .filter((i) => i.infotext)
       .map((i) => ({ name: i.infoname, text: i.infotext })),
-    accessibilityInfo,
-    barrierFree,
+    accessibilityInfo: withTourFailed ? undefined : accessibilityInfo,
+    barrierFree: withTourFailed ? undefined : barrierFree,
     syncedAt: new Date(),
   };
 }

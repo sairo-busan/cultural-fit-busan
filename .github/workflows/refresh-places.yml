@@ -24,6 +24,12 @@ jobs:
   refresh:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # 레포 Actions 기본 권한이 read라 GITHUB_TOKEN으로 이슈를 못 만든다(소피 리뷰) —
+    # check-stale-en-fields.ts·check-broken-places.ts가 이슈 생성에 실패해도 조용히
+    # 넘어가서(try/catch) 알아채기 어려웠다.
+    permissions:
+      contents: read
+      issues: write
     steps:
       - uses: actions/checkout@v4
 
