@@ -1,5 +1,6 @@
 import { setRequestLocale } from "next-intl/server";
 import { routing, type Locale } from "@/i18n/routing";
+import { BackHeader } from "./BackHeader";
 
 /**
  * 개인정보처리방침. 스토어 등록에 공개 URL 이 필요해 화면 하나로 둔다
@@ -128,20 +129,23 @@ export default async function PrivacyPage({ params }: PageProps<"/[locale]/priva
   const t = (locale as Locale) === "en" ? EN : KO;
 
   return (
-    <div className="screen mx-auto w-full max-w-screen-sm py-10">
-      <h1 className="ds-title-1">{t.title}</h1>
-      <p className="ds-caption mt-2 text-sub">{t.updated}</p>
+    <div className="mx-auto w-full max-w-screen-sm">
+      <BackHeader />
+      <div className="screen pb-10 pt-2">
+        <h1 className="ds-title-1">{t.title}</h1>
+        <p className="ds-caption mt-2 text-sub">{t.updated}</p>
 
-      {t.sections.map((section) => (
-        <section key={section.h} className="mt-8">
-          <h2 className="ds-title-2">{section.h}</h2>
-          {section.p.map((line) => (
-            <p key={line} className="ds-body-1 mt-3 text-sub">
-              {line}
-            </p>
-          ))}
-        </section>
-      ))}
+        {t.sections.map((section) => (
+          <section key={section.h} className="mt-8">
+            <h2 className="ds-title-2">{section.h}</h2>
+            {section.p.map((line) => (
+              <p key={line} className="ds-body-1 mt-3 text-sub">
+                {line}
+              </p>
+            ))}
+          </section>
+        ))}
+      </div>
     </div>
   );
 }
