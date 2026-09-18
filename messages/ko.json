@@ -54,6 +54,11 @@
     "close": "닫기",
     "menu": "메뉴"
   },
+  "screenError": {
+    "title": "화면을 불러오지 못했어요",
+    "body": "잠시 뒤에 다시 시도해 주세요",
+    "action": "다시 시도"
+  },
   "feed": {
     "title": "지금 갈 만한 곳",
     "yourType": "내 여행 유형",

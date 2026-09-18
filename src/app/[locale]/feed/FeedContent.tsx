@@ -3,6 +3,7 @@
 import { useLocale, useTranslations } from "next-intl";
 import { RotateCw } from "lucide-react";
 import { EmptyState } from "@/components/common/EmptyState";
+import { ItemBoundary } from "@/components/common/ItemBoundary";
 import { Skeleton } from "@/components/common/Skeleton";
 import { ListHeader, ScreenTitle } from "@/components/common/TabScreen";
 import { WeatherIcon } from "@/components/common/WeatherIcon";
@@ -133,12 +134,13 @@ export function FeedContent() {
       {error === null && (
         <div className="mt-2">
           {places.map((place) => (
-            <PlaceCard
-              key={place.contentId}
-              place={place}
-              saved={savedIds.has(place.contentId)}
-              onToggleSave={toggle}
-            />
+            <ItemBoundary key={place.contentId}>
+              <PlaceCard
+                place={place}
+                saved={savedIds.has(place.contentId)}
+                onToggleSave={toggle}
+              />
+            </ItemBoundary>
           ))}
         </div>
       )}

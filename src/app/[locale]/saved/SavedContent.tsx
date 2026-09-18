@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
+import { ItemBoundary } from "@/components/common/ItemBoundary";
 import { ScreenTitle } from "@/components/common/TabScreen";
 import { PlaceRow } from "@/components/place/PlaceRow";
 import { useSavedPlaces } from "@/hooks/useSavedPlaces";
@@ -234,17 +235,18 @@ export function SavedContent() {
             const band = fitBand(entry.fit);
 
             return (
-              <PlaceRow
-                key={entry.place.contentId}
-                place={entry.place}
-                note={
-                  sort === "fit"
-                    ? band && tPlace(`fit.${band}`)
-                    : formatSavedAt(entry.savedAt, now, (k, v) => t(k, v))
-                }
-                saved
-                onToggleSave={toggle}
-              />
+              <ItemBoundary key={entry.place.contentId}>
+                <PlaceRow
+                  place={entry.place}
+                  note={
+                    sort === "fit"
+                      ? band && tPlace(`fit.${band}`)
+                      : formatSavedAt(entry.savedAt, now, (k, v) => t(k, v))
+                  }
+                  saved
+                  onToggleSave={toggle}
+                />
+              </ItemBoundary>
             );
           })}
         </div>
