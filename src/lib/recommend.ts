@@ -146,6 +146,9 @@ async function computeRecommendations(contentTypeId?: string): Promise<Recommend
     if (!score.contentId) continue; // content_id 없으면 이미지·좌표를 못 구함 — 스킵
     const place = placesByContentId.get(score.contentId);
     if (!place) continue; // places에 아직 적재 안 된 content_id
+    // 문서는 있어도 핵심 필드가 null이면(TourAPI 원본 소실·재적재 실패 등) 노출 안 함 —
+    // 9/18 사고(addr1 null로 FE 크래시) 재발 방지, FE 가드 유무와 무관하게 서버가 막는다
+    if (!place.title || !place.addr1 || place.mapX == null || place.mapY == null) continue;
 
     if (contentTypeId && place.contentTypeId !== contentTypeId) continue;
 

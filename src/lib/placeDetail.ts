@@ -214,6 +214,9 @@ export async function getPlaceDetail(contentId: string): Promise<PlaceDetail | n
 
   const place = await db.collection<PlaceDoc>("places").findOne({ _id: contentId });
   if (!place) return null;
+  // 문서는 있어도 핵심 필드가 null이면(TourAPI 원본 소실·재적재 실패 등) "찾을 수 없음" —
+  // 9/18 사고(addr1 null로 FE 크래시) 재발 방지, recommend.ts와 동일 가드
+  if (!place.title || !place.addr1 || place.mapX == null || place.mapY == null) return null;
 
   const score = await db.collection<ScoreBoardRow>("score_board").findOne({ contentId });
   // score_board(큐레이션 118곳) 밖이면 TourAPI엔 있어도 "찾을 수 없음" —
