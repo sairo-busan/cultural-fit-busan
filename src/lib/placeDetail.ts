@@ -80,16 +80,23 @@ type PlaceInfoDoc = {
   guideTipsRawKo?: string | null;
   /** 9/17 LLM 번역, "Route: …\nPhoto spot: …\nCaution: …" 구조로 guideTipsRawKo와 대칭 */
   guideTipsRawEn?: string | null;
-  /** 9/17 BE-FEAT-017, edge-tts 생성 후 Vercel Blob 업로드(upload-docent-audio-ko.ts) */
+  /** 9/19 BE-FEAT-020, Google Cloud TTS(ko-KR-Chirp3-HD-Despina)로 교체.
+   * edge-tts는 비공식 클라이언트라 리스크로 판단해 제거(소피 발견, PR #49) */
   audioUrlSimpleKo?: string | null;
   audioUrlDetailKo?: string | null;
-  /** 9/17 BE-FEAT-018, en-US-JennyNeural(upload-docent-audio-en.ts) */
+  /** 9/19 BE-FEAT-020, en-US-Chirp3-HD-Despina(edge-tts에서 교체) */
   audioUrlSimpleEn?: string | null;
   audioUrlDetailEn?: string | null;
   /** Phase 4(9/17), TourAPI 무장애여행에 영문 서비스가 없어 LLM 직접 번역
    * (fill-accessibility-en.ts). accessibilityInfoSourceKo는 번역 당시 원본 JSON 스냅샷 */
   accessibilityInfoEn?: Record<string, string> | null;
   accessibilityInfoSourceKo?: string | null;
+  /** 9/19 BE-FEAT-020, 문장별 재생 시각(소피 요청) — { startSec, text }[], text는
+   * 원고에서 그대로 자른 부분 문자열(정규화 안 함, 화면이 찾아서 하이라이트) */
+  audioMarksSimpleKo?: { startSec: number; text: string }[] | null;
+  audioMarksDetailKo?: { startSec: number; text: string }[] | null;
+  audioMarksSimpleEn?: { startSec: number; text: string }[] | null;
+  audioMarksDetailEn?: { startSec: number; text: string }[] | null;
 };
 
 type PlaceByCf8Doc = {
@@ -130,6 +137,11 @@ export type PlaceDetail = {
   /** 9/17 BE-FEAT-018, 도슨트 영문 음성(간단히·자세히) */
   audioUrlSimpleEn: string | null;
   audioUrlDetailEn: string | null;
+  /** 9/19 BE-FEAT-020, 문장별 재생 시각(소피 요청) */
+  audioMarksSimpleKo: { startSec: number; text: string }[];
+  audioMarksDetailKo: { startSec: number; text: string }[];
+  audioMarksSimpleEn: { startSec: number; text: string }[];
+  audioMarksDetailEn: { startSec: number; text: string }[];
   hours: string | null;
   closedDays: string | null;
   hoursEn: string | null;
@@ -296,6 +308,10 @@ export async function getPlaceDetail(contentId: string): Promise<PlaceDetail | n
     audioUrlDetailKo: info?.audioUrlDetailKo ?? null,
     audioUrlSimpleEn: info?.audioUrlSimpleEn ?? null,
     audioUrlDetailEn: info?.audioUrlDetailEn ?? null,
+    audioMarksSimpleKo: info?.audioMarksSimpleKo ?? [],
+    audioMarksDetailKo: info?.audioMarksDetailKo ?? [],
+    audioMarksSimpleEn: info?.audioMarksSimpleEn ?? [],
+    audioMarksDetailEn: info?.audioMarksDetailEn ?? [],
 
     hours: pickOperationValue(place.operationInfo, HOURS_KEYS),
     closedDays: pickOperationValue(place.operationInfo, CLOSED_KEYS),

@@ -44,7 +44,8 @@ async function main() {
       continue;
     }
     const [, placeId, kind] = match;
-    const field = kind === "simple" ? "audioUrlSimpleEn" : "audioUrlDetailEn";
+    const urlField = kind === "simple" ? "audioUrlSimpleEn" : "audioUrlDetailEn";
+    const marksField = kind === "simple" ? "audioMarksSimpleEn" : "audioMarksDetailEn";
 
     try {
       const buffer = fs.readFileSync(path.join(AUDIO_DIR, file));
@@ -54,7 +55,12 @@ async function main() {
         contentType: "audio/mpeg",
         addRandomSuffix: true,
       });
-      await placeInfo.updateOne({ placeId }, { $set: { [field]: blob.url } });
+      const set: Record<string, unknown> = { [urlField]: blob.url };
+      const marksPath = path.join(AUDIO_DIR, file.replace(/\.mp3$/, ".marks.json"));
+      if (fs.existsSync(marksPath)) {
+        set[marksField] = JSON.parse(fs.readFileSync(marksPath, "utf-8"));
+      }
+      await placeInfo.updateOne({ placeId }, { $set: set });
       ok++;
     } catch (err) {
       failed++;
