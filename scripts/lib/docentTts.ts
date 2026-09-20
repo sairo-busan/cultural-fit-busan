@@ -27,11 +27,17 @@ function splitParagraphs(text: string): string[] {
     .filter(Boolean);
 }
 
+/** "Mt. Geumjeong" 같은 약어 뒤 마침표를 문장 끝으로 오인해 끊는 문제(소피 PR #60
+ * 리뷰 — 영문 마크 3건 실측) 방지. 이 목록 뒤의 마침표는 분리 안 함. */
+const SENTENCE_ABBREVIATIONS = ["Mt", "St", "Dr", "Mr", "Mrs", "Ms", "Jr", "Sr", "vs", "No", "approx", "etc"];
+
 /** 마침표/느낌표/물음표 뒤 공백 기준 분리. text는 원문에서 trim만 한 부분
  * 문자열이라 화면이 원고 안에서 그대로 찾을 수 있다(소피 리뷰, 정규화 금지). */
 function splitSentences(paragraph: string): string[] {
+  const abbrPattern = SENTENCE_ABBREVIATIONS.join("|");
+  const splitRegex = new RegExp(`(?<!\\b(?:${abbrPattern})\\.)(?<=[.!?])\\s+(?=\\S)`, "g");
   return paragraph
-    .split(/(?<=[.!?])\s+(?=\S)/)
+    .split(splitRegex)
     .map((s) => s.trim())
     .filter(Boolean);
 }
@@ -112,9 +118,17 @@ function encodeMp3(wavBuffer: Buffer): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const ff = spawn("ffmpeg", ["-y", "-i", "pipe:0", "-codec:a", "libmp3lame", "-b:a", "128k", "-f", "mp3", "pipe:1"]);
     const chunks: Buffer[] = [];
+    const stderrChunks: Buffer[] = [];
     ff.stdout.on("data", (d) => chunks.push(d));
+    // stderr를 안 읽으면 ffmpeg 로그가 파이프 버퍼를 채워 그대로 멈춘다(소피 PR #60 리뷰) —
+    // 실패 시 원인 파악용으로 모아두되, 평소엔 그냥 비워서 흘려보낸다.
+    ff.stderr.on("data", (d) => stderrChunks.push(d));
     ff.on("error", reject);
-    ff.on("close", (code) => (code === 0 ? resolve(Buffer.concat(chunks)) : reject(new Error(`ffmpeg 종료 코드 ${code}`))));
+    ff.on("close", (code) =>
+      code === 0
+        ? resolve(Buffer.concat(chunks))
+        : reject(new Error(`ffmpeg 종료 코드 ${code}: ${Buffer.concat(stderrChunks).toString("utf-8").slice(-500)}`))
+    );
     ff.stdin.write(wavBuffer);
     ff.stdin.end();
   });

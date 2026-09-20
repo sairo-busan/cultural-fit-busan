@@ -16,7 +16,6 @@
     "@capacitor/android": "^8.5.2",
     "@capacitor/cli": "^8.5.2",
     "@capacitor/core": "^8.5.2",
-    "@google-cloud/text-to-speech": "^7.1.0",
     "@radix-ui/react-radio-group": "^1.4.7",
     "@vercel/blob": "^2.8.0",
     "lucide-react": "^1.33.0",
@@ -27,6 +26,7 @@
     "react-dom": "19.2.8"
   },
   "devDependencies": {
+    "@google-cloud/text-to-speech": "^7.1.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

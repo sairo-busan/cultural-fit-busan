@@ -58,8 +58,10 @@ async function main() {
   await runWithConcurrency(jobs, CONCURRENCY, async (job) => {
     const base = path.join(OUT_DIR, `${job.placeId}_${job.kind}_en`);
     try {
-      // 재실행 시 이미 만든 건 건너뜀(할당량 초과 재시도용)
-      if (!existsSync(`${base}.mp3`)) {
+      // 재실행 시 이미 만든 건 건너뜀(할당량 초과 재시도용). mp3만 보면 mp3 쓰고
+      // marks.json 쓰기 전에 죽었을 때 마크 없이 "완료"로 오판한다(소피 PR #60 리뷰) —
+      // 두 파일 다 있어야 건너뛴다.
+      if (!(existsSync(`${base}.mp3`) && existsSync(`${base}.marks.json`))) {
         const { marks, mp3 } = await buildDocentAudio(job.text, VOICE);
         await writeFile(`${base}.mp3`, mp3);
         await writeFile(`${base}.marks.json`, JSON.stringify(marks));
