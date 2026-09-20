@@ -149,7 +149,7 @@ function SettingRow({
   return (
     <Link
       href={href}
-      className="flex min-h-16 items-center gap-4 border-b border-hair px-[--gutter] transition-colors active:bg-surface"
+      className="flex min-h-16 items-center gap-4 border-b border-hair px-[--gutter] transition-colors last:border-b-0 active:bg-surface"
     >
       <span className="ds-title-2 shrink-0">{label}</span>
       {hydrated ? (
