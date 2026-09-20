@@ -132,7 +132,13 @@ export function Docent({
         </div>
 
         <div className="screen pb-safe-cta">
-          <h1 id="docent-name" className="ds-title-1 mt-2">
+          {/* 열릴 때 포커스를 여기로 받는다 — 두지 않으면 첫 버튼인 뒤로 가기에 테두리가 남는다 */}
+          <h1
+            id="docent-name"
+            className="ds-title-1 mt-2 focus-visible:outline-none"
+            tabIndex={-1}
+            autoFocus
+          >
             {name}
           </h1>
           {(district || type) && (
