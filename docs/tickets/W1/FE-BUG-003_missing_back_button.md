@@ -16,7 +16,7 @@
 | Type | BUG |
 | Severity | Medium |
 | Layer | Page |
-| Status | In Progress |
+| Status | Done — PR #57 |
 | Screen | S20 · 개인정보처리방침 |
 | Depends | — (`PlaceContent.tsx` 를 바꾼 FE-FEAT-016 PR #48 은 머지됨) |
 | Related | APP-BUG-001 (안드로이드 뒤로 가기) · APP-CHORE-002 (개인정보처리방침 화면) · FE-FEAT-017 E2 |

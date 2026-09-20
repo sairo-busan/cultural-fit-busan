@@ -13,7 +13,7 @@ Google Play 는 앱 등록에 **개인정보처리방침 URL 을 필수로 요�
 | Type | CHORE |
 | Severity | High |
 | Layer | Route |
-| Status | In Progress |
+| Status | Done — PR #38 |
 | Screen | 신규 `/privacy` · S50(내 정보) |
 | Depends | APP-CHORE-001 |
 | Related | Play 콘솔 `앱 콘텐츠` · 원스토어 판매정보 |

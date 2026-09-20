@@ -10,7 +10,7 @@
 | Type | FEAT |
 | Severity | High |
 | Layer | Screen |
-| Status | Todo |
+| Status | Done — PR #39 |
 | Screen | S20 장소 상세 · 내 정보(이 앱에 대해) · 사진·콘텐츠 출처(신규) |
 | Branch | `feat/image-source-credit` (워크트리 `cfb-credits`, `origin/main` 기준) |
 | Depends | Step 2 만 — 에린 `feat/image-copyright-source`(`imageSources`) 머지 |

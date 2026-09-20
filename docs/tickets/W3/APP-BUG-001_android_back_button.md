@@ -15,7 +15,7 @@
 | Type | BUG |
 | Severity | High |
 | Layer | Android |
-| Status | In Progress |
+| Status | Done — PR #44 |
 | Screen | 전 화면 (앱) |
 | Depends | APP-CHORE-001 |
 | Related | v1.1 부터 있음 · v1.2 에서 수정 |
