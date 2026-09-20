@@ -299,12 +299,13 @@ export function TripSetupPage() {
     <div className="flex h-dvh flex-col">
       <AppHeader onBack={back} />
 
-      <div className="shrink-0 px-6 pt-3 pb-5">
-        <h1 className="ds-display">{t("title")}</h1>
-        <p className="ds-body-1 mt-2 text-sub">{t("lead")}</p>
-      </div>
-
       <div ref={scrollRef} className="relative min-h-0 flex-1 overflow-y-auto">
+        {/* 제목은 스크롤과 함께 올라간다 — 고정하면 선택지가 보이는 영역이 좁다 */}
+        <div className="px-6 pt-3 pb-5">
+          <h1 className="ds-display">{t("title")}</h1>
+          <p className="ds-body-1 mt-2 text-sub">{t("lead")}</p>
+        </div>
+
         <div className="flex flex-col px-6 pb-10">
           {SECTIONS.map((section, sectionIndex) => {
             const expanded = open === sectionIndex;
