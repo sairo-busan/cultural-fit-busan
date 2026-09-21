@@ -142,7 +142,7 @@ export function Docent({
           <h1
             ref={titleRef}
             id="docent-name"
-            className="ds-title-1 mt-2 focus-visible:outline-none"
+            className="ds-title-1 mt-2 outline-none"
             tabIndex={-1}
           >
             {name}
