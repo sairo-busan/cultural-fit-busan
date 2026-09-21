@@ -15,7 +15,7 @@
 | Type | FEAT |
 | Severity | Medium |
 | Layer | Page · Hook · Lib |
-| Status | In Progress |
+| Status | Done — PR #53 |
 | Screen | S10 [취향 미설정] |
 | Depends | — (FE-FEAT-016 S10 사진 넘기기 PR #48 머지됨) |
 | Related | FE-FEAT-014 (S10 사진 카드) · FE-FEAT-005 (추천 엔진 — 날씨 점수 변경은 에린 리뷰) · `docs/화면_IA.md` S10 분기 상태 |

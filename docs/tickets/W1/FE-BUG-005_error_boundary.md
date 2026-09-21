@@ -17,7 +17,7 @@
 | Type | BUG |
 | Severity | High (한 곳의 데이터 이상이 화면 전체를 멈춘다) |
 | Layer | Screen · Component |
-| Status | Review |
+| Status | Done — PR #58 |
 | Screen | 모든 화면 · S10 추천 · 저장 · S20 함께 둘러볼 곳 |
 | Branch | `fix/error-boundary` (워크트리 `cfb-error-boundary`, `origin/main` 기준) |
 | Depends | — |

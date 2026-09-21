@@ -51,9 +51,10 @@ export function PlaceCard({ place, saved, onToggleSave }: PlaceCardProps) {
   ].filter(Boolean);
 
   return (
+    // 사진을 누를 때는 흐리지 않는다 — iOS Safari 는 스와이프하는 동안에도 :active 를 유지한다
     <Link
       href={`/place/${place.contentId}`}
-      className="block px-[--gutter] py-4 transition-opacity active:opacity-70"
+      className="block px-[--gutter] py-4 transition-opacity active:not-has-[[role=region]:active]:opacity-70"
     >
       <PhotoSwipe
         images={images}

@@ -10,7 +10,7 @@
 | Type | FEAT |
 | Severity | Medium |
 | Layer | Screen |
-| Status | In Progress |
+| Status | Done — PR #59 |
 | Screen | S20 장소 상세 (en) |
 | Branch | `feat/en-fields-display` (워크트리 `cfb-en-fields`, `origin/main` 기준) |
 | Depends | BE-FEAT-015 (PR #46 — `reasonByCf8En` · `petConditionEn` · `tipsEn`) · BE-FEAT-016 (PR #47 — `guideDetailEn`) · BE-FEAT-019 (PR #51 — `accessibilityEn`) |
