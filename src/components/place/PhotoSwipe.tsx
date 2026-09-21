@@ -23,13 +23,35 @@ type PhotoSwipeProps = {
   children?: ReactNode;
   /** 목록 카드처럼 사진이 여러 개 이어지는 곳 — 마우스를 올린 사진에만 화살표를 그린다 */
   hoverArrows?: boolean;
+  /** 첫 사진을 바로 받는다. 목록은 첫 화면에 보이는 카드만 켠다 — 카드가 100개 넘어 전부 켜면 10MB 를 받는다 */
+  priority?: boolean;
 };
 
-export function PhotoSwipe({ images, name, sizes, className, children, hoverArrows = false }: PhotoSwipeProps) {
+export function PhotoSwipe({ images, name, sizes, className, children, hoverArrows = false, priority = true }: PhotoSwipeProps) {
   const t = useTranslations("placeDetail");
   const scroller = useRef<HTMLDivElement>(null);
+  // 웹은 사진 한 장이 변환을 거쳐 0.4초쯤 걸려, 넘길 때 받기 시작하면 빈 칸이 보인다.
+  // 카드가 화면 가까이 오면 두 번째 사진을, 넘기기 시작하면 나머지를 받는다.
+  // 목록은 카드를 100개 넘게 한 번에 그리므로 처음부터 받지는 않는다
+  const [near, setNear] = useState(false);
+  const [swiped, setSwiped] = useState(false);
 
   const hasMany = images.length > 1;
+
+  useEffect(() => {
+    const el = scroller.current;
+    if (!el || !hasMany) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        setNear(true);
+        io.disconnect();
+      },
+      { rootMargin: "300px 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [hasMany]);
 
   return (
     // 포커스 테두리는 사진 위에 겹쳐 그린다. 전역 테두리는 바깥쪽이라 화면 끝에서 잘린다
@@ -41,6 +63,7 @@ export function PhotoSwipe({ images, name, sizes, className, children, hoverArro
           role="region"
           aria-label={t("photos", { name })}
           className="flex size-full snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] focus-visible:outline-none! [&::-webkit-scrollbar]:hidden"
+          onScroll={() => setSwiped(true)}
           onKeyDown={(e) => {
             if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
             e.preventDefault();
@@ -56,8 +79,8 @@ export function PhotoSwipe({ images, name, sizes, className, children, hoverArro
                 fill
                 sizes={sizes}
                 className="object-cover"
-                loading={i === 0 ? "eager" : "lazy"}
-                fetchPriority={i === 0 ? "high" : "auto"}
+                loading={(i === 0 && priority) || (i === 1 && near) || swiped ? "eager" : "lazy"}
+                fetchPriority={i === 0 && priority ? "high" : "auto"}
               />
             </div>
           ))}

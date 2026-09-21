@@ -36,6 +36,7 @@ export function Docent({
   audio: DocentAudio;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
   const locale = useLocale() as Locale;
   const t = useTranslations("docent");
   const tDetail = useTranslations("placeDetail");
@@ -46,7 +47,12 @@ export function Docent({
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
+    if (open && !dialog.open) {
+      dialog.showModal();
+      // showModal 이 첫 버튼(뒤로 가기)에 포커스를 주고, iOS Safari 는 거기에 테두리를
+      // 남긴다. 연 뒤에 제목으로 옮긴다 — 화면 낭독기도 장소 이름부터 읽는다
+      titleRef.current?.focus({ preventScroll: true });
+    }
     if (!open && dialog.open) dialog.close();
   }, [open]);
 
@@ -132,12 +138,13 @@ export function Docent({
         </div>
 
         <div className="screen pb-safe-cta">
-          {/* 열릴 때 포커스를 여기로 받는다 — 두지 않으면 첫 버튼인 뒤로 가기에 테두리가 남는다 */}
+          {/* 열릴 때 포커스를 여기로 받는다 — 위 useEffect 참고.
+              전역 포커스 테두리(globals.css)가 레이어 밖이라 ! 로 덮는다 — PhotoSwipe 와 같다 */}
           <h1
+            ref={titleRef}
             id="docent-name"
-            className="ds-title-1 mt-2 focus-visible:outline-none"
+            className="ds-title-1 mt-2 outline-none!"
             tabIndex={-1}
-            autoFocus
           >
             {name}
           </h1>
