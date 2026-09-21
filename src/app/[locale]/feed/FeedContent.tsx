@@ -133,12 +133,13 @@ export function FeedContent() {
 
       {error === null && (
         <div className="mt-2">
-          {places.map((place) => (
+          {places.map((place, i) => (
             <ItemBoundary key={place.contentId}>
               <PlaceCard
                 place={place}
                 saved={savedIds.has(place.contentId)}
                 onToggleSave={toggle}
+                priority={i < 3}
               />
             </ItemBoundary>
           ))}

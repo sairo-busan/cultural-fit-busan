@@ -26,9 +26,11 @@ type PlaceCardProps = {
   place: RecommendedPlace;
   saved: boolean;
   onToggleSave: (contentId: string) => void;
+  /** 첫 화면에 보이는 카드 — 사진을 바로 받는다 */
+  priority?: boolean;
 };
 
-export function PlaceCard({ place, saved, onToggleSave }: PlaceCardProps) {
+export function PlaceCard({ place, saved, onToggleSave, priority = false }: PlaceCardProps) {
   const locale = useLocale() as Locale;
   const t = useTranslations("place");
 
@@ -62,6 +64,7 @@ export function PlaceCard({ place, saved, onToggleSave }: PlaceCardProps) {
         sizes="(min-width: 640px) 640px, 100vw"
         className="aspect-[4/3] overflow-hidden rounded-2xl bg-surface"
         hoverArrows
+        priority={priority}
       >
         {/* 저장 아이콘이 앉을 바탕. 사진 밝기와 무관하게 흰 아이콘 하나로 통일한다 */}
         {hasImage && (
