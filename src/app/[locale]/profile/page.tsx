@@ -247,7 +247,9 @@ export function ProfilePage() {
 
       <div
         ref={scrollRef}
-        className={`min-h-0 flex-1 ${revealing ? "overflow-hidden" : "overflow-y-auto"}`}
+        // 연출 중에는 스크롤을 막는다. hidden 으로 막으면 캐릭터 이름이 아래 버튼 자리(숨겨져 있을 뿐
+        // 공간은 차지한다)에서 잘려, visible 로 둔다 — 스크롤 영역이 아니게 되는 것은 같다
+        className={`min-h-0 flex-1 ${revealing ? "overflow-visible" : "overflow-y-auto"}`}
       >
         {/* 화면 1 */}
         <section
