@@ -151,13 +151,41 @@ const HOURS_KEYS = ["usetime", "usetimeculture", "opentime", "usetimeleports"];
 const CLOSED_KEYS = ["restdate", "restdateculture", "restdateshopping", "restdateleports"];
 const PHONE_KEYS = ["infocenter", "infocenterculture", "infocentershopping", "infocenterleports"];
 
-/** <br> → 줄바꿈, 앞뒤 공백 제거. 후보 키 중 값이 있는 첫 번째를 쓴다. */
+/** 시각 범위의 하이픈을 잠시 치환해 두는 표식 — 목록 기호와 구분하려고 쓴다 */
+const RANGE_HYPHEN = "";
+
+/**
+ * TourAPI 원문은 줄바꿈 없이 이어 붙어 오는 경우가 많다
+ * (`[시장]08:00~20:00[야시장]19:00~03:30※ 점포 별로…`). 화면은 줄바꿈을 살려 그리므로
+ * 여기서 나눈다 — 구분 기호가 있는 자리만 나누고 문장은 건드리지 않는다.
+ */
+function formatOperationValue(raw: string): string {
+  return (
+    raw
+      .replace(/<br\s*\/?>/gi, "\n")
+      // "09:30 - 17:30" 은 범위라 목록 기호로 보지 않는다
+      .replace(/(\d{1,2}:\d{2})\s-\s(?=\d{1,2}:\d{2})/g, `$1${RANGE_HYPHEN}`)
+      .replace(/(?<=\S)\s*\[/g, "\n[")
+      .replace(/(?<=\S)\s*※/g, "\n※")
+      // 영문 주의 표시. 괄호 안의 것은 문장 일부라 그대로 둔다 — "(* Subject to change)"
+      .replace(/(?<=[^(\s])\s*\*\s*(?=\S)/g, "\n* ")
+      .replace(/(?<=\S)\s*-\s(?=\S)/g, "\n- ")
+      .replaceAll(RANGE_HYPHEN, " - ")
+      // 줄 끝에 홀로 남는 구분자 — 줄바꿈이 이미 나눈다
+      .replace(/\s*\/\s*$/gm, "")
+      .replace(/[ \t]+$/gm, "")
+      .replace(/\n{2,}/g, "\n")
+      .trim()
+  );
+}
+
+/** 구분 기호마다 줄을 나누고 앞뒤 공백 제거. 후보 키 중 값이 있는 첫 번째를 쓴다. */
 function pickOperationValue(info: OperationInfo | undefined, keys: string[]): string | null {
   if (!info) return null;
   for (const key of keys) {
     const raw = info[key];
     if (raw && raw.trim() !== "") {
-      return raw.replace(/<br\s*\/?>/gi, "\n").trim();
+      return formatOperationValue(raw);
     }
   }
   return null;
