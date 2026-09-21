@@ -138,11 +138,12 @@ export function Docent({
         </div>
 
         <div className="screen pb-safe-cta">
-          {/* 열릴 때 포커스를 여기로 받는다 — 위 useEffect 참고 */}
+          {/* 열릴 때 포커스를 여기로 받는다 — 위 useEffect 참고.
+              전역 포커스 테두리(globals.css)가 레이어 밖이라 ! 로 덮는다 — PhotoSwipe 와 같다 */}
           <h1
             ref={titleRef}
             id="docent-name"
-            className="ds-title-1 mt-2 outline-none"
+            className="ds-title-1 mt-2 outline-none!"
             tabIndex={-1}
           >
             {name}
