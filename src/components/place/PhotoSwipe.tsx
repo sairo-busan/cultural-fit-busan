@@ -28,6 +28,9 @@ type PhotoSwipeProps = {
 export function PhotoSwipe({ images, name, sizes, className, children, hoverArrows = false }: PhotoSwipeProps) {
   const t = useTranslations("placeDetail");
   const scroller = useRef<HTMLDivElement>(null);
+  // 넘기기 시작하면 남은 사진을 미리 받는다 — 화면에 들어올 때 받으면 넘기는 동안 빈 칸이 보인다.
+  // 목록에는 카드가 100개 넘어서, 처음부터 다 받지 않고 손이 닿은 카드만 받는다
+  const [swiped, setSwiped] = useState(false);
 
   const hasMany = images.length > 1;
 
@@ -41,6 +44,7 @@ export function PhotoSwipe({ images, name, sizes, className, children, hoverArro
           role="region"
           aria-label={t("photos", { name })}
           className="flex size-full snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] focus-visible:outline-none! [&::-webkit-scrollbar]:hidden"
+          onScroll={() => setSwiped(true)}
           onKeyDown={(e) => {
             if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
             e.preventDefault();
@@ -56,7 +60,7 @@ export function PhotoSwipe({ images, name, sizes, className, children, hoverArro
                 fill
                 sizes={sizes}
                 className="object-cover"
-                loading={i === 0 ? "eager" : "lazy"}
+                loading={i === 0 || swiped ? "eager" : "lazy"}
                 fetchPriority={i === 0 ? "high" : "auto"}
               />
             </div>
