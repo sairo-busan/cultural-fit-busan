@@ -8,6 +8,7 @@
 - **로그인 없음** — localStorage로 프로필 저장, Play Store "수집 데이터 없음" 신고 유지
 - **MongoDB** — 로우데이터 배치 적재 + 사용자 이벤트는 실시간 호출 (하이브리드)
 - **포그라운드만** — 백그라운드 위치·FCM 사용 안 함 (Play Store 심사 리스크 제거)
+- **좌표는 서버로 보내지 않음** — 거리 계산은 클라이언트에서 (BE-FEAT-006)
 
 ## 기술스택
 
@@ -15,15 +16,15 @@
 |---|---|---|
 | 프론트엔드 | Next.js 16 (App Router) | React 19 · TypeScript |
 | 스타일링 | Tailwind CSS 4 | 모바일 퍼스트 |
-| 상태 관리 | Zustand + React Query | 프로필: localStorage · 장소: MongoDB |
+| 상태 관리 | localStorage 훅 (`src/hooks/`) | 프로필: localStorage · 장소: MongoDB · Zustand · React Query 미설치 |
 | DB | MongoDB | 로우데이터 배치 적재 · 에린 설계 |
 | 스토리지 | Cloudflare R2 (검토 중) | 10GB 무료 · egress 무료 · 우선 API URL 직접 사용 |
-| 지도 | Kakao Maps SDK | 부산 지역 최적화 |
-| 외부 API | TourAPI 4.0 (6종) | 배치 + 실시간 하이브리드 · API 키 확보 완료 |
+| 지도 | Kakao Maps SDK | 미설치 · 루트 지도(S33) 도입 시 |
+| 외부 API | TourAPI 4.0 (6종 — 기준 확인 대기) | 배치 + 실시간 하이브리드 · API 키 확보 완료 |
 | i18n | next-intl | EN/KO 2개 언어 |
 | 앱 빌드 | Capacitor | WebView 래핑 · Android Only |
 | 배포 | Vercel + Play Store | 웹: Vercel · 앱: Play Store 내부 테스트 |
-| 모니터링 | Vercel Analytics | Core Web Vitals |
+| 모니터링 | Vercel Analytics | 미설치 |
 
 ## 핵심 차별점
 
@@ -49,19 +50,6 @@
 | F4 | 문화 이해 가이드 및 실체험 요약 | 이용 방법 3단계 + 3줄 후기 |
 | F5 | 현장 실시간 안내 | 근접 알림(인앱) + 도착 안내 + 상황형 루트 |
 
-## 디자인 시스템
-
-에디토리얼 잡지 스타일 (stayfolio 참조)
-
-| 토큰 | 값 |
-|---|---|
-| bg | `#FFFFFF` |
-| text | `#111213` |
-| primary (잉크) | `#111213` — 브랜드색을 따로 두지 않고 잉크 농도로 위계를 만든다 |
-| danger / caution | `#A33A2A` / `#8A6320` |
-| 본문 | Noto Sans KR 300/200/400 |
-| 숫자·영문 강조 | Cormorant Garamond (serif) |
-
 ## 팀 구성 (4인)
 
 | 이름 | 역할 | 비고 |
@@ -71,9 +59,27 @@
 | 에린 | 추천 엔진 + 백엔드 + 검색 | DB 구조, API 연동, 엔진 로직 |
 | 태무 | 비즈니스 컨설턴트 | 도메인: 은행 · 서비스 방향 · 기능 우선순위 자문 |
 
+## 코드베이스 지도
+
+- `src/app/[locale]/` 화면 · `src/app/api/` Route Handler (health · place · recommend · tour · weather)
+- `src/lib/` 추천 엔진(순수 함수) + DB · 저장소 연동 · `src/hooks/` 브라우저 I/O
+- `scripts/` TourAPI 적재 · 시트 import · 도슨트 오디오 배치 (`npx tsx scripts/…`)
+
+## 명령어
+
+```bash
+npm run dev          # 개발 서버 :3000
+npm run build        # 웹 빌드
+npm run build:app    # Capacitor 앱용 정적 빌드
+npm run lint
+npx tsc --noEmit     # 타입 검사 (별도 스크립트 없음)
+```
+
+Node 22 고정(`engines`, `.nvmrc`). 환경변수는 `.env.example` 참고. 테스트 프레임워크 없음.
+
 ## 주요 참고 문서
 
-- `docs/cfp_16유형_체계.md` — CFP 16유형 체계 (진단·환산·화면 표시 규칙)
+- `docs/cfp_16유형_체계.md` — CFP 16유형 체계 (구 체계 · 현재는 CF8, 아래 전환 검토 참고)
 - `docs/추천_알고리즘_명세서_v2.md` — 추천 알고리즘 8단계 명세
 - `docs/화면_IA.md` — 화면 ID 정의 (피그마 IA **v4.0** 정본 + v2.0 재매핑 표)
 - 유저플로우 — 피그마 `Page 2_최종` 의 `UXF · 유저플로우`(`800:395`) · `UXF2 · 00 읽는 법`(`899:395`) · `00 전체 흐름도`(`907:395`) · FLOW별 프레임
@@ -85,87 +91,13 @@
 ## Notion
 
 NOTION_TOKEN (`.env` 참조)으로 접근
-- WBS v2 DB: `3b8ee5c6-3c52-813d-82f2-c9b2fd125cf9`
 - 공모전 문서 페이지: `3b2ee5c6-3c52-808a-b041-cdb81501e8a5`
 - 노션 하위 문서: 기능정의서(v3, 9시트 83요소) · 기능설명서 초안(v3) · 추천 알고리즘 명세서(v2.0) · 공모전 제출항목
-
-## 5주 스프린트 (8/10 ~ 9/21)
-
-### W0 · 기반 세팅 (8/10~16)
-
-- ✅ 공공데이터포털 인증키 발급
-- ✅ GitHub org `sairo-busan` 생성 + 레포 생성
-- 🔄 화면 IA 확정 (21개)
-- 🔄 Next.js 16 프로젝트 세팅 + Vercel 배포
-- ⬜ 디자인 토큰 + 레이아웃 (유나 Figma 기준)
-- ⬜ 장소 태깅 JSON 구조 설계 + 시드 데이터
-- ⬜ TourAPI 프록시 (Vercel API Route 1개)
-
-### W1 · MVP 코어 — 반드시 (8/17~23) ← 현재
-
-- ✅ S00 랜딩 화면
-- ✅ S01 취향 진단 3문항 (CF8 · FE-FEAT-003)
-- ✅ S02 취향 결과 카드 (3축 · 코드 숨김)
-- ⬜ S03 조건 입력 (동반·보행·이동수단·음식제약 — FE-FEAT-004)
-- ✅ CF8 프로필 생성 (클라이언트, localStorage `cf8_code`)
-- ⬜ 추천 엔진 클라이언트 (3단계: 적합도 → 상황 보정 → 리스크 필터)
-- ⬜ S10 추천 피드 화면
-- ⬜ S20 장소 상세
-- ⬜ 장소 태깅 JSON 60건 (권역당 10건)
-
-### W2 · 차별화 — 여유 되면 (8/24~30)
-
-> 화면ID는 **피그마 IA v4.0 기준**. 괄호 안은 구 v2.0 번호 — `docs/화면_IA.md` 재매핑 표 참고.
-
-- ⬜ S21 방문 전 체크 (구 S30 · 문화 충돌 예측)
-- ⬜ S22 문화 가이드 상세 (구 S21)
-- ⬜ S32 오늘의 루트 (구 S40 · 포그라운드 watchPosition)
-- ⬜ S33 루트 지도 모드 (구 S40b · Kakao Maps)
-- ⬜ S36 도착 안내 (구 S44 · 50m 진입 시 이용 방법 3단계 — 핵심 차별점)
-- ⬜ S50 전체 메뉴 (구 S05)
-- ⬜ i18n (next-intl) — ⚠️ 피그마 S51은 **4개 언어**(한/영/일/중), 아래 표의 EN/KO와 불일치
-- ⬜ 문화 가이드 콘텐츠 + 실체험 3줄 작성
-- ~~S42 근접 알림 인앱 UI~~ → **P02로 강등, Phase 2** (피그마 v4.0) · 스코프 아웃 후보
-
-### W3 · 완성도 + 앱 빌드 (8/31~9/7)
-
-- ⬜ S90~S94 예외 화면 5종 (로딩 · 결과 없음 · 출발지 필요 · 오프라인 · 영업 종료)
-- ⬜ S52 서비스 소개 · 활용 API (구 S99)
-- ⬜ Capacitor 빌드 + Android APK 생성
-- ⬜ Play Store 내부 테스트 등록
-- ⬜ 태깅 100건 확장
-- ⬜ 추천 정밀도 튜닝
-- ⬜ UI/UX 고도화
-
-### W4 · 제출 (9/8~9/21)
-
-- ⬜ QA + 버그 수정 + 안정화
-- ⬜ 화면 캡처 (대표 1장 + 상세 5장)
-- ⬜ 기능 흐름도 5개 도식화
-- ⬜ 기능설명서 공식 양식 이관
-- ⬜ 제출 자료 준비
-- ⬜ 최종 제출 (9/17~18 목표)
-- ⬜ 서버·도메인 유지 확인
-
-### 발전계획 (제출 후)
-
-- Virtual Walk 데모
-- 리뷰 감정 요약
-- 전국 확장 구조 설계
-- iOS 대응 (사업화 시)
-- 백그라운드 위치 + 네이티브 전환
-
-### 심사 기준 대응
-
-- **서비스 기획력 (30점)** — 3문항 2지선다 진단(CF8) · 3단계 추천 로직 · 문화 충돌 예측(핵심 차별점) · S36 도착 안내
-- **서비스 완성도 (30점)** — 추천 피드·장소 상세 · 예외 처리 · 모바일 퍼스트 UI · QA
-- **데이터 활용 (20점)** — TourAPI 5종 연동 · 부산 100건+ 태깅 · 포그라운드 위치 · 날씨 보정 · API 출처 명시
-- **서비스 발전성 (20점)** — Virtual Walk · 리뷰 감정 요약 · 전국 확장 구조 설계
-- **지역특화 가점 (+2점)** — 부산 6개 권역 콘텐츠 · 권역별 장소 태깅 · 부산 특화 문화 가이드
 
 ## 코드 규칙
 
 - 커밋 메시지: `feat:`, `fix:`, `chore:`, `docs:` 접두사 (한국어 본문)
+- `trip_setup_mode` 는 원시 문자열로 저장한다 — `useLocalStorage`(JSON)로 다루면 비교가 에러 없이 실패 (`src/lib/storage.ts`)
 
 <!-- BEGIN:nextjs-agent-rules -->
 
