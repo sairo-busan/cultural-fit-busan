@@ -8,6 +8,7 @@
 - **로그인 없음** — localStorage로 프로필 저장, Play Store "수집 데이터 없음" 신고 유지
 - **MongoDB** — 로우데이터 배치 적재 + 사용자 이벤트는 실시간 호출 (하이브리드)
 - **포그라운드만** — 백그라운드 위치·FCM 사용 안 함 (Play Store 심사 리스크 제거)
+- **좌표는 서버로 보내지 않음** — 거리 계산은 클라이언트에서 (BE-FEAT-006)
 
 ## 기술스택
 
@@ -71,6 +72,24 @@
 | 에린 | 추천 엔진 + 백엔드 + 검색 | DB 구조, API 연동, 엔진 로직 |
 | 태무 | 비즈니스 컨설턴트 | 도메인: 은행 · 서비스 방향 · 기능 우선순위 자문 |
 
+## 코드베이스 지도
+
+- `src/app/[locale]/` 화면 · `src/app/api/` Route Handler (health · place · recommend · tour · weather)
+- `src/lib/` 추천 엔진(순수 함수) + DB · 저장소 연동 · `src/hooks/` 브라우저 I/O
+- `scripts/` TourAPI 적재 · 시트 import · 도슨트 오디오 배치 (`npx tsx scripts/…`)
+
+## 명령어
+
+```bash
+npm run dev          # 개발 서버 :3000
+npm run build        # 웹 빌드
+npm run build:app    # Capacitor 앱용 정적 빌드
+npm run lint
+npx tsc --noEmit     # 타입 검사 (별도 스크립트 없음)
+```
+
+Node 22 고정(`engines`, `.nvmrc`). 환경변수는 `.env.example` 참고. 테스트 프레임워크 없음.
+
 ## 주요 참고 문서
 
 - `docs/cfp_16유형_체계.md` — CFP 16유형 체계 (구 체계 · 현재는 CF8, 아래 전환 검토 참고)
@@ -91,6 +110,7 @@ NOTION_TOKEN (`.env` 참조)으로 접근
 ## 코드 규칙
 
 - 커밋 메시지: `feat:`, `fix:`, `chore:`, `docs:` 접두사 (한국어 본문)
+- `trip_setup_mode` 는 원시 문자열로 저장한다 — `useLocalStorage`(JSON)로 다루면 비교가 에러 없이 실패 (`src/lib/storage.ts`)
 
 <!-- BEGIN:nextjs-agent-rules -->
 
