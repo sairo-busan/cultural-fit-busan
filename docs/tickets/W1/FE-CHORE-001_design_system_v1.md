@@ -95,7 +95,7 @@
 
 - 화면별 순차 적용: S00 → S10(피드 + PlaceCard) → S20(장소 상세) → 공용 컴포넌트
 - `globals.css` 구버전 토큰(`accent`·`sub-accent`·`muted`·`sub-text`·`border`·`surface`) 정리 — DS 토큰으로 흡수 후 제거
-- `CLAUDE.md` 디자인 시스템 표를 DS v1 기준으로 갱신 (딥그린·클레이 제거 여부 포함)
+- ~~`CLAUDE.md` 디자인 시스템 표를 DS v1 기준으로 갱신~~ — FE-CHORE-004에서 표 삭제. 토큰 정본은 `globals.css`
 
 ### 제외
 
@@ -114,7 +114,7 @@
 3. S10 피드 + `PlaceCard` + `LiveStatusBar` + `BottomTabBar`
 4. S20 장소 상세 (가장 큼 — 47건)
 5. 공용 컴포넌트 (`LocaleToggle`·`LocaleDropdown`·`Toast`·`QuizActions`)
-6. `CLAUDE.md` 갱신
+6. ~~`CLAUDE.md` 갱신~~ — FE-CHORE-004로 이관
 
 ---
 
