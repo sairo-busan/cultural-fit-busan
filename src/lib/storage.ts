@@ -22,6 +22,8 @@ export const STORAGE_KEYS = {
   hardFilter: "cfb-hard-filter",
   /** 저장한 장소 */
   saved: "cfb_saved",
+  /** 링크로 저장한 곳(lab/link-save 실험) */
+  linkSaves: "cfb_link_saves",
 } as const;
 
 /**
@@ -131,6 +133,80 @@ export function toggleSaved(id: string, now = new Date()): SavedPlace[] {
 
   localStorage.setItem(STORAGE_KEYS.saved, JSON.stringify(next));
   return next;
+}
+
+// === 링크로 저장한 곳 ===
+
+/**
+ * 링크 하나에 장소 여럿. `places` 가 비면 아직 어디인지 정하지 않은 링크다.
+ * `placeId` 는 사이로 카탈로그 contentId, `kakaoId` 는 카카오 장소 id. 둘 다 없으면 이름만 적어 둔 곳이다.
+ * 카탈로그 밖의 장소도 들어오므로 `cfb_saved` 와 섞지 않는다.
+ */
+export type LinkSave = {
+  url: string;
+  provider: string;
+  title: string | null;
+  /** 사용자가 붙인 이름. 없으면 화면은 `title` 을 쓴다 */
+  name?: string;
+  savedAt: string;
+  places: { label: string; placeId: string | null; kakaoId?: string | null }[];
+};
+
+function isLinkSave(v: unknown): v is LinkSave {
+  return (
+    typeof v === "object" && v !== null &&
+    typeof (v as LinkSave).url === "string" &&
+    typeof (v as LinkSave).savedAt === "string" &&
+    Array.isArray((v as LinkSave).places)
+  );
+}
+
+/** 최근 저장순 */
+export function readLinkSaves(): LinkSave[] {
+  if (typeof window === "undefined") return [];
+
+  try {
+    const parsed: unknown = JSON.parse(localStorage.getItem(STORAGE_KEYS.linkSaves) ?? "[]");
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(isLinkSave)
+      .sort((a, b) => b.savedAt.localeCompare(a.savedAt));
+  } catch {
+    return [];
+  }
+}
+
+/** 같은 링크면 덮어쓴다. 장소를 고쳐 다시 저장해도 붙여 둔 이름은 남긴다 */
+export function upsertLinkSave(save: LinkSave): LinkSave[] {
+  const current = readLinkSaves();
+  const name = save.name ?? current.find((s) => s.url === save.url)?.name;
+  const next = [{ ...save, ...(name && { name }) }, ...current.filter((s) => s.url !== save.url)];
+  localStorage.setItem(STORAGE_KEYS.linkSaves, JSON.stringify(next));
+  return next;
+}
+
+export const LINK_NAME_MAX = 40;
+
+/** 비우면 이름을 지운다 — 화면은 다시 영상 제목을 쓴다 */
+export function renameLinkSave(url: string, name: string): void {
+  const trimmed = name.trim().slice(0, LINK_NAME_MAX);
+  const next = readLinkSaves().map((s) =>
+    s.url === url ? { ...s, name: trimmed || undefined } : s,
+  );
+  localStorage.setItem(STORAGE_KEYS.linkSaves, JSON.stringify(next));
+}
+
+/** 장소 하나만 뺀다. 마지막 장소를 빼도 링크는 남는다(장소 미확정) */
+export function removeLinkPlace(url: string, index: number): void {
+  const next = readLinkSaves().map((s) =>
+    s.url === url ? { ...s, places: s.places.filter((_, i) => i !== index) } : s,
+  );
+  localStorage.setItem(STORAGE_KEYS.linkSaves, JSON.stringify(next));
+}
+
+export function deleteLinkSave(url: string): void {
+  const next = readLinkSaves().filter((s) => s.url !== url);
+  localStorage.setItem(STORAGE_KEYS.linkSaves, JSON.stringify(next));
 }
 
 /**
