@@ -52,6 +52,7 @@ type ResolveResult = {
  * 허용 호스트 밖으로는 요청을 보내지 않는다 — 단축 링크의 중간 hop 도 같다.
  */
 export async function GET(request: NextRequest) {
+  if (process.env.LINK_LAB_ENABLED !== "true") return new NextResponse(null, { status: 404 });
   const raw = request.nextUrl.searchParams.get("url")?.trim();
 
   let input: URL;

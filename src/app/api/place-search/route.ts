@@ -7,6 +7,7 @@ import { searchKakao } from "@/lib/kakaoLocal";
  * `id` 를 주면 그 카카오 장소 하나만 돌려준다 — 카카오에 id 조회가 없어, 저장해 둔 이름으로 다시 찾는다.
  */
 export async function GET(request: NextRequest) {
+  if (process.env.LINK_LAB_ENABLED !== "true") return new NextResponse(null, { status: 404 });
   const q = request.nextUrl.searchParams.get("q")?.trim();
   if (!q || q.length > 50) {
     return NextResponse.json({ error: "q 는 1~50자여야 합니다" }, { status: 400 });
