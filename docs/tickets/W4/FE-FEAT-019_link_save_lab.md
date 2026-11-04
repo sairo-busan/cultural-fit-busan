@@ -10,11 +10,11 @@
 | Type | FEAT |
 | Severity | Medium |
 | Layer | Screen · API Route |
-| Status | 구현 · YouTube 표본 실측 완료 — 커밋 대기 |
+| Status | PR #66 에린 리뷰 반영 중 |
 | Screen | `/[locale]/lab/link-save` (탭바 · 메뉴 진입점 없음) |
 | Branch | `feat/link-save-lab` (`origin/main` 기준) |
 | Depends | DOCS-002 (조사) · `docs/decisions/2026-10-29_링크저장_지도API_선택.md` |
-| Env | `YOUTUBE_API_KEY` · `KAKAO_REST_API_KEY` (서버) · `NEXT_PUBLIC_KAKAO_JS_KEY` (지도, 도메인 제한) |
+| Env | `YOUTUBE_API_KEY` · `KAKAO_REST_API_KEY` (서버) · `NEXT_PUBLIC_KAKAO_JS_KEY` (지도, 도메인 제한) · `LINK_LAB_ENABLED` (실험 스위치) |
 
 ---
 
@@ -73,6 +73,7 @@ DOCS-002 계획과 목업에 없던 결정. 근거는 각 행의 출처.
 
 | 항목 | 결정 | 근거 |
 |---|---|---|
+| 실험 스위치 | `LINK_LAB_ENABLED=true` 인 환경에서만 두 API · lab 화면을 연다. Vercel 은 Preview · Development 만. 미리보기 주소는 공개 상태 | PR #66 에린 리뷰 — 호출 제한 없는 공개 API |
 | 장소 확정 API | TourAPI 대신 **카카오 로컬 키워드 검색**. TourAPI 는 카탈로그 연결에만 | 실측: `youtu.be/izp9Vn3ZNGM` 설명란 5곳 중 TourAPI 2곳 · 카카오 4곳. 결정 기록 `docs/decisions/2026-10-29_링크저장_지도API_선택.md` |
 | 지도 열기 | 외국인 대상이라 기존 `googleMapsUrl()` 유지, 장소 확인 링크는 카카오맵 장소 페이지 | 결정 기록 |
 | TourAPI 지역 필터 | `areaCode=6` 대신 `lDongRegnCd=26`(`BUSAN_REGION_CODE`) | `scripts/ingest-places.ts` — v2 에 `areaCode` 없음 |

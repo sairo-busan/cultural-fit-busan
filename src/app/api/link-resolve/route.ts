@@ -4,6 +4,7 @@ import {
   googlePlaceName,
   isAllowedHost,
   ogTitle,
+  readLimited,
   SHORT_HOSTS,
   titleClues,
   youtubeClues,
@@ -22,6 +23,7 @@ const RESIDENTIAL = /빌라|주택|아파트|오피스텔|주거/;
 /** 카카오에 한꺼번에 보내는 검색 수 */
 const BATCH = 10;
 const TIMEOUT_MS = 5000;
+const MAX_BODY_BYTES = 1024 * 1024;
 
 type Candidate = KakaoPlace & Pick<LinkClue, "evidence" | "kind">;
 
@@ -68,7 +70,7 @@ export async function GET(request: NextRequest) {
   const result: ResolveResult = { provider: "other", url: input.href, title: null, candidates: [] };
 
   try {
-    const { url, html } = await follow(input);
+    const { url, html, blocked } = await follow(input);
     result.provider = detectProvider(url);
     // 저장은 url 로 중복을 막는다. youtu.be · shorts · &feature= 처럼 모양이 달라도 같은 영상은 한 주소로
     const videoId = result.provider === "youtube" ? youtubeVideoId(url) : null;
@@ -77,14 +79,15 @@ export async function GET(request: NextRequest) {
     const { title, thumbnail, clues, reason } = await cluesFor(result.provider, url, html);
     result.title = title;
     result.thumbnail = thumbnail;
-    result.reason = reason;
+    result.reason = blocked ? "허용 밖 호스트로 이동해 중단" : reason;
     result.candidates = await toCandidates(clues);
-    if (!process.env.KAKAO_REST_API_KEY) result.reason ??= "KAKAO_REST_API_KEY 없음";
+    if (!process.env.KAKAO_REST_API_KEY) result.reason ??= "서버 설정 없음";
     if (!result.candidates.length && !result.reason) {
       result.reason = clues.length ? "카카오에서 맞는 곳 없음" : "단서 없음";
     }
   } catch (error) {
-    result.reason = (error as Error).message;
+    console.error("[link-resolve]", error);
+    result.reason = "링크 처리 실패";
   }
 
   return NextResponse.json(result);
@@ -94,11 +97,11 @@ export async function GET(request: NextRequest) {
  * 단축 링크를 따라간다. 지도 장소 페이지는 og:title 을 읽어야 하므로 마지막 본문도 돌려준다.
  * 허용 호스트가 아니면 따라가지도, 본문을 받지도 않는다.
  */
-async function follow(start: URL): Promise<{ url: URL; html: string | null }> {
+async function follow(start: URL): Promise<{ url: URL; html: string | null; blocked?: boolean }> {
   let url = start;
 
   for (let hop = 0; hop <= MAX_HOPS; hop++) {
-    if (!isAllowedHost(url.hostname) || url.protocol !== "https:") return { url, html: null };
+    if (!isAllowedHost(url.hostname) || url.protocol !== "https:") return { url, html: null, blocked: hop > 0 };
 
     const isShort = SHORT_HOSTS.includes(url.hostname);
     const needsBody = !isShort && (detectProvider(url) === "kakaomap" || detectProvider(url) === "navermap");
@@ -116,7 +119,7 @@ async function follow(start: URL): Promise<{ url: URL; html: string | null }> {
       url = new URL(location, url);
       continue;
     }
-    return { url, html: needsBody && res.ok ? await res.text() : null };
+    return { url, html: needsBody && res.ok ? await readLimited(res, MAX_BODY_BYTES) : null };
   }
 
   throw new Error("리다이렉트가 너무 깁니다");
@@ -131,14 +134,17 @@ async function cluesFor(
     case "youtube": {
       const key = process.env.YOUTUBE_API_KEY;
       const id = youtubeVideoId(url);
-      if (!key) return { title: null, clues: [], reason: "YOUTUBE_API_KEY 없음" };
+      if (!key) return { title: null, clues: [], reason: "서버 설정 없음" };
       if (!id) return { title: null, clues: [], reason: "영상 ID 없음" };
 
       const res = await fetch(
         `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${id}&key=${key}`,
         { cache: "no-store", signal: AbortSignal.timeout(TIMEOUT_MS) },
       );
-      if (!res.ok) return { title: null, clues: [], reason: `YouTube API ${res.status}` };
+      if (!res.ok) {
+        console.error("[link-resolve] YouTube API", res.status);
+        return { title: null, clues: [], reason: "영상 정보를 받지 못함" };
+      }
 
       const snippet = (await res.json()).items?.[0]?.snippet;
       if (!snippet) return { title: null, clues: [], reason: "영상 없음" };
@@ -179,10 +185,11 @@ async function toCandidates(clues: LinkClue[]): Promise<Candidate[]> {
     hits.push(...(await Promise.all(ordered.slice(i, i + BATCH).map(searchClue))));
   }
 
-  const seen = new Set<string>();
-  return hits
-    .filter((h): h is Candidate => h !== null && !seen.has(h.kakaoId) && !!seen.add(h.kakaoId))
-    .slice(0, MAX_CANDIDATES);
+  const byId = new Map<string, Candidate>();
+  for (const hit of hits) {
+    if (hit && !byId.has(hit.kakaoId)) byId.set(hit.kakaoId, hit);
+  }
+  return [...byId.values()].slice(0, MAX_CANDIDATES);
 }
 
 /** 단서 하나 → 카카오 검색, 부산 주소 · 주거시설 아닌 첫 결과 */

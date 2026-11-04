@@ -141,6 +141,7 @@ export function toggleSaved(id: string, now = new Date()): SavedPlace[] {
  * 링크 하나에 장소 여럿. `places` 가 비면 아직 어디인지 정하지 않은 링크다.
  * `placeId` 는 사이로 카탈로그 contentId, `kakaoId` 는 카카오 장소 id. 둘 다 없으면 이름만 적어 둔 곳이다.
  * 카탈로그 밖의 장소도 들어오므로 `cfb_saved` 와 섞지 않는다.
+ * `label` · `kakaoId` 는 카카오 응답 값이다(실험 한정, `kakaoLocal.ts` 참고).
  */
 export type LinkSave = {
   url: string;

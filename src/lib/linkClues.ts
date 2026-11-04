@@ -211,3 +211,21 @@ function dedupe(clues: LinkClue[]): LinkClue[] {
     return true;
   });
 }
+
+/** 본문을 앞에서 `maxBytes` 까지만 읽고 나머지는 받지 않는다 */
+export async function readLimited(res: Response, maxBytes: number): Promise<string> {
+  const reader = res.body?.getReader();
+  if (!reader) return "";
+
+  const decoder = new TextDecoder();
+  let text = "";
+  let size = 0;
+  while (size < maxBytes) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    text += decoder.decode(value.subarray(0, maxBytes - size), { stream: true });
+    size += value.length;
+  }
+  await reader.cancel();
+  return text;
+}

@@ -23,9 +23,7 @@ export async function GET(request: NextRequest) {
       ? NextResponse.json(place)
       : NextResponse.json({ error: "장소를 찾을 수 없습니다" }, { status: 404 });
   } catch (error) {
-    return NextResponse.json(
-      { error: "장소 검색 실패", detail: (error as Error).message },
-      { status: 502 },
-    );
+    console.error("[place-search]", error);
+    return NextResponse.json({ error: "장소 검색 실패" }, { status: 502 });
   }
 }

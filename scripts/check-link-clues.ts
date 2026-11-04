@@ -9,6 +9,7 @@ import {
   googlePlaceName,
   isAllowedHost,
   ogTitle,
+  readLimited,
   titleClues,
   youtubeClues,
   youtubeVideoId,
@@ -103,4 +104,19 @@ assert.deepEqual(
 assert.deepEqual(titleClues("부산 힐링 여행 🌊ㅣ돼지국밥, 연화리해녀촌").map((c) => c.name), ["돼지국밥", "연화리해녀촌"]);
 assert.deepEqual(titleClues("부산 여행 브이로그"), []);
 
-console.log("ok");
+async function checkReadLimited() {
+  assert.equal(await readLimited(new Response("가나다"), 1024), "가나다");
+  assert.equal(await readLimited(new Response("a".repeat(5000)), 1000), "a".repeat(1000));
+
+  let pulled = 0;
+  const endless = new ReadableStream<Uint8Array>({
+    pull(controller) {
+      pulled++;
+      controller.enqueue(new Uint8Array(1024).fill(97));
+    },
+  });
+  assert.equal((await readLimited(new Response(endless), 2048)).length, 2048);
+  assert.ok(pulled < 10, "상한을 넘으면 더 받지 않는다");
+}
+
+checkReadLimited().then(() => console.log("ok"));
