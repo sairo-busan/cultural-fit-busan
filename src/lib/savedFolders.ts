@@ -110,9 +110,10 @@ export function visibleRows(rows: SavedRow[], district: string, sort: FolderSort
 export type FolderPin = { x: number; y: number; on: boolean; label: string; n: number; plain: true };
 
 /** 번호는 지금 보이는 목록의 순서. 좌표가 없는 곳은 핀만 빠지고 번호는 행과 같게 둔다 */
-export function folderPins(rows: SavedRow[]): FolderPin[] {
+export function folderPins(rows: SavedRow[], en = false): FolderPin[] {
   return rows.flatMap((r, i) => {
-    const { mapX: x, mapY: y, title: label } = r.place;
+    const { mapX: x, mapY: y, title, titleEn } = r.place;
+    const label = en ? titleEn ?? title : title;
     return x === null || y === null ? [] : [{ x, y, on: true, label, n: i + 1, plain: true as const }];
   });
 }

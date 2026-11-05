@@ -3,11 +3,12 @@
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Bookmark, ChevronRight, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { EmptyState } from "@/components/common/EmptyState";
 import { useToast } from "@/contexts/ToastContext";
 import { Link, useRouter } from "@/i18n/navigation";
-import { folderRows, type FolderSummary } from "@/lib/savedFolders";
+import { folderPins, folderRows, type FolderSummary } from "@/lib/savedFolders";
+import { KakaoMap } from "../link-save/KakaoMap";
 import { FolderArt } from "./FolderArt";
 import { FolderHeader } from "./FolderHeader";
 import { FolderNameSheet } from "./FolderSheets";
@@ -18,6 +19,7 @@ import { folderActions, useFolderSource } from "./useSavedFolders";
 
 const BASE = "/lab/saved-folders";
 const HOME_FOLDERS = 2;
+const NOOP = () => {};
 
 function Shell({ children }: { children: React.ReactNode }) {
   return <div className="mx-auto flex min-h-dvh w-full max-w-screen-sm flex-col">{children}</div>;
@@ -210,6 +212,7 @@ type DetailOverlay = "menu" | "rename" | "delete" | null;
 
 export function FolderDetail() {
   const t = useTranslations("savedFolders");
+  const en = useLocale() === "en";
   const router = useRouter();
   const toast = useToast();
   const id = useSearchParams().get("id");
@@ -229,6 +232,23 @@ export function FolderDetail() {
   const filter = usePlaceFilter(rows);
   const [mode, setMode] = useState<"folder" | "pick" | null>(null);
   const [overlay, setOverlay] = useState<DetailOverlay>(null);
+  const [focusId, setFocusId] = useState<string | null>(null);
+
+  const pins = useMemo(() => folderPins(filter.visible, en), [filter.visible, en]);
+  const focusIndex = filter.visible.findIndex((r) => r.place.contentId === focusId);
+  const activeRow = focusIndex >= 0 ? focusIndex : 0;
+  const activeId = filter.visible[activeRow]?.place.contentId ?? null;
+  const selectedPin = pins.findIndex((p) => p.n === activeRow + 1);
+
+  function selectPin(index: number) {
+    const contentId = filter.visible[pins[index].n - 1].place.contentId;
+    setFocusId(contentId);
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document.getElementById(`place-${contentId}`)?.scrollIntoView({
+      behavior: reduced ? "auto" : "smooth",
+      block: "start",
+    });
+  }
 
   const back = () => router.push(BASE);
 
@@ -317,6 +337,20 @@ export function FolderDetail() {
           </div>
         ) : (
           <>
+            {pins.length > 0 && (
+              <div className="sticky top-0 z-10 -mx-1 bg-page px-1 pb-3">
+                <div className="h-48 overflow-hidden rounded-2xl">
+                  <KakaoMap
+                    key={filter.district}
+                    pins={pins}
+                    selected={selectedPin}
+                    onSelect={selectPin}
+                    onMapClick={NOOP}
+                    coverBottom={0}
+                  />
+                </div>
+              </div>
+            )}
             <section className="mt-5">
               <div className="mb-2 flex min-h-11 items-center justify-between gap-2">
                 <h2 className="ds-title-1">{t("inFolder")}</h2>
@@ -328,6 +362,8 @@ export function FolderDetail() {
                 filter={filter}
                 hasFit={source.hasFit}
                 timeKey="added"
+                numbered
+                focusId={activeId}
               />
             </section>
           </>
