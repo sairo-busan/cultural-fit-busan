@@ -24,6 +24,8 @@ export const STORAGE_KEYS = {
   saved: "cfb_saved",
   /** 링크로 저장한 곳(lab/link-save 실험) */
   linkSaves: "cfb_link_saves",
+  /** 저장한 장소를 나눈 폴더(lab/saved-folders 실험) */
+  savedFolders: "cfb_saved_folders",
 } as const;
 
 /**
@@ -133,6 +135,117 @@ export function toggleSaved(id: string, now = new Date()): SavedPlace[] {
 
   localStorage.setItem(STORAGE_KEYS.saved, JSON.stringify(next));
   return next;
+}
+
+// === 저장 폴더 ===
+
+/** `places[].id` 는 카탈로그 contentId. 저장을 해제해도 남으므로 다시 저장하면 폴더에 돌아온다 */
+export type SavedFolder = {
+  id: string;
+  name: string;
+  createdAt: string;
+  places: { id: string; addedAt: string }[];
+};
+
+export const FOLDER_NAME_MAX = 20;
+
+export type FolderNameError = "empty" | "duplicate";
+
+function isFolderPlace(v: unknown): v is SavedFolder["places"][number] {
+  return (
+    typeof v === "object" && v !== null &&
+    typeof (v as SavedFolder["places"][number]).id === "string" &&
+    typeof (v as SavedFolder["places"][number]).addedAt === "string"
+  );
+}
+
+function isSavedFolder(v: unknown): v is SavedFolder {
+  return (
+    typeof v === "object" && v !== null &&
+    typeof (v as SavedFolder).id === "string" &&
+    typeof (v as SavedFolder).name === "string" &&
+    typeof (v as SavedFolder).createdAt === "string" &&
+    Array.isArray((v as SavedFolder).places)
+  );
+}
+
+export function readSavedFolders(): SavedFolder[] {
+  if (typeof window === "undefined") return [];
+
+  try {
+    const parsed: unknown = JSON.parse(localStorage.getItem(STORAGE_KEYS.savedFolders) ?? "[]");
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(isSavedFolder)
+      .map((f) => ({ ...f, places: f.places.filter(isFolderPlace) }));
+  } catch {
+    return [];
+  }
+}
+
+function writeSavedFolders(folders: SavedFolder[]): void {
+  localStorage.setItem(STORAGE_KEYS.savedFolders, JSON.stringify(folders));
+}
+
+const cleanFolderName = (name: string) => name.trim().slice(0, FOLDER_NAME_MAX);
+
+/** `exceptId` 는 이름을 바꾸는 폴더 자신 — 같은 이름으로 저장해도 중복이 아니다 */
+export function folderNameError(name: string, exceptId?: string): FolderNameError | null {
+  const clean = cleanFolderName(name);
+  if (!clean) return "empty";
+
+  const key = clean.toLowerCase();
+  return readSavedFolders().some((f) => f.id !== exceptId && f.name.toLowerCase() === key)
+    ? "duplicate"
+    : null;
+}
+
+/** 이름이 맞지 않으면 만들지 않고 null 을 돌려준다 */
+export function createSavedFolder(name: string, now = new Date()): SavedFolder | null {
+  if (folderNameError(name)) return null;
+
+  const folder: SavedFolder = {
+    id: `${now.getTime().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
+    name: cleanFolderName(name),
+    createdAt: now.toISOString(),
+    places: [],
+  };
+  writeSavedFolders([...readSavedFolders(), folder]);
+  return folder;
+}
+
+export function renameSavedFolder(id: string, name: string): boolean {
+  if (folderNameError(name, id)) return false;
+
+  writeSavedFolders(
+    readSavedFolders().map((f) => (f.id === id ? { ...f, name: cleanFolderName(name) } : f)),
+  );
+  return true;
+}
+
+export function deleteSavedFolder(id: string): void {
+  writeSavedFolders(readSavedFolders().filter((f) => f.id !== id));
+}
+
+/** 이미 든 곳은 건너뛰어 처음 넣은 시각을 유지한다 */
+export function addPlacesToFolder(id: string, placeIds: string[], now = new Date()): void {
+  const addedAt = now.toISOString();
+
+  writeSavedFolders(
+    readSavedFolders().map((f) => {
+      if (f.id !== id) return f;
+      const fresh = [...new Set(placeIds)].filter((p) => !f.places.some((x) => x.id === p));
+      return { ...f, places: [...f.places, ...fresh.map((p) => ({ id: p, addedAt }))] };
+    }),
+  );
+}
+
+export function removePlacesFromFolder(id: string, placeIds: string[]): void {
+  writeSavedFolders(
+    readSavedFolders().map((f) =>
+      f.id === id ? { ...f, places: f.places.filter((x) => !placeIds.includes(x.id)) } : f,
+    ),
+  );
 }
 
 // === 링크로 저장한 곳 ===
