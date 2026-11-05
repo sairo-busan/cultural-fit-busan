@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Bookmark, ChevronRight, Plus } from "lucide-react";
+import { Bookmark, ChevronRight, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { EmptyState } from "@/components/common/EmptyState";
 import { useToast } from "@/contexts/ToastContext";
@@ -11,8 +11,10 @@ import { folderRows, type FolderSummary } from "@/lib/savedFolders";
 import { FolderArt } from "./FolderArt";
 import { FolderHeader } from "./FolderHeader";
 import { FolderNameSheet } from "./FolderSheets";
+import { ManageView } from "./ManageView";
 import { PlaceList, usePlaceFilter } from "./PlaceList";
-import { useFolderSource } from "./useSavedFolders";
+import { ConfirmSheet, Sheet } from "./Sheet";
+import { folderActions, useFolderSource } from "./useSavedFolders";
 
 const BASE = "/lab/saved-folders";
 const HOME_FOLDERS = 2;
@@ -80,8 +82,21 @@ export function SavedHome() {
   const router = useRouter();
   const source = useFolderSource();
   const filter = usePlaceFilter(source.rows);
+  const [manage, setManage] = useState(false);
   const [naming, setNaming] = useState(false);
   const created = useFolderCreated();
+
+  if (manage) {
+    return (
+      <ManageView
+        mode="saved"
+        rows={source.rows}
+        summaries={source.summaries}
+        hasFit={source.hasFit}
+        onDone={() => setManage(false)}
+      />
+    );
+  }
 
   return (
     <Shell>
@@ -130,6 +145,9 @@ export function SavedHome() {
               <section className="mt-8">
                 <div className="mb-2 flex min-h-11 items-center justify-between gap-2">
                   <h2 className="ds-title-1">{t("allPlaces")}</h2>
+                  <button type="button" onClick={() => setManage(true)} className="ds-body-2 min-h-11 px-1">
+                    {t("manage")}
+                  </button>
                 </div>
                 <PlaceList filter={filter} hasFit={source.hasFit} timeKey="saved" />
               </section>
@@ -188,9 +206,12 @@ export function AllFolders() {
   );
 }
 
+type DetailOverlay = "menu" | "rename" | "delete" | null;
+
 export function FolderDetail() {
   const t = useTranslations("savedFolders");
   const router = useRouter();
+  const toast = useToast();
   const id = useSearchParams().get("id");
   const source = useFolderSource();
   const { catalog, places, options } = source;
@@ -200,7 +221,14 @@ export function FolderDetail() {
     () => (folder && catalog ? folderRows(folder, places, catalog, options) : []),
     [folder, catalog, places, options],
   );
+  const addable = useMemo(() => {
+    const inside = new Set(rows.map((r) => r.place.contentId));
+    return source.rows.filter((r) => !inside.has(r.place.contentId));
+  }, [rows, source.rows]);
+
   const filter = usePlaceFilter(rows);
+  const [mode, setMode] = useState<"folder" | "pick" | null>(null);
+  const [overlay, setOverlay] = useState<DetailOverlay>(null);
 
   const back = () => router.push(BASE);
 
@@ -236,9 +264,34 @@ export function FolderDetail() {
     );
   }
 
+  if (mode) {
+    return (
+      <ManageView
+        mode={mode}
+        rows={mode === "pick" ? addable : rows}
+        folder={folder}
+        summaries={source.summaries}
+        hasFit={source.hasFit}
+        onDone={() => setMode(null)}
+      />
+    );
+  }
+
   return (
     <Shell>
-      <FolderHeader onBack={back} />
+      <FolderHeader
+        onBack={back}
+        right={
+          <button
+            type="button"
+            onClick={() => setOverlay("menu")}
+            aria-label={t("folderMenu")}
+            className="relative grid size-8 place-items-center before:absolute before:-inset-1.5 before:content-['']"
+          >
+            <MoreHorizontal size={20} strokeWidth={1.5} />
+          </button>
+        }
+      />
 
       <main className="screen flex-1 pb-10">
         <div className="mt-2 mb-6 flex items-center gap-5">
@@ -254,12 +307,22 @@ export function FolderDetail() {
             <div className="mb-3"><FolderArt empty open /></div>
             <h2 className="ds-title-1">{t("emptyFolder.title")}</h2>
             <p className="ds-body-2 max-w-[30ch] text-sub">{t("emptyFolder.body")}</p>
+            <button
+              type="button"
+              onClick={() => setMode("pick")}
+              className="ds-title-2 mt-3 min-h-12 min-w-40 rounded-xl bg-primary px-4 text-white active:bg-primary-press"
+            >
+              {t("emptyFolder.action")}
+            </button>
           </div>
         ) : (
           <>
             <section className="mt-5">
               <div className="mb-2 flex min-h-11 items-center justify-between gap-2">
                 <h2 className="ds-title-1">{t("inFolder")}</h2>
+                <button type="button" onClick={() => setMode("folder")} className="ds-body-2 min-h-11 px-1">
+                  {t("manage")}
+                </button>
               </div>
               <PlaceList
                 filter={filter}
@@ -270,6 +333,44 @@ export function FolderDetail() {
           </>
         )}
       </main>
+
+      {overlay === "menu" && (
+        <Sheet title={folder.name} onClose={() => setOverlay(null)}>
+          <button type="button" onClick={() => setOverlay("rename")} className="ds-body-1 flex min-h-14 w-full items-center gap-3 text-left">
+            <Pencil size={20} strokeWidth={1.5} aria-hidden />
+            {t("rename")}
+          </button>
+          <button type="button" onClick={() => setOverlay("delete")} className="ds-body-1 flex min-h-14 w-full items-center gap-3 text-left text-danger">
+            <Trash2 size={20} strokeWidth={1.5} aria-hidden />
+            {t("deleteFolder")}
+          </button>
+        </Sheet>
+      )}
+      {overlay === "rename" && (
+        <FolderNameSheet
+          folder={folder}
+          onClose={() => setOverlay(null)}
+          onSaved={() => {
+            setOverlay(null);
+            toast.show(t("toast.renamed"));
+          }}
+        />
+      )}
+      {overlay === "delete" && (
+        <ConfirmSheet
+          title={t("deleteTitle")}
+          body={t("deleteBody", { name: folder.name })}
+          note={t("deleteNote")}
+          actionLabel={t("deleteFolder")}
+          cancelLabel={t("cancel")}
+          onAction={() => {
+            folderActions.remove(folder.id);
+            toast.show(t("toast.deleted"));
+            back();
+          }}
+          onClose={() => setOverlay(null)}
+        />
+      )}
     </Shell>
   );
 }
