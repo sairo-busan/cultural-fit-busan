@@ -10,7 +10,7 @@
 | Type | FEAT |
 | Severity | Medium |
 | Layer | Screen · API Route |
-| Status | PR #66 에린 리뷰 반영 중 |
+| Status | PR #66 승인 — 머지 대기 · 운영에서는 꺼짐(`LINK_LAB_ENABLED`) |
 | Screen | `/[locale]/lab/link-save` (탭바 · 메뉴 진입점 없음) |
 | Branch | `feat/link-save-lab` (`origin/main` 기준) |
 | Depends | DOCS-002 (조사) · `docs/decisions/2026-10-29_링크저장_지도API_선택.md` |
@@ -145,3 +145,8 @@ DOCS-002 계획과 목업에 없던 결정. 근거는 각 행의 출처.
 - 카카오 로컬 일일 무료 쿼터 수치 · 응답 저장 제한 약관 원문 확인(결정 기록 "남은 확인")
 - 앱 빌드에서 카카오 지도 도메인(`https://localhost`) 동작 확인
 - 앱에서 쓰려면 Vercel 배포와 Vercel env(`YOUTUBE_API_KEY` · `KAKAO_REST_API_KEY` · `NEXT_PUBLIC_KAKAO_JS_KEY`) 필요 — 앱은 `/api/link-resolve` · `/api/place-search` 를 Vercel 에서 부른다
+- 운영에서 열기 전 외부 저장소 기반 호출 제한. 미리보기 주소는 공개 상태라 실제 키의 쿼터가 소진될 수 있다
+- PR #66 리뷰 선택 사항
+  - `readLimited` 끝에 디코더 플러시 없음 — 상한 경계의 글자 일부가 버려진다
+  - 키가 없을 때 서버 로그 없음 — 응답만 `서버 설정 없음`
+  - 차단됐을 때 `result.url` 에 허용 밖 주소가 담김 — 저장을 막거나 입력한 주소를 쓰는 방안
