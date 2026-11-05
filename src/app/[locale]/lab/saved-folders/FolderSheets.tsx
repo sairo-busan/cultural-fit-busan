@@ -45,7 +45,7 @@ export function FolderNameSheet({
           {t("nameLabel")}
         </label>
         <div
-          className={`flex h-14 items-center gap-2 rounded-xl border bg-page px-4 ${
+          className={`flex h-14 items-center gap-2 rounded-xl border bg-page px-4 focus-within:ring-1 focus-within:ring-ink ${
             error ? "border-danger" : "border-ink"
           }`}
         >
