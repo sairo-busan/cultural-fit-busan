@@ -60,6 +60,8 @@ export type UseSavedPlacesResult = {
   ids: Set<string>;
   /** 뒤집고, 무슨 일이 일어났는지 토스트로 알린다 */
   toggle: (contentId: string) => void;
+  /** 여러 곳을 한 번에 해제하고, 토스트 하나로 함께 되돌린다 */
+  removeMany: (contentIds: string[]) => void;
 };
 
 export function useSavedPlaces(): UseSavedPlacesResult {
@@ -103,5 +105,29 @@ export function useSavedPlaces(): UseSavedPlacesResult {
     [t, toast, router],
   );
 
-  return { places, ids, toggle };
+  const removeMany = useCallback(
+    (contentIds: string[]) => {
+      const removed = readSavedPlaces().filter((p) => contentIds.includes(p.id));
+      if (removed.length === 0) return;
+
+      for (const p of removed) toggleSaved(p.id);
+      invalidate();
+
+      toast.show(t("removedToast"), {
+        action: {
+          label: t("undo"),
+          onAct: () => {
+            const current = readSavedPlaces();
+            for (const p of removed) {
+              if (!current.some((c) => c.id === p.id)) toggleSaved(p.id, new Date(p.savedAt));
+            }
+            invalidate();
+          },
+        },
+      });
+    },
+    [t, toast],
+  );
+
+  return { places, ids, toggle, removeMany };
 }

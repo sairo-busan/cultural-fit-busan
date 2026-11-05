@@ -344,5 +344,94 @@
     "later": "나중에 할게요",
     "reset": "초기화",
     "clear": "지우기"
+  },
+  "savedFolders": {
+    "title": "저장한 곳",
+    "subtitle": "가고 싶은 부산, 여기에 모아 두세요.",
+    "folders": "내 폴더",
+    "viewAll": "전체 보기",
+    "allTitle": "전체 폴더",
+    "allSubtitle": "여행의 모양대로, 나누어 담아요.",
+    "newFolder": "새 폴더",
+    "allPlaces": "모든 장소",
+    "inFolder": "폴더 안의 장소",
+    "manage": "관리",
+    "count": "{count}곳",
+    "filterLabel": "지역 필터",
+    "filterAll": "전체",
+    "sortLabel": "장소 정렬",
+    "sort": {
+      "saved": "최근 저장순",
+      "added": "최근 넣은 순",
+      "fit": "적합도순"
+    },
+    "selectAll": "전체 선택",
+    "addedAt": {
+      "today": "오늘 넣음",
+      "yesterday": "어제 넣음",
+      "daysAgo": "{d}일 전 넣음",
+      "date": "{m}월 {d}일 넣음"
+    },
+    "manageTitle": "장소 관리",
+    "manageBody": "여러 폴더에 함께 넣을 수 있어요.",
+    "pickTitle": "장소 넣기",
+    "pickBody": "이 폴더에 넣을 곳을 골라 주세요.",
+    "selected": "{count}곳 선택",
+    "done": "완료",
+    "cancel": "취소",
+    "unsave": "저장 해제",
+    "removeFromFolder": "폴더에서 빼기",
+    "addHere": "이 폴더에 넣기",
+    "nothingToAdd": "더 넣을 수 있는 곳이 없어요.",
+    "putTitle": "폴더에 넣기",
+    "putBody": "{count}곳을 넣을 폴더를 모두 골라 주세요.",
+    "putChoose": "폴더를 골라 주세요",
+    "putAction": "{count}개 폴더에 넣기",
+    "nameLabel": "폴더 이름",
+    "namePlaceholder": "예: 다음에 갈 곳",
+    "nameHelp": "최대 {max}자까지 입력할 수 있어요.",
+    "nameError": {
+      "empty": "폴더 이름을 입력해 주세요.",
+      "duplicate": "같은 이름의 폴더가 있어요. 다른 이름을 써 주세요."
+    },
+    "rename": "이름 바꾸기",
+    "renameAction": "이름 바꾸기",
+    "createAction": "폴더 만들기",
+    "folderMenu": "폴더 메뉴",
+    "deleteFolder": "폴더 삭제",
+    "deleteTitle": "폴더를 삭제할까요?",
+    "deleteBody": "“{name}” 폴더만 지워져요.",
+    "deleteNote": "안에 담긴 장소는 저장한 곳에 남아요.",
+    "unsaveTitle": "선택한 곳의 저장을 해제할까요?",
+    "unsaveBody": "선택한 {count}곳이 모든 폴더에서도 빠져요.",
+    "toast": {
+      "created": "새 폴더를 만들었어요",
+      "renamed": "폴더 이름을 바꿨어요",
+      "deleted": "폴더를 삭제했어요. 장소는 그대로 남아 있어요.",
+      "removed": "폴더에서 뺐어요. 저장한 곳에는 남아 있어요.",
+      "put": "선택한 폴더에 넣었어요",
+      "added": "폴더에 장소를 넣었어요"
+    },
+    "emptySaved": {
+      "title": "아직 저장한 곳이 없어요",
+      "body": "마음에 드는 곳을 저장하고 나만의 부산 여행을 모아 보세요.",
+      "action": "추천 보러 가기"
+    },
+    "emptyFolder": {
+      "title": "이 폴더에 넣은 곳이 없어요",
+      "body": "저장한 곳에서 골라 담아 보세요.",
+      "action": "장소 넣기"
+    },
+    "noFolders": "폴더를 만들어 저장한 곳을 나눠 보세요.",
+    "notFound": {
+      "title": "폴더를 찾을 수 없어요",
+      "body": "삭제했거나 다른 기기에서 만든 폴더예요.",
+      "action": "저장한 곳 보기"
+    },
+    "loadError": {
+      "title": "장소를 불러오지 못했어요",
+      "body": "연결을 확인하고 다시 시도해 주세요.",
+      "action": "다시 시도"
+    }
   }
 }

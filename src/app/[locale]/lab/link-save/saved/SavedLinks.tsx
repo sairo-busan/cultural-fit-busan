@@ -35,7 +35,7 @@ export function SavedLinks() {
       <AppHeader onBack={() => router.push(PATH)} />
       <div className="screen">
         <ScreenTitle aside={<span className="ds-body-2 text-sub">링크 {saves.length}</span>}>
-          링크로 저장한 곳
+          링크 기록
         </ScreenTitle>
       </div>
 

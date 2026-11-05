@@ -1,0 +1,41 @@
+.art { position: relative; flex-shrink: 0; width: 112px; height: 84px; }
+.tab { position: absolute; top: 0; left: 4px; width: 44%; height: 24px; border: 1px solid var(--line); border-bottom: 0; border-radius: 8px 12px 0 0; background: var(--hair); }
+.back { position: absolute; top: 12px; left: 4px; right: 4px; height: 68px; border: 1px solid var(--line); border-radius: 0 8px 8px 8px; background: var(--hair); }
+.paper { position: absolute; left: 16px; right: 16px; top: 20px; height: 40px; border: 1px solid var(--hair); border-radius: 4px; background: var(--page); transform: rotate(-5deg); }
+.paper::after { content: ""; display: block; width: 32px; height: 2px; margin: 8px; background: var(--hair); }
+.front { position: absolute; inset: 28px 0 0; border: 1px solid var(--line); border-radius: 8px 8px 12px 12px; background: var(--surface); transform-origin: bottom; transition: transform 0.24s ease; }
+.front::after { content: ""; position: absolute; right: 12px; bottom: 12px; width: 16px; height: 4px; border-radius: 4px; background: var(--ink); }
+
+.open .front { transform: perspective(180px) rotateX(-25deg); background: var(--hair); }
+.empty .paper { display: none; }
+.empty .front::after { background: var(--line); }
+
+.title { width: 80px; height: 64px; }
+.title .tab { height: 20px; }
+.title .back { height: 48px; }
+.title .front { top: 24px; }
+.title .paper { left: 12px; right: 12px; top: 16px; height: 24px; }
+
+.small { width: 48px; height: 40px; }
+.small .tab { left: 2px; height: 12px; border-radius: 4px 4px 0 0; }
+.small .back { top: 8px; left: 2px; right: 2px; height: 28px; border-radius: 0 4px 4px 4px; }
+.small .front { top: 14px; border-radius: 4px 4px 6px 6px; }
+.small .front::after { right: 6px; bottom: 6px; width: 8px; height: 2px; }
+.small .paper { display: none; }
+
+.photo { position: absolute; width: 58%; height: 56px; overflow: hidden; border: 3px solid var(--page); border-radius: 6px; background: var(--page); box-shadow: 0 0 0 1px rgb(16 19 24 / 8%); }
+.photo img { object-fit: cover; object-position: center 32%; }
+.photo0 { left: 10%; top: 8px; transform: rotate(-10deg); }
+.photo1 { right: 8%; top: 16px; transform: rotate(9deg); }
+.hasPhotos .paper { display: none; }
+.hasPhotos .front { top: 36px; }
+
+.title .photo { height: 40px; border-width: 2px; }
+.title .photo0 { top: 4px; }
+.title .photo1 { top: 12px; }
+.title.hasPhotos .front { top: 28px; }
+
+.small .photo { height: 24px; border-width: 1px; border-radius: 3px; }
+.small .photo0 { top: 4px; }
+.small .photo1 { top: 8px; }
+.small.hasPhotos .front { top: 18px; }
