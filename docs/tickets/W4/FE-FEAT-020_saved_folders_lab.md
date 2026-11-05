@@ -10,7 +10,7 @@
 | Type | FEAT |
 | Severity | Medium |
 | Layer | Screen · localStorage |
-| Status | 구현 완료 · 브랜치 푸시 · PR 전 — 운영에서는 꺼짐(`LINK_LAB_ENABLED`) |
+| Status | PR #68 — 운영에서는 꺼짐(`LINK_LAB_ENABLED`) |
 | Screen | `/[locale]/lab/saved-folders` (탭바 · 메뉴 진입점 없음) |
 | Branch | `feat/saved-folders-lab` (`origin/main` 기준) |
 | Depends | FE-FEAT-019 (lab 화면 · `KakaoMap` · 실험 스위치) |
