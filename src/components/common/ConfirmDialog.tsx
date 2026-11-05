@@ -13,6 +13,8 @@ type ConfirmDialogProps = {
   onSecondary: () => void;
   /** Esc · 배경 누름 */
   onClose: () => void;
+  /** 되돌릴 수 없는 일(삭제)이면 계속하는 쪽을 위험색으로 */
+  danger?: boolean;
 };
 
 /**
@@ -28,6 +30,7 @@ export function ConfirmDialog({
   onPrimary,
   onSecondary,
   onClose,
+  danger,
 }: ConfirmDialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
 
@@ -60,7 +63,9 @@ export function ConfirmDialog({
           type="button"
           autoFocus
           onClick={onPrimary}
-          className="ds-title-2 min-h-12 rounded-xl bg-primary text-white transition-colors active:bg-primary-press"
+          className={`ds-title-2 min-h-12 rounded-xl text-white transition-colors ${
+            danger ? "bg-danger active:opacity-90" : "bg-primary active:bg-primary-press"
+          }`}
         >
           {primaryLabel}
         </button>

@@ -48,6 +48,12 @@ const nextConfig: NextConfig = {
     unoptimized: isApp,
     remotePatterns: [
       {
+        // 링크 저장 실험(lab/link-save) — 출처 영상 썸네일
+        protocol: "https",
+        hostname: "i.ytimg.com",
+        pathname: "/vi/**",
+      },
+      {
         protocol: "https",
         hostname: "tong.visitkorea.or.kr",
         pathname: "/cms/resource/**",
