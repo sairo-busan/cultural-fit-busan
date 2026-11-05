@@ -107,7 +107,7 @@ export function PutFolderSheet({
     <Sheet title={t("putTitle")} onClose={onClose}>
       <p className="ds-body-2 mb-4 text-sub">{t("putBody", { count })}</p>
       <ul>
-        {summaries.map(({ folder, count: inside }) => {
+        {summaries.map(({ folder, count: inside, photos }) => {
           const on = targets.has(folder.id);
           return (
             <li key={folder.id}>
@@ -118,7 +118,7 @@ export function PutFolderSheet({
                 onClick={() => onToggle(folder.id)}
                 className="flex min-h-18 w-full items-center gap-4 text-left"
               >
-                <FolderArt size="small" empty={inside === 0} />
+                <FolderArt size="small" empty={inside === 0} photos={photos} />
                 <span className="min-w-0 flex-1 break-words">
                   <span className="ds-body-1 block">{folder.name}</span>
                   <span className="ds-body-2 mt-1 block text-sub">{t("count", { count: inside })}</span>

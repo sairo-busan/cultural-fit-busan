@@ -93,13 +93,13 @@ const catalog = new Map([
 ]);
 const opts = { en: false, cf8Code: null };
 
-// 부모님 여행: a(2일) · c(3일) · b(4일). b 는 사진이 없어 표지는 c
+// 부모님 여행: a(2일) · c(3일) · b(4일). b 는 사진이 없어 건너뛴다
 const summaries = () => folderSummaries(readSavedFolders(), readSavedPlaces(), catalog, opts);
 const parentsSummary = () => summaries().find((s) => s.folder.id === parents.id)!;
 let rows = folderRows(only("부모님 여행"), readSavedPlaces(), catalog, opts);
 assert.deepEqual(rows.map((r) => r.place.contentId), ["b", "c", "a"]);
 assert.equal(parentsSummary().count, 3);
-assert.equal(parentsSummary().cover, "c.jpg");
+assert.deepEqual(parentsSummary().photos, ["c.jpg", "a.jpg"]);
 assert.equal(summaries()[0].folder.id, parents.id);
 assert.equal(summaries().at(-1)!.count, 0);
 
@@ -129,7 +129,7 @@ assert.deepEqual(rows.map((r) => r.place.contentId), ["b", "a"]);
 assert.equal(parentsSummary().count, 2);
 assert.equal(savedRows(readSavedPlaces(), catalog, opts).length, 2);
 assert.equal(activeDistrict("기장", districtCounts(rows)), ALL_DISTRICTS);
-assert.equal(parentsSummary().cover, "a.jpg");
+assert.deepEqual(parentsSummary().photos, ["a.jpg"]);
 assert.ok(ids("부모님 여행").includes("c"));
 toggleSaved("c", at(5));
 assert.equal(parentsSummary().count, 3);

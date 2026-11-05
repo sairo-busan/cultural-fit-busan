@@ -20,7 +20,8 @@ export type RowOptions = { en: boolean; cf8Code: string | null };
 export type FolderSummary = {
   folder: SavedFolder;
   count: number;
-  cover: string | null;
+  /** 폴더 그림에 비치는 사진. 최근 넣은 순으로 최대 2장 */
+  photos: string[];
 };
 
 function toRow(place: RecommendedPlace, at: string, { en, cf8Code }: RowOptions): SavedRow {
@@ -61,7 +62,7 @@ export function folderRows(
     .sort((a, b) => b.at.localeCompare(a.at));
 }
 
-/** 표지는 최근 넣은 곳 중 사진이 있는 첫 곳. 최근에 장소를 넣거나 만든 폴더가 앞 */
+/** 최근에 장소를 넣거나 만든 폴더가 앞 */
 export function folderSummaries(
   folders: SavedFolder[],
   saved: SavedPlace[],
@@ -76,7 +77,7 @@ export function folderSummaries(
         summary: {
           folder,
           count: rows.length,
-          cover: rows.find((r) => r.place.firstImage)?.place.firstImage ?? null,
+          photos: rows.flatMap((r) => r.place.firstImage ?? []).slice(0, 2),
         },
         activeAt: latest > folder.createdAt ? latest : folder.createdAt,
       };

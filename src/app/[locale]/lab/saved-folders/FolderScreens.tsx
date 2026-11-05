@@ -44,13 +44,13 @@ function FolderGrid({ summaries }: { summaries: FolderSummary[] }) {
   const t = useTranslations("savedFolders");
   return (
     <div className="grid grid-cols-2 gap-x-3 gap-y-5 pt-3 pb-1">
-      {summaries.map(({ folder, count }) => (
+      {summaries.map(({ folder, count, photos }) => (
         <Link
           key={folder.id}
           href={{ pathname: `${BASE}/folder`, query: { id: folder.id } }}
           className="flex min-w-0 flex-col items-center px-1 pb-2 transition-opacity active:opacity-70"
         >
-          <FolderArt empty={count === 0} />
+          <FolderArt empty={count === 0} photos={photos} />
           <span className="ds-body-1 mt-3 max-w-full break-words text-center">{folder.name}</span>
           <span className="ds-body-2 mt-1 text-sub">{t("count", { count })}</span>
         </Link>
@@ -251,6 +251,7 @@ export function FolderDetail() {
   }
 
   const back = () => router.push(BASE);
+  const folderPhotos = source.summaries.find((s) => s.folder.id === id)?.photos ?? [];
 
   if (source.failed) {
     return (
@@ -315,7 +316,7 @@ export function FolderDetail() {
 
       <main className="screen flex-1 pb-10">
         <div className="mt-2 mb-6 flex items-center gap-5">
-          <FolderArt size="title" open empty={rows.length === 0} />
+          <FolderArt size="title" open empty={rows.length === 0} photos={folderPhotos} />
           <div className="min-w-0">
             <h1 className="ds-display break-words">{folder.name}</h1>
             <p className="ds-body-2 mt-2 text-sub">{t("count", { count: rows.length })}</p>
