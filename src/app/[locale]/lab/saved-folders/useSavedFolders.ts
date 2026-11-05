@@ -1,11 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useLocale } from "next-intl";
+import { useSavedPlaces } from "@/hooks/useSavedPlaces";
+import { useHydrated, useStoredSnapshot } from "@/hooks/useStoredSnapshot";
 import { apiUrl } from "@/lib/apiBase";
+import { folderSummaries, savedRows } from "@/lib/savedFolders";
 import {
   addPlacesToFolder,
   createSavedFolder,
   deleteSavedFolder,
+  readCf8Code,
   readSavedFolders,
   removePlacesFromFolder,
   renameSavedFolder,
@@ -84,4 +89,37 @@ export function useCatalogMap(): CatalogState & { retry: () => void } {
   }, []);
 
   return { ...state, retry };
+}
+
+/** 세 화면이 함께 쓰는 원천 값 */
+export function useFolderSource() {
+  const en = useLocale() === "en";
+  const hydrated = useHydrated();
+  const cf8Code = useStoredSnapshot(readCf8Code, null);
+  const { places } = useSavedPlaces();
+  const folders = useSavedFolders();
+  const { catalog, failed, retry } = useCatalogMap();
+
+  const options = useMemo(() => ({ en, cf8Code }), [en, cf8Code]);
+  const summaries = useMemo(
+    () => (catalog ? folderSummaries(folders, places, catalog, options) : []),
+    [catalog, folders, places, options],
+  );
+  const rows = useMemo(
+    () => (catalog ? savedRows(places, catalog, options) : []),
+    [catalog, places, options],
+  );
+
+  return {
+    ready: hydrated && catalog !== null,
+    failed,
+    retry,
+    catalog,
+    places,
+    folders,
+    summaries,
+    rows,
+    options,
+    hasFit: Boolean(cf8Code),
+  };
 }

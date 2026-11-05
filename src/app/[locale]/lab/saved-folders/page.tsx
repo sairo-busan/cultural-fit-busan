@@ -1,10 +1,5 @@
-import { Suspense } from "react";
-import { DataPreview } from "./DataPreview";
+import { SavedHome } from "./FolderScreens";
 
 export default function SavedFoldersPage() {
-  return (
-    <Suspense>
-      <DataPreview view="main" />
-    </Suspense>
-  );
+  return <SavedHome />;
 }

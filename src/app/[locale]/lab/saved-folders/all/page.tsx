@@ -1,10 +1,5 @@
-import { Suspense } from "react";
-import { DataPreview } from "../DataPreview";
+import { AllFolders } from "../FolderScreens";
 
 export default function SavedFoldersAllPage() {
-  return (
-    <Suspense>
-      <DataPreview view="all" />
-    </Suspense>
-  );
+  return <AllFolders />;
 }

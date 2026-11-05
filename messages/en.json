@@ -344,5 +344,94 @@
     "later": "Maybe later",
     "reset": "Reset",
     "clear": "Clear"
+  },
+  "savedFolders": {
+    "title": "Saved places",
+    "subtitle": "Keep a little of Busan for later.",
+    "folders": "Your folders",
+    "viewAll": "View all",
+    "allTitle": "All folders",
+    "allSubtitle": "A little space for every kind of trip.",
+    "newFolder": "New folder",
+    "allPlaces": "All saved places",
+    "inFolder": "Places in this folder",
+    "manage": "Manage",
+    "count": "{count, plural, one {# place} other {# places}}",
+    "filterLabel": "Filter by area",
+    "filterAll": "All",
+    "sortLabel": "Sort places",
+    "sort": {
+      "saved": "Recently saved",
+      "added": "Recently added",
+      "fit": "Best match"
+    },
+    "selectAll": "Select all",
+    "addedAt": {
+      "today": "Added today",
+      "yesterday": "Added yesterday",
+      "daysAgo": "Added {d} days ago",
+      "date": "Added {m}/{d}"
+    },
+    "manageTitle": "Manage places",
+    "manageBody": "A place can belong to more than one folder.",
+    "pickTitle": "Add places",
+    "pickBody": "Choose places to add to this folder.",
+    "selected": "{count} selected",
+    "done": "Done",
+    "cancel": "Cancel",
+    "unsave": "Unsave",
+    "removeFromFolder": "Remove from folder",
+    "addHere": "Add to this folder",
+    "nothingToAdd": "Nothing more to add.",
+    "putTitle": "Add to folders",
+    "putBody": "Choose folders for {count, plural, one {# place} other {# places}}.",
+    "putChoose": "Choose folders",
+    "putAction": "Add to {count, plural, one {# folder} other {# folders}}",
+    "nameLabel": "Folder name",
+    "namePlaceholder": "e.g. For next time",
+    "nameHelp": "Use up to {max} characters.",
+    "nameError": {
+      "empty": "Enter a folder name.",
+      "duplicate": "A folder with this name exists. Try another name."
+    },
+    "rename": "Rename folder",
+    "renameAction": "Save name",
+    "createAction": "Create folder",
+    "folderMenu": "Folder menu",
+    "deleteFolder": "Delete folder",
+    "deleteTitle": "Delete this folder?",
+    "deleteBody": "Only “{name}” will be deleted.",
+    "deleteNote": "The places inside will stay in Saved places.",
+    "unsaveTitle": "Unsave selected places?",
+    "unsaveBody": "{count, plural, one {This place} other {These # places}} will also be removed from all folders.",
+    "toast": {
+      "created": "Folder created",
+      "renamed": "Folder renamed",
+      "deleted": "Folder deleted. Your places are still saved.",
+      "removed": "Removed from folder. Still in Saved places.",
+      "put": "Added to selected folders",
+      "added": "Places added to folder"
+    },
+    "emptySaved": {
+      "title": "No saved places yet",
+      "body": "Save places you love and make Busan your own.",
+      "action": "Explore recommendations"
+    },
+    "emptyFolder": {
+      "title": "This folder is empty",
+      "body": "Choose places from your saved list.",
+      "action": "Add places"
+    },
+    "noFolders": "Create a folder to sort your saved places.",
+    "notFound": {
+      "title": "Folder not found",
+      "body": "It was deleted or created on another device.",
+      "action": "Go to saved places"
+    },
+    "loadError": {
+      "title": "Couldn’t load places",
+      "body": "Check your connection and try again.",
+      "action": "Try again"
+    }
   }
 }
