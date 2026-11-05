@@ -147,7 +147,7 @@ type SavedFolder = {
 
 ## 남은 것
 
-- 카카오 콘솔 도메인 등록: `cultural-fit-busan-git-feat-saved-folders-lab-shionparks-projects.vercel.app` — 미등록이면 미리보기에서 지도 SDK 401, 지도 칸에 안내 문구
+- 카카오 콘솔에 이 브랜치 미리보기 도메인 등록 — 미등록이면 지도 SDK 401, 지도 칸에 안내 문구
 
 - 유나 확인: 화면 용어(저장 · 폴더 · 링크 기록) · 임시 문구("넣음" · "관리" · "저장한 곳 전체")
 - 유나 스케치의 "선택하여 합치기(?)" · "설문(?)" 뜻 — 보류
